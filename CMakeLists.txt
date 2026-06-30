@@ -26,10 +26,9 @@ add_compile_definitions(
     TUSB_OPT_DEVICE_ENABLED=1
     TUSB_OPT_HOST_ENABLED=1
 
-    CFG_TUSB_NO_DEFAULT_MCU=1
-
+    CFG_TUD_NET=0
     CFG_TUD_ENABLED=1
-    CFG_TUH_ENABLED=1
+    CFG_TUH_ENABLED=0
 )
 
 # =========================
@@ -39,17 +38,16 @@ file(GLOB_RECURSE APP_SOURCES
     Core/*.c
 )
 
-set(TINYUSB_DIR ${CMAKE_SOURCE_DIR}/Core/USB/tinyusb/src)
+set(TINYUSB_ROOT ${CMAKE_SOURCE_DIR}/Core/USB/tinyusb)
+set(TINYUSB_SRC ${TINYUSB_ROOT}/src)
 
-set(TINYUSB_SRC
-    ${TINYUSB_DIR}/tusb.c
-    ${TINYUSB_DIR}/common/tusb_fifo.c
+set(TINYUSB_SOURCES
+    ${TINYUSB_SRC}/tusb.c
+    ${TINYUSB_SRC}/common/tusb_fifo.c
+    ${TINYUSB_SRC}/device/usbd.c
+    ${TINYUSB_SRC}/class/cdc/cdc_device.c
 
-    ${TINYUSB_DIR}/device/usbd.c
-
-    ${TINYUSB_DIR}/class/cdc/cdc_device.c
-
-    ${TINYUSB_DIR}/portable/st/stm32_fsdev/dcd_stm32_fsdev.c
+    ${TINYUSB_SRC}/portable/st/stm32_fsdev/dcd_stm32_fsdev.c
 )
 
 set(USB_PORT_SRC
@@ -59,26 +57,26 @@ set(USB_PORT_SRC
 
 add_executable(${PROJECT_NAME}.elf
     ${APP_SOURCES}
-    ${TINYUSB_SRC}
+    ${TINYUSB_SOURCES}
     ${USB_PORT_SRC}
 )
 
 # =========================
-# INCLUDE FIX (KRITICKÉ)
+# INCLUDE PATHS (FIXED)
 # =========================
 target_include_directories(${PROJECT_NAME}.elf PRIVATE
+
+    # APP
     Core/Inc
     Core/App
     Core/USB
     Core/USB/port
     Core/Board
 
-    # TinyUSB core (FIX)
-    ${TINYUSB_DIR}
+    # 🔥 TinyUSB ROOT FIX (důležité!)
+    ${TINYUSB_SRC}
 
-    # BSP (FIX - důležité)
-    #${CMAKE_SOURCE_DIR}/Core/USB/tinyusb/hw/bsp
-
+    # HAL
     Drivers/STM32H5xx_HAL_Driver/Inc
     Drivers/STM32H5xx_HAL_Driver/Inc/Legacy
     Drivers/CMSIS/Device/ST/STM32H5xx/Include
