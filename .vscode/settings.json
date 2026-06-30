@@ -1,0 +1,11 @@
+{
+    "cmake.generator": "Ninja",
+
+    "cmake.configureSettings": {
+        "CMAKE_MAKE_PROGRAM": "C:/Strawberry/c/bin/ninja.exe",
+
+        "CMAKE_C_COMPILER": "C:/Program Files (x86)/Arm/arm-gnu-toolchain-15.x/bin/arm-none-eabi-gcc.exe",
+        "CMAKE_CXX_COMPILER": "C:/Program Files (x86)/Arm/arm-gnu-toolchain-15.x/bin/arm-none-eabi-g++.exe",
+        "CMAKE_ASM_COMPILER": "C:/Program Files (x86)/Arm/arm-gnu-toolchain-15.x/bin/arm-none-eabi-gcc.exe"
+    }
+}

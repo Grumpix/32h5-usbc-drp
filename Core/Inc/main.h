@@ -37,7 +37,7 @@ extern "C" {
 #include "stm32h5xx_ll_pwr.h"
 #include "stm32h5xx_ll_gpio.h"
 #include "stm32h5xx_ll_dma.h"
-
+#include "drp_fsm.h"
 #include "stm32h5xx_ll_exti.h"
 
 /* Private includes ----------------------------------------------------------*/

@@ -1,0 +1,9 @@
+# ninja log v5
+76	324	8045296014900115	CMakeFiles/stm32h533.elf.dir/Core/Src/sysmem.c.obj	4d5e904c963e18f8
+66	426	8045296015876679	CMakeFiles/stm32h533.elf.dir/Core/Src/syscalls.c.obj	9ac3c50d41345c17
+126	569	8045296016896375	CMakeFiles/stm32h533.elf.dir/Core/USB/tinyusb/hw/bsp/board.c.obj	b0cb0ee03bb1e2a3
+327	637	8045296018043186	CMakeFiles/stm32h533.elf.dir/Core/USB/tinyusb/lib/SEGGER_RTT/RTT/SEGGER_RTT.c.obj	bff46e99a379a1e
+86	728	8045296018928015	CMakeFiles/stm32h533.elf.dir/Core/Src/system_stm32h5xx.c.obj	96c11903d47eca3d
+19	738	8045296019064401	CMakeFiles/stm32h533.elf.dir/Core/App/usb_debug.c.obj	237aa1f08975c11d
+56	770	8045296019368619	CMakeFiles/stm32h533.elf.dir/Core/Src/stm32h5xx_it.c.obj	d10fc02c616536d0
+102	781	8045296019484355	CMakeFiles/stm32h533.elf.dir/Core/USB/port/dcd_stm32h5.c.obj	ee55a7f229b63174
