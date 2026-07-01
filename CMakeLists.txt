@@ -20,13 +20,12 @@ add_compile_definitions(
     CFG_TUSB_MCU=OPT_MCU_STM32H5
     CFG_TUSB_OS=OPT_OS_NONE
 
-    CFG_TUSB_RHPORT0_MODE=OPT_MODE_DEVICE
     CFG_TUSB_INIT_MANUAL=1
 
 
     CFG_TUD_NET=0
     CFG_TUD_ENABLED=1
-    CFG_TUH_ENABLED=0
+    CFG_TUH_ENABLED=1
 )
 
 # =========================
@@ -41,6 +40,7 @@ set(APP_SOURCES
     ${APP_LAYER_SOURCES}
     ${BOARD_SOURCES}
     Core/USB/usb_device_tusb.c
+    Core/USB/usb_host_tusb.c
     Core/Startup/startup_stm32h533retx.s
 )
 
@@ -51,10 +51,12 @@ set(TINYUSB_SOURCES
     ${TINYUSB_SRC}/tusb.c
     ${TINYUSB_SRC}/common/tusb_fifo.c
     ${TINYUSB_SRC}/device/usbd.c
+    ${TINYUSB_SRC}/host/usbh.c
     ${TINYUSB_SRC}/class/cdc/cdc_device.c
 
     ${TINYUSB_SRC}/portable/st/stm32_fsdev/fsdev_common.c
     ${TINYUSB_SRC}/portable/st/stm32_fsdev/dcd_stm32_fsdev.c
+    ${TINYUSB_SRC}/portable/st/stm32_fsdev/hcd_stm32_fsdev.c
 )
 
 set(HAL_SOURCES

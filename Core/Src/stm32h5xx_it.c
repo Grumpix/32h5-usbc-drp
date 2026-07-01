@@ -1,6 +1,7 @@
 #include "main.h"
 #include "stm32h5xx_it.h"
 #include "tusb.h"
+#include "usb_manager.h"
 
 /* =========================
    Cortex handlers
@@ -24,7 +25,14 @@ void SysTick_Handler(void)
 ========================= */
 void USB_DRD_FS_IRQHandler(void)
 {
-    tud_int_handler(0);
+    if (usb_manager_get_mode() == USB_MODE_HOST)
+    {
+        tuh_int_handler(0);
+    }
+    else if (usb_manager_get_mode() == USB_MODE_DEVICE)
+    {
+        tud_int_handler(0);
+    }
 }
 
 /* =========================

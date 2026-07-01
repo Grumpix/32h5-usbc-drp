@@ -72,6 +72,8 @@ void Error_Handler(void);
 #define VBUS_ON_GPIO_Port GPIOC
 #define LED_Pin GPIO_PIN_5
 #define LED_GPIO_Port GPIOA
+#define USB_MODE_BUTTON_Pin GPIO_PIN_0
+#define USB_MODE_BUTTON_GPIO_Port GPIOA
 
 /* USER CODE BEGIN Private defines */
 
