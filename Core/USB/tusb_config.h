@@ -18,7 +18,8 @@
    HOST
 ========================= */
 #define CFG_TUH_ENABLED           1
-#define CFG_TUH_MSC               0
+#define CFG_TUH_CDC               1
+#define CFG_TUH_MSC               1
 #define CFG_TUH_HUB               0
 #define CFG_TUH_DEVICE_MAX        4
 

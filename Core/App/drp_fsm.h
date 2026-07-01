@@ -12,3 +12,4 @@ void drp_task(void);
 drp_role_t drp_get_role(void);
 void drp_request_role(drp_role_t role);
 uint8_t drp_is_ready(void);
+void drp_irq_handler(void);

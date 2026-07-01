@@ -5,3 +5,4 @@
 void usb_host_tusb_init(void);
 void usb_host_tusb_deinit(void);
 bool usb_host_tusb_is_device_attached(void);
+void usb_host_tusb_log(char const *text);

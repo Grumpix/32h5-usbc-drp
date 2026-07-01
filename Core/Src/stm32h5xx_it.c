@@ -25,11 +25,11 @@ void SysTick_Handler(void)
 ========================= */
 void USB_DRD_FS_IRQHandler(void)
 {
-    if (usb_manager_get_mode() == USB_MODE_HOST)
+    if (usb_manager_get_state() == USB_STATE_HOST)
     {
         tuh_int_handler(0);
     }
-    else if (usb_manager_get_mode() == USB_MODE_DEVICE)
+    else if (usb_manager_get_state() == USB_STATE_DEVICE)
     {
         tud_int_handler(0);
     }

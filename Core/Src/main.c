@@ -1,6 +1,7 @@
 #include "main.h"
 #include "usb_manager.h"
 #include "drp_fsm.h"
+#include "uart_log.h"
 #include "usb_mode_button.h"
 
 void SystemClock_Config(void);
@@ -17,14 +18,14 @@ int main(void)
 
     MX_GPIO_Init();
     MX_ICACHE_Init();
+    uart_log_init();
+    uart_log_write("BOOT\r\n");
 
     HAL_Delay(5);
 
+    usb_manager_init();
     drp_init();
     usb_mode_button_init();
-
-    usb_manager_init();
-    (void) usb_manager_start_device();
 
     while (1)
     {
@@ -32,13 +33,13 @@ int main(void)
         {
             if (usb_manager_toggle_mode())
             {
-                drp_request_role((usb_manager_get_mode() == USB_MODE_HOST) ?
-                                 DRP_ROLE_HOST : DRP_ROLE_DEVICE);
+                uart_log_write((usb_manager_get_state() == USB_STATE_HOST) ?
+                               "MODE HOST\r\n" : "MODE DEVICE\r\n");
             }
         }
 
-        drp_task();
         usb_manager_task();
+        drp_task();
     }
 }
 
@@ -48,7 +49,6 @@ void SystemClock_Config(void)
     RCC_OscInitTypeDef osc_init = {0};
     RCC_ClkInitTypeDef clk_init = {0};
     RCC_PeriphCLKInitTypeDef usb_clk_init = {0};
-    RCC_CRSInitTypeDef crs_init = {0};
 
     __HAL_PWR_VOLTAGESCALING_CONFIG(PWR_REGULATOR_VOLTAGE_SCALE0);
 
@@ -56,9 +56,8 @@ void SystemClock_Config(void)
     {
     }
 
-    osc_init.OscillatorType = RCC_OSCILLATORTYPE_HSE | RCC_OSCILLATORTYPE_HSI48;
+    osc_init.OscillatorType = RCC_OSCILLATORTYPE_HSE;
     osc_init.HSEState = RCC_HSE_ON;
-    osc_init.HSI48State = RCC_HSI48_ON;
     osc_init.PLL.PLLState = RCC_PLL_ON;
     osc_init.PLL.PLLSource = RCC_PLL1_SOURCE_HSE;
     osc_init.PLL.PLLM = 12;
@@ -89,18 +88,18 @@ void SystemClock_Config(void)
         Error_Handler();
     }
 
-    __HAL_RCC_CRS_CLK_ENABLE();
-
-    crs_init.Prescaler = RCC_CRS_SYNC_DIV1;
-    crs_init.Source = RCC_CRS_SYNC_SOURCE_USB;
-    crs_init.Polarity = RCC_CRS_SYNC_POLARITY_RISING;
-    crs_init.ReloadValue = __HAL_RCC_CRS_RELOADVALUE_CALCULATE(48000000, 1000);
-    crs_init.ErrorLimitValue = 34;
-    crs_init.HSI48CalibrationValue = 32;
-    HAL_RCCEx_CRSConfig(&crs_init);
-
     usb_clk_init.PeriphClockSelection = RCC_PERIPHCLK_USB;
-    usb_clk_init.UsbClockSelection = RCC_USBCLKSOURCE_HSI48;
+    usb_clk_init.PLL3.PLL3Source = RCC_PLL3_SOURCE_HSE;
+    usb_clk_init.PLL3.PLL3M = 6;
+    usb_clk_init.PLL3.PLL3N = 48;
+    usb_clk_init.PLL3.PLL3P = 2;
+    usb_clk_init.PLL3.PLL3Q = 4;
+    usb_clk_init.PLL3.PLL3R = 2;
+    usb_clk_init.PLL3.PLL3RGE = RCC_PLL3_VCIRANGE_1;
+    usb_clk_init.PLL3.PLL3VCOSEL = RCC_PLL3_VCORANGE_WIDE;
+    usb_clk_init.PLL3.PLL3FRACN = 0;
+    usb_clk_init.PLL3.PLL3ClockOut = RCC_PLL3_DIVQ;
+    usb_clk_init.UsbClockSelection = RCC_USBCLKSOURCE_PLL3Q;
 
     if (HAL_RCCEx_PeriphCLKConfig(&usb_clk_init) != HAL_OK)
     {

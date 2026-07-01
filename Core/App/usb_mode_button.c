@@ -55,7 +55,7 @@ void usb_mode_button_init(void)
 
     gpio_init.Pin = USB_MODE_BUTTON_Pin;
     gpio_init.Mode = GPIO_MODE_INPUT;
-    gpio_init.Pull = GPIO_PULLUP;
+    gpio_init.Pull = GPIO_NOPULL;
     gpio_init.Speed = GPIO_SPEED_FREQ_LOW;
     HAL_GPIO_Init(USB_MODE_BUTTON_GPIO_Port, &gpio_init);
 #endif
@@ -64,11 +64,23 @@ void usb_mode_button_init(void)
 bool usb_mode_button_pressed(void)
 {
 #if USB_MODE_BUTTON_CONFIGURED
+    static uint8_t initialized = 0U;
+    static GPIO_PinState released_state = GPIO_PIN_SET;
     static GPIO_PinState stable_state = GPIO_PIN_SET;
     static GPIO_PinState last_sample = GPIO_PIN_SET;
     static uint32_t change_started_ms = 0;
     GPIO_PinState raw_state = HAL_GPIO_ReadPin(USB_MODE_BUTTON_GPIO_Port, USB_MODE_BUTTON_Pin);
     uint32_t now = HAL_GetTick();
+
+    if (initialized == 0U)
+    {
+        initialized = 1U;
+        released_state = raw_state;
+        stable_state = raw_state;
+        last_sample = raw_state;
+        change_started_ms = now;
+        return false;
+    }
 
     if (raw_state != last_sample)
     {
@@ -85,7 +97,7 @@ bool usb_mode_button_pressed(void)
     {
         stable_state = raw_state;
 
-        if (stable_state == GPIO_PIN_RESET)
+        if (stable_state != released_state)
         {
             return true;
         }

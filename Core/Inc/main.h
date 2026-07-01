@@ -74,6 +74,8 @@ void Error_Handler(void);
 #define LED_GPIO_Port GPIOA
 #define USB_MODE_BUTTON_Pin GPIO_PIN_0
 #define USB_MODE_BUTTON_GPIO_Port GPIOA
+#define UART_LOG_TX_Pin GPIO_PIN_9
+#define UART_LOG_TX_GPIO_Port GPIOA
 
 /* USER CODE BEGIN Private defines */
 

@@ -1,3 +1,0 @@
-C:/Users/novak/Desktop/30626/h533-300626/build/CMakeFiles/stm32h533.elf.dir
-C:/Users/novak/Desktop/30626/h533-300626/build/CMakeFiles/edit_cache.dir
-C:/Users/novak/Desktop/30626/h533-300626/build/CMakeFiles/rebuild_cache.dir

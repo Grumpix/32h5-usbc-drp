@@ -53,6 +53,8 @@ set(TINYUSB_SOURCES
     ${TINYUSB_SRC}/device/usbd.c
     ${TINYUSB_SRC}/host/usbh.c
     ${TINYUSB_SRC}/class/cdc/cdc_device.c
+    ${TINYUSB_SRC}/class/cdc/cdc_host.c
+    ${TINYUSB_SRC}/class/msc/msc_host.c
 
     ${TINYUSB_SRC}/portable/st/stm32_fsdev/fsdev_common.c
     ${TINYUSB_SRC}/portable/st/stm32_fsdev/dcd_stm32_fsdev.c
@@ -73,6 +75,7 @@ set(HAL_SOURCES
     Drivers/STM32H5xx_HAL_Driver/Src/stm32h5xx_hal_pwr_ex.c
     Drivers/STM32H5xx_HAL_Driver/Src/stm32h5xx_hal_rcc.c
     Drivers/STM32H5xx_HAL_Driver/Src/stm32h5xx_hal_rcc_ex.c
+    Drivers/STM32H5xx_HAL_Driver/Src/stm32h5xx_ll_gpio.c
 )
 
 add_executable(${PROJECT_NAME}.elf

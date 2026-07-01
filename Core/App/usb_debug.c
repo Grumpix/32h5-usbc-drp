@@ -10,7 +10,6 @@ static volatile usb_dbg_state_t dbg_state = USB_DBG_DISCONNECTED;
 void usb_debug_init(void)
 {
     dbg_state = USB_DBG_DISCONNECTED;
-    HAL_GPIO_WritePin(LED_GPIO_Port, LED_Pin, GPIO_PIN_RESET);
 }
 
 /* =========================
@@ -20,33 +19,6 @@ void usb_debug_init(void)
 void usb_debug_set_state(usb_dbg_state_t state)
 {
     dbg_state = state;
-
-    switch (state)
-    {
-        case USB_DBG_DISCONNECTED:
-            HAL_GPIO_WritePin(LED_GPIO_Port, LED_Pin, GPIO_PIN_RESET);
-            break;
-
-        case USB_DBG_ATTACHED:
-            /* steady low indication (not toggle spam) */
-            HAL_GPIO_WritePin(LED_GPIO_Port, LED_Pin, GPIO_PIN_RESET);
-            break;
-
-        case USB_DBG_POWERED:
-            HAL_GPIO_WritePin(LED_GPIO_Port, LED_Pin, GPIO_PIN_SET);
-            break;
-
-        case USB_DBG_ENUMERATED:
-            /* short blink, non-blocking style */
-            HAL_GPIO_TogglePin(LED_GPIO_Port, LED_Pin);
-            break;
-
-        case USB_DBG_ERROR:
-            /* IMPORTANT: no blocking loop */
-            /* just force visible state */
-            HAL_GPIO_WritePin(LED_GPIO_Port, LED_Pin, GPIO_PIN_SET);
-            break;
-    }
 }
 
 /* =========================
