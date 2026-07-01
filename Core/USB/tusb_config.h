@@ -13,13 +13,14 @@
 #define CFG_TUD_RNDIS 0
 #define CFG_TUD_ECM_RNDIS 0
 #define CFG_TUSB_DEBUG 0
+#define CFG_TUD_CDC_COUNT 1
 /* =========================
    HOST
 ========================= */
-#define CFG_TUH_ENABLED           1
-#define CFG_TUH_MSC               1
+#define CFG_TUH_ENABLED           0
+#define CFG_TUH_MSC               0
 
 /* =========================
    USB speed
 ========================= */
-//#define CFG_TUSB_RHPORT0_MODE     (OPT_MODE_DEVICE | OPT_MODE_HOST)
+#define CFG_TUSB_RHPORT0_MODE OPT_MODE_DEVICE  // | OPT_MODE_HOST

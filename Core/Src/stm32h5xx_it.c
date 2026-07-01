@@ -2,9 +2,6 @@
 #include "stm32h5xx_it.h"
 #include "tusb.h"
 
-/* HAL USB handle (still needed for clock + low-level glue) */
-extern PCD_HandleTypeDef hpcd_USB_DRD_FS;
-
 /* =========================
    Cortex handlers
 ========================= */
@@ -27,8 +24,6 @@ void SysTick_Handler(void)
 ========================= */
 void USB_DRD_FS_IRQHandler(void)
 {
-    /* DO NOT call HAL_PCD_IRQHandler */
-
     tud_int_handler(0);
 }
 

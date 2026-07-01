@@ -23,8 +23,6 @@ add_compile_definitions(
     CFG_TUSB_RHPORT0_MODE=OPT_MODE_DEVICE
     CFG_TUSB_INIT_MANUAL=1
 
-    TUSB_OPT_DEVICE_ENABLED=1
-    TUSB_OPT_HOST_ENABLED=1
 
     CFG_TUD_NET=0
     CFG_TUD_ENABLED=1
@@ -34,8 +32,16 @@ add_compile_definitions(
 # =========================
 # SOURCES
 # =========================
-file(GLOB_RECURSE APP_SOURCES
-    Core/*.c
+file(GLOB CORE_SOURCES Core/Src/*.c)
+file(GLOB APP_LAYER_SOURCES Core/App/*.c)
+file(GLOB BOARD_SOURCES Core/Board/*.c)
+
+set(APP_SOURCES
+    ${CORE_SOURCES}
+    ${APP_LAYER_SOURCES}
+    ${BOARD_SOURCES}
+    Core/USB/usb_device_tusb.c
+    Core/Startup/startup_stm32h533retx.s
 )
 
 set(TINYUSB_ROOT ${CMAKE_SOURCE_DIR}/Core/USB/tinyusb)
@@ -47,18 +53,30 @@ set(TINYUSB_SOURCES
     ${TINYUSB_SRC}/device/usbd.c
     ${TINYUSB_SRC}/class/cdc/cdc_device.c
 
+    ${TINYUSB_SRC}/portable/st/stm32_fsdev/fsdev_common.c
     ${TINYUSB_SRC}/portable/st/stm32_fsdev/dcd_stm32_fsdev.c
 )
 
-set(USB_PORT_SRC
-    Core/USB/port/dcd_stm32h5.c
-    Core/USB/port/tusb_port.c
+set(HAL_SOURCES
+    Drivers/STM32H5xx_HAL_Driver/Src/stm32h5xx_hal.c
+    Drivers/STM32H5xx_HAL_Driver/Src/stm32h5xx_hal_cortex.c
+    Drivers/STM32H5xx_HAL_Driver/Src/stm32h5xx_hal_dma.c
+    Drivers/STM32H5xx_HAL_Driver/Src/stm32h5xx_hal_dma_ex.c
+    Drivers/STM32H5xx_HAL_Driver/Src/stm32h5xx_hal_exti.c
+    Drivers/STM32H5xx_HAL_Driver/Src/stm32h5xx_hal_flash.c
+    Drivers/STM32H5xx_HAL_Driver/Src/stm32h5xx_hal_flash_ex.c
+    Drivers/STM32H5xx_HAL_Driver/Src/stm32h5xx_hal_gpio.c
+    Drivers/STM32H5xx_HAL_Driver/Src/stm32h5xx_hal_icache.c
+    Drivers/STM32H5xx_HAL_Driver/Src/stm32h5xx_hal_pwr.c
+    Drivers/STM32H5xx_HAL_Driver/Src/stm32h5xx_hal_pwr_ex.c
+    Drivers/STM32H5xx_HAL_Driver/Src/stm32h5xx_hal_rcc.c
+    Drivers/STM32H5xx_HAL_Driver/Src/stm32h5xx_hal_rcc_ex.c
 )
 
 add_executable(${PROJECT_NAME}.elf
     ${APP_SOURCES}
     ${TINYUSB_SOURCES}
-    ${USB_PORT_SRC}
+    ${HAL_SOURCES}
 )
 
 # =========================
@@ -70,7 +88,6 @@ target_include_directories(${PROJECT_NAME}.elf PRIVATE
     Core/Inc
     Core/App
     Core/USB
-    Core/USB/port
     Core/Board
 
     # 🔥 TinyUSB ROOT FIX (důležité!)

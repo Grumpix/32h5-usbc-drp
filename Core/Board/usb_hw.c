@@ -1,57 +1,41 @@
 #include "usb_hw.h"
 #include "main.h"
-#include "stm32h5xx_hal.h"
-#include "stm32h5xx_hal_pcd.h"
-extern PCD_HandleTypeDef hpcd_USB_DRD_FS;
 
-/* ========================= */
 void usb_hw_init(void)
 {
-    /* nothing for now */
+    HAL_PWREx_EnableVddUSB();
+
+    __HAL_RCC_USB_CLK_ENABLE();
+
+    HAL_NVIC_SetPriority(USB_DRD_FS_IRQn, 0, 0);
+    HAL_NVIC_EnableIRQ(USB_DRD_FS_IRQn);
 }
 
-/* =========================
-   SOFT RESET (SAFE FOR TINYUSB)
-========================= */
 void usb_hw_reset_peripheral(void)
 {
-    /* stop peripheral */
-    HAL_PCD_Stop(&hpcd_USB_DRD_FS);
+    __HAL_RCC_USB_FORCE_RESET();
 
-    /* DO NOT full DeInit (breaks TinyUSB state machine) */
-    HAL_PCD_Suspend(&hpcd_USB_DRD_FS);
-
-    /* small settle delay */
-    for (volatile int i = 0; i < 2000; i++)
+    for (volatile uint32_t delay = 0; delay < 64; ++delay)
+    {
         __NOP();
+    }
+
+    __HAL_RCC_USB_RELEASE_RESET();
 }
 
-/* =========================
-   DEVICE MODE
-========================= */
 void usb_hw_enable_device(void)
 {
+    usb_hw_init();
     usb_hw_reset_peripheral();
-
-    /* re-enable peripheral only */
-    HAL_PCD_Init(&hpcd_USB_DRD_FS);
-    HAL_PCD_Start(&hpcd_USB_DRD_FS);
 }
 
-/* =========================
-   HOST MODE (placeholder)
-========================= */
 void usb_hw_enable_host(void)
 {
-    usb_hw_reset_peripheral();
-
-    /* TODO later:
-       - HCD init (UHCI-like or TinyUSB host stack)
-    */
+    /* DRP host path is intentionally inactive in the CDC-only phase. */
 }
 
-/* ========================= */
 void usb_hw_deinit(void)
 {
-    HAL_PCD_Stop(&hpcd_USB_DRD_FS);
+    HAL_NVIC_DisableIRQ(USB_DRD_FS_IRQn);
+    __HAL_RCC_USB_CLK_DISABLE();
 }
