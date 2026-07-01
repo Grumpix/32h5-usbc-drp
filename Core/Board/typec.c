@@ -8,86 +8,124 @@ static typec_state_t current_state = TYPEC_STATE_UNATTACHED;
 static typec_cc_orientation_t current_orientation = TYPEC_ORIENTATION_NONE;
 static uint8_t vbus_enabled = 0U;
 
-static bool typec_sink_is_rp(uint32_t cc_state)
+static bool typec_sink_cc1_is_rp(uint32_t cc_state)
 {
     return (cc_state == LL_UCPD_SNK_CC1_VRP) ||
            (cc_state == LL_UCPD_SNK_CC1_VRP15A) ||
            (cc_state == LL_UCPD_SNK_CC1_VRP30A);
 }
 
-static bool typec_source_is_rd(uint32_t cc_state)
+static bool typec_sink_cc2_is_rp(uint32_t cc_state)
+{
+    return (cc_state == LL_UCPD_SNK_CC2_VRP) ||
+           (cc_state == LL_UCPD_SNK_CC2_VRP15A) ||
+           (cc_state == LL_UCPD_SNK_CC2_VRP30A);
+}
+
+static bool typec_source_cc1_is_rd(uint32_t cc_state)
 {
     return (cc_state == LL_UCPD_SRC_CC1_VRD);
 }
 
-static bool typec_source_is_open(uint32_t cc_state)
+static bool typec_source_cc2_is_rd(uint32_t cc_state)
+{
+    return (cc_state == LL_UCPD_SRC_CC2_VRD);
+}
+
+static bool typec_source_cc1_is_open(uint32_t cc_state)
 {
     return (cc_state == LL_UCPD_SRC_CC1_OPEN);
 }
 
-static bool typec_source_is_ra(uint32_t cc_state)
+static bool typec_source_cc2_is_open(uint32_t cc_state)
+{
+    return (cc_state == LL_UCPD_SRC_CC2_OPEN);
+}
+
+static bool typec_source_cc1_is_ra(uint32_t cc_state)
 {
     return (cc_state == LL_UCPD_SRC_CC1_VRA);
 }
 
-static void typec_update_status(void)
+static bool typec_source_cc2_is_ra(uint32_t cc_state)
+{
+    return (cc_state == LL_UCPD_SRC_CC2_VRA);
+}
+
+static cc_state_t typec_read_cc_state(typec_cc_orientation_t *orientation)
 {
     uint32_t sr = UCPD1->SR;
     uint32_t cc1 = sr & UCPD_SR_TYPEC_VSTATE_CC1;
     uint32_t cc2 = sr & UCPD_SR_TYPEC_VSTATE_CC2;
 
-    current_orientation = TYPEC_ORIENTATION_NONE;
+    *orientation = TYPEC_ORIENTATION_NONE;
 
     if (active_role == TYPEC_ROLE_SOURCE)
     {
-        if (typec_source_is_rd(cc1) && (typec_source_is_open(cc2) || typec_source_is_ra(cc2)))
+        if (typec_source_cc1_is_rd(cc1) &&
+            (typec_source_cc2_is_open(cc2) || typec_source_cc2_is_ra(cc2)))
+        {
+            *orientation = TYPEC_ORIENTATION_CC1;
+            return CC_RD;
+        }
+
+        if (typec_source_cc2_is_rd(cc2) &&
+            (typec_source_cc1_is_open(cc1) || typec_source_cc1_is_ra(cc1)))
+        {
+            *orientation = TYPEC_ORIENTATION_CC2;
+            return CC_RD;
+        }
+
+        return CC_NONE;
+    }
+
+    if (active_role == TYPEC_ROLE_SINK)
+    {
+        if (typec_sink_cc1_is_rp(cc1) && (cc2 == LL_UCPD_SNK_CC2_VOPEN))
+        {
+            *orientation = TYPEC_ORIENTATION_CC1;
+            return CC_RP;
+        }
+
+        if (typec_sink_cc2_is_rp(cc2) && (cc1 == LL_UCPD_SNK_CC1_VOPEN))
+        {
+            *orientation = TYPEC_ORIENTATION_CC2;
+            return CC_RP;
+        }
+
+        return CC_NONE;
+    }
+
+    return CC_NONE;
+}
+
+static void typec_update_status(void)
+{
+    cc_state_t cc_state;
+
+    cc_state = typec_read_cc_state(&current_orientation);
+
+    if (active_role == TYPEC_ROLE_SOURCE)
+    {
+        if (cc_state == CC_RD)
         {
             current_state = TYPEC_STATE_ATTACHED_SOURCE;
-            current_orientation = TYPEC_ORIENTATION_CC1;
             return;
         }
 
-        if (typec_source_is_rd(cc2) && (typec_source_is_open(cc1) || typec_source_is_ra(cc1)))
-        {
-            current_state = TYPEC_STATE_ATTACHED_SOURCE;
-            current_orientation = TYPEC_ORIENTATION_CC2;
-            return;
-        }
-
-        if ((typec_source_is_open(cc1) || typec_source_is_ra(cc1)) &&
-            (typec_source_is_open(cc2) || typec_source_is_ra(cc2)))
-        {
-            current_state = TYPEC_STATE_UNATTACHED;
-            return;
-        }
-
-        current_state = TYPEC_STATE_INVALID;
+        current_state = TYPEC_STATE_UNATTACHED;
         return;
     }
 
     if (active_role == TYPEC_ROLE_SINK)
     {
-        if (typec_sink_is_rp(cc1) && (cc2 == LL_UCPD_SNK_CC2_VOPEN))
+        if (cc_state == CC_RP)
         {
             current_state = TYPEC_STATE_ATTACHED_SINK;
-            current_orientation = TYPEC_ORIENTATION_CC1;
             return;
         }
 
-        if (typec_sink_is_rp(cc2) && (cc1 == LL_UCPD_SNK_CC1_VOPEN))
-        {
-            current_state = TYPEC_STATE_ATTACHED_SINK;
-            current_orientation = TYPEC_ORIENTATION_CC2;
-            return;
-        }
-
-        if ((cc1 == LL_UCPD_SNK_CC1_VOPEN) && (cc2 == LL_UCPD_SNK_CC2_VOPEN))
-        {
-            current_state = TYPEC_STATE_UNATTACHED;
-            return;
-        }
-
-        current_state = TYPEC_STATE_INVALID;
+        current_state = TYPEC_STATE_UNATTACHED;
         return;
     }
 
@@ -176,6 +214,13 @@ typec_state_t typec_get_state(void)
 {
     typec_update_status();
     return current_state;
+}
+
+cc_state_t typec_get_cc_state(void)
+{
+    typec_cc_orientation_t orientation;
+
+    return typec_read_cc_state(&orientation);
 }
 
 typec_role_t typec_get_role(void)

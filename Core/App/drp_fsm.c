@@ -18,6 +18,7 @@ typedef enum
 #define DRP_TOGGLE_MS      75U
 #define DRP_CC_DEBOUNCE_MS 120U
 #define DRP_VBUS_STABLE_MS 100U
+#define DRP_CC_STABLE_SAMPLES 5U
 
 static volatile drp_role_t current_role = DRP_ROLE_UNKNOWN;
 static volatile drp_role_t requested_role = DRP_ROLE_UNKNOWN;
@@ -28,6 +29,9 @@ static typec_state_t stable_typec_state = TYPEC_STATE_UNATTACHED;
 static typec_state_t candidate_typec_state = TYPEC_STATE_UNATTACHED;
 static typec_cc_orientation_t stable_orientation = TYPEC_ORIENTATION_NONE;
 static typec_cc_orientation_t candidate_orientation = TYPEC_ORIENTATION_NONE;
+static cc_state_t stable_cc_state = CC_NONE;
+static cc_state_t candidate_cc_state = CC_NONE;
+static uint8_t candidate_cc_samples = 0U;
 static typec_role_t toggle_role = TYPEC_ROLE_SINK;
 static drp_role_t latched_role = DRP_ROLE_UNKNOWN;
 static uint8_t usb_mode_requested = 0U;
@@ -92,6 +96,9 @@ static void drp_reset_debounce(typec_state_t state, typec_cc_orientation_t orien
     candidate_typec_state = state;
     stable_orientation = orientation;
     candidate_orientation = orientation;
+    stable_cc_state = CC_NONE;
+    candidate_cc_state = CC_NONE;
+    candidate_cc_samples = 0U;
     candidate_since_ms = now;
 }
 
@@ -121,14 +128,14 @@ static void drp_set_unattached(uint32_t now)
 
 static bool drp_candidate_matches_toggle(void)
 {
-    return ((toggle_role == TYPEC_ROLE_SOURCE) && (candidate_typec_state == TYPEC_STATE_ATTACHED_SOURCE)) ||
-           ((toggle_role == TYPEC_ROLE_SINK) && (candidate_typec_state == TYPEC_STATE_ATTACHED_SINK));
+    return ((toggle_role == TYPEC_ROLE_SOURCE) && (candidate_cc_state == CC_RD)) ||
+        ((toggle_role == TYPEC_ROLE_SINK) && (candidate_cc_state == CC_RP));
 }
 
 static bool drp_stable_matches_latched(void)
 {
-    return ((latched_role == DRP_ROLE_HOST) && (stable_typec_state == TYPEC_STATE_ATTACHED_SOURCE)) ||
-           ((latched_role == DRP_ROLE_DEVICE) && (stable_typec_state == TYPEC_STATE_ATTACHED_SINK));
+    return ((latched_role == DRP_ROLE_HOST) && (stable_cc_state == CC_RD)) ||
+        ((latched_role == DRP_ROLE_DEVICE) && (stable_cc_state == CC_RP));
 }
 
 static void drp_begin_attach_detected(uint32_t now)
@@ -203,22 +210,40 @@ static void drp_update_typec_sample(uint32_t now)
 {
     typec_state_t sampled_state = typec_get_state();
     typec_cc_orientation_t sampled_orientation = typec_get_cc_orientation();
+    cc_state_t sampled_cc_state = typec_get_cc_state();
 
-    if ((sampled_state != candidate_typec_state) || (sampled_orientation != candidate_orientation))
+    if ((sampled_state != candidate_typec_state) ||
+        (sampled_orientation != candidate_orientation) ||
+        (sampled_cc_state != candidate_cc_state))
     {
         candidate_typec_state = sampled_state;
         candidate_orientation = sampled_orientation;
+        candidate_cc_state = sampled_cc_state;
+        candidate_cc_samples = 1U;
         candidate_since_ms = now;
         return;
     }
 
+    if (candidate_cc_samples < 0xFFU)
+    {
+        ++candidate_cc_samples;
+    }
+
     if ((sampled_state != stable_typec_state) || (sampled_orientation != stable_orientation))
     {
-        if ((now - candidate_since_ms) >= DRP_CC_DEBOUNCE_MS)
+        if (((now - candidate_since_ms) >= DRP_CC_DEBOUNCE_MS) &&
+            (candidate_cc_samples >= DRP_CC_STABLE_SAMPLES))
         {
             stable_typec_state = sampled_state;
             stable_orientation = sampled_orientation;
+            stable_cc_state = sampled_cc_state;
         }
+    }
+    else if ((sampled_cc_state != stable_cc_state) &&
+             ((now - candidate_since_ms) >= DRP_CC_DEBOUNCE_MS) &&
+             (candidate_cc_samples >= DRP_CC_STABLE_SAMPLES))
+    {
+        stable_cc_state = sampled_cc_state;
     }
 }
 

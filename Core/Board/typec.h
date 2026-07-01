@@ -24,9 +24,17 @@ typedef enum
     TYPEC_ORIENTATION_CC2
 } typec_cc_orientation_t;
 
+typedef enum
+{
+    CC_NONE = 0,
+    CC_RD,
+    CC_RP
+} cc_state_t;
+
 void typec_init(void);
 void typec_set_role(typec_role_t role);
 typec_state_t typec_get_state(void);
+cc_state_t typec_get_cc_state(void);
 typec_role_t typec_get_role(void);
 typec_cc_orientation_t typec_get_cc_orientation(void);
 void typec_vbus_enable(bool enabled);
