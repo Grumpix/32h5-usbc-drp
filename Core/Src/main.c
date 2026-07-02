@@ -1,6 +1,7 @@
 #include "main.h"
 #include "usb_manager.h"
 #include "drp_fsm.h"
+#include "usb_mode_button.h"
 
 void SystemClock_Config(void);
 static void MPU_Config(void);
@@ -19,17 +20,30 @@ int main(void)
 
     HAL_Delay(5);
 
+    
     drp_init();
+    
+    usb_mode_button_init();
 
     usb_manager_init();
-    usb_manager_start_device();
+    (void) usb_manager_start_device();
 
     while (1)
     {
+        if (usb_mode_button_pressed())
+        {
+            if (usb_manager_toggle_mode())
+            {
+                drp_request_role((usb_manager_get_mode() == USB_MODE_HOST) ?
+                                 DRP_ROLE_HOST : DRP_ROLE_DEVICE);
+            }
+        }
+
         drp_task();
         usb_manager_task();
     }
 }
+
 
 void SystemClock_Config(void)
 {

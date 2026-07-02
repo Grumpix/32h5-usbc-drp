@@ -57,6 +57,17 @@ static const char *const string_desc_arr[] =
 
 static uint16_t desc_string[32];
 
+static void cdc_write_text(char const *text)
+{
+    if (!tud_cdc_connected())
+    {
+        return;
+    }
+
+    tud_cdc_write_str(text);
+    tud_cdc_write_flush();
+}
+
 uint8_t const *tud_descriptor_device_cb(void)
 {
     return (uint8_t const *) &desc_device;
@@ -130,6 +141,17 @@ void tud_resume_cb(void)
 {
 }
 
+void tud_cdc_line_state_cb(uint8_t itf, bool dtr, bool rts)
+{
+    (void) itf;
+    (void) rts;
+
+    if (dtr)
+    {
+        cdc_write_text("CDC echo ready\r\n");
+    }
+}
+
 /* =========================
    CDC RX HANDLER
 ========================= */
@@ -139,9 +161,18 @@ void tud_cdc_rx_cb(uint8_t itf)
     (void) itf;
 
     uint8_t buf[64];
-    uint32_t count = tud_cdc_read(buf, sizeof(buf));
 
-    /* echo example */
-    tud_cdc_write(buf, count);
+    while (tud_cdc_available() != 0)
+    {
+        uint32_t count = tud_cdc_read(buf, sizeof(buf));
+
+        if (count == 0)
+        {
+            break;
+        }
+
+        tud_cdc_write(buf, count);
+    }
+
     tud_cdc_write_flush();
 }

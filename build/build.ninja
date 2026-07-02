@@ -12,7 +12,7 @@
 
 # =============================================================================
 # Project: stm32h533
-# Configurations: 
+# Configurations: Debug
 # =============================================================================
 
 #############################################
@@ -20,6 +20,11 @@
 
 ninja_required_version = 1.5
 
+
+#############################################
+# Set configuration variable for custom commands.
+
+CONFIGURATION = Debug
 # =============================================================================
 # Include auxiliary files.
 
@@ -44,10 +49,11 @@ cmake_ninja_workdir = C$:/Users/novak/Desktop/30626/h533-300626/build/
 
 build cmake_object_order_depends_target_stm32h533.elf: phony || .
 
-build CMakeFiles/stm32h533.elf.dir/Core/Src/main.c.obj: C_COMPILER__stm32h533.2eelf_unscanned_ C$:/Users/novak/Desktop/30626/h533-300626/Core/Src/main.c || cmake_object_order_depends_target_stm32h533.elf
-  DEFINES = -DCFG_TUD_ENABLED=1 -DCFG_TUD_NET=0 -DCFG_TUH_ENABLED=0 -DCFG_TUSB_INIT_MANUAL=1 -DCFG_TUSB_MCU=OPT_MCU_STM32H5 -DCFG_TUSB_OS=OPT_OS_NONE -DCFG_TUSB_RHPORT0_MODE=OPT_MODE_DEVICE -DSTM32H533xx -DUSE_FULL_LL_DRIVER -DUSE_HAL_DRIVER
+build CMakeFiles/stm32h533.elf.dir/Core/Src/main.c.obj: C_COMPILER__stm32h533.2eelf_unscanned_Debug C$:/Users/novak/Desktop/30626/h533-300626/Core/Src/main.c || cmake_object_order_depends_target_stm32h533.elf
+  CONFIG = Debug
+  DEFINES = -DCFG_TUD_ENABLED=1 -DCFG_TUD_NET=0 -DCFG_TUH_ENABLED=1 -DCFG_TUSB_INIT_MANUAL=1 -DCFG_TUSB_MCU=OPT_MCU_STM32H5 -DCFG_TUSB_OS=OPT_OS_NONE -DSTM32H533xx -DUSE_FULL_LL_DRIVER -DUSE_HAL_DRIVER
   DEP_FILE = CMakeFiles\stm32h533.elf.dir\Core\Src\main.c.obj.d
-  FLAGS = -std=gnu11 -mcpu=cortex-m33 -mthumb -mfpu=fpv5-sp-d16 -mfloat-abi=hard -Wall -Wextra -ffunction-sections -fdata-sections -O0 -g3
+  FLAGS = -g -std=gnu11 -mcpu=cortex-m33 -mthumb -mfpu=fpv5-sp-d16 -mfloat-abi=hard -Wall -Wextra -ffunction-sections -fdata-sections -O0 -g3
   INCLUDES = -IC:/Users/novak/Desktop/30626/h533-300626/Core/Inc -IC:/Users/novak/Desktop/30626/h533-300626/Core/App -IC:/Users/novak/Desktop/30626/h533-300626/Core/USB -IC:/Users/novak/Desktop/30626/h533-300626/Core/Board -IC:/Users/novak/Desktop/30626/h533-300626/Core/USB/tinyusb/src -IC:/Users/novak/Desktop/30626/h533-300626/Drivers/STM32H5xx_HAL_Driver/Inc -IC:/Users/novak/Desktop/30626/h533-300626/Drivers/STM32H5xx_HAL_Driver/Inc/Legacy -IC:/Users/novak/Desktop/30626/h533-300626/Drivers/CMSIS/Device/ST/STM32H5xx/Include -IC:/Users/novak/Desktop/30626/h533-300626/Drivers/CMSIS/Include
   OBJECT_DIR = CMakeFiles\stm32h533.elf.dir
   OBJECT_FILE_DIR = CMakeFiles\stm32h533.elf.dir\Core\Src
@@ -55,10 +61,11 @@ build CMakeFiles/stm32h533.elf.dir/Core/Src/main.c.obj: C_COMPILER__stm32h533.2e
   TARGET_PDB = stm32h533.elf.pdb
   TARGET_SUPPORT_DIR = CMakeFiles\stm32h533.elf.dir
 
-build CMakeFiles/stm32h533.elf.dir/Core/Src/stm32h5xx_hal_msp.c.obj: C_COMPILER__stm32h533.2eelf_unscanned_ C$:/Users/novak/Desktop/30626/h533-300626/Core/Src/stm32h5xx_hal_msp.c || cmake_object_order_depends_target_stm32h533.elf
-  DEFINES = -DCFG_TUD_ENABLED=1 -DCFG_TUD_NET=0 -DCFG_TUH_ENABLED=0 -DCFG_TUSB_INIT_MANUAL=1 -DCFG_TUSB_MCU=OPT_MCU_STM32H5 -DCFG_TUSB_OS=OPT_OS_NONE -DCFG_TUSB_RHPORT0_MODE=OPT_MODE_DEVICE -DSTM32H533xx -DUSE_FULL_LL_DRIVER -DUSE_HAL_DRIVER
+build CMakeFiles/stm32h533.elf.dir/Core/Src/stm32h5xx_hal_msp.c.obj: C_COMPILER__stm32h533.2eelf_unscanned_Debug C$:/Users/novak/Desktop/30626/h533-300626/Core/Src/stm32h5xx_hal_msp.c || cmake_object_order_depends_target_stm32h533.elf
+  CONFIG = Debug
+  DEFINES = -DCFG_TUD_ENABLED=1 -DCFG_TUD_NET=0 -DCFG_TUH_ENABLED=1 -DCFG_TUSB_INIT_MANUAL=1 -DCFG_TUSB_MCU=OPT_MCU_STM32H5 -DCFG_TUSB_OS=OPT_OS_NONE -DSTM32H533xx -DUSE_FULL_LL_DRIVER -DUSE_HAL_DRIVER
   DEP_FILE = CMakeFiles\stm32h533.elf.dir\Core\Src\stm32h5xx_hal_msp.c.obj.d
-  FLAGS = -std=gnu11 -mcpu=cortex-m33 -mthumb -mfpu=fpv5-sp-d16 -mfloat-abi=hard -Wall -Wextra -ffunction-sections -fdata-sections -O0 -g3
+  FLAGS = -g -std=gnu11 -mcpu=cortex-m33 -mthumb -mfpu=fpv5-sp-d16 -mfloat-abi=hard -Wall -Wextra -ffunction-sections -fdata-sections -O0 -g3
   INCLUDES = -IC:/Users/novak/Desktop/30626/h533-300626/Core/Inc -IC:/Users/novak/Desktop/30626/h533-300626/Core/App -IC:/Users/novak/Desktop/30626/h533-300626/Core/USB -IC:/Users/novak/Desktop/30626/h533-300626/Core/Board -IC:/Users/novak/Desktop/30626/h533-300626/Core/USB/tinyusb/src -IC:/Users/novak/Desktop/30626/h533-300626/Drivers/STM32H5xx_HAL_Driver/Inc -IC:/Users/novak/Desktop/30626/h533-300626/Drivers/STM32H5xx_HAL_Driver/Inc/Legacy -IC:/Users/novak/Desktop/30626/h533-300626/Drivers/CMSIS/Device/ST/STM32H5xx/Include -IC:/Users/novak/Desktop/30626/h533-300626/Drivers/CMSIS/Include
   OBJECT_DIR = CMakeFiles\stm32h533.elf.dir
   OBJECT_FILE_DIR = CMakeFiles\stm32h533.elf.dir\Core\Src
@@ -66,10 +73,11 @@ build CMakeFiles/stm32h533.elf.dir/Core/Src/stm32h5xx_hal_msp.c.obj: C_COMPILER_
   TARGET_PDB = stm32h533.elf.pdb
   TARGET_SUPPORT_DIR = CMakeFiles\stm32h533.elf.dir
 
-build CMakeFiles/stm32h533.elf.dir/Core/Src/stm32h5xx_it.c.obj: C_COMPILER__stm32h533.2eelf_unscanned_ C$:/Users/novak/Desktop/30626/h533-300626/Core/Src/stm32h5xx_it.c || cmake_object_order_depends_target_stm32h533.elf
-  DEFINES = -DCFG_TUD_ENABLED=1 -DCFG_TUD_NET=0 -DCFG_TUH_ENABLED=0 -DCFG_TUSB_INIT_MANUAL=1 -DCFG_TUSB_MCU=OPT_MCU_STM32H5 -DCFG_TUSB_OS=OPT_OS_NONE -DCFG_TUSB_RHPORT0_MODE=OPT_MODE_DEVICE -DSTM32H533xx -DUSE_FULL_LL_DRIVER -DUSE_HAL_DRIVER
+build CMakeFiles/stm32h533.elf.dir/Core/Src/stm32h5xx_it.c.obj: C_COMPILER__stm32h533.2eelf_unscanned_Debug C$:/Users/novak/Desktop/30626/h533-300626/Core/Src/stm32h5xx_it.c || cmake_object_order_depends_target_stm32h533.elf
+  CONFIG = Debug
+  DEFINES = -DCFG_TUD_ENABLED=1 -DCFG_TUD_NET=0 -DCFG_TUH_ENABLED=1 -DCFG_TUSB_INIT_MANUAL=1 -DCFG_TUSB_MCU=OPT_MCU_STM32H5 -DCFG_TUSB_OS=OPT_OS_NONE -DSTM32H533xx -DUSE_FULL_LL_DRIVER -DUSE_HAL_DRIVER
   DEP_FILE = CMakeFiles\stm32h533.elf.dir\Core\Src\stm32h5xx_it.c.obj.d
-  FLAGS = -std=gnu11 -mcpu=cortex-m33 -mthumb -mfpu=fpv5-sp-d16 -mfloat-abi=hard -Wall -Wextra -ffunction-sections -fdata-sections -O0 -g3
+  FLAGS = -g -std=gnu11 -mcpu=cortex-m33 -mthumb -mfpu=fpv5-sp-d16 -mfloat-abi=hard -Wall -Wextra -ffunction-sections -fdata-sections -O0 -g3
   INCLUDES = -IC:/Users/novak/Desktop/30626/h533-300626/Core/Inc -IC:/Users/novak/Desktop/30626/h533-300626/Core/App -IC:/Users/novak/Desktop/30626/h533-300626/Core/USB -IC:/Users/novak/Desktop/30626/h533-300626/Core/Board -IC:/Users/novak/Desktop/30626/h533-300626/Core/USB/tinyusb/src -IC:/Users/novak/Desktop/30626/h533-300626/Drivers/STM32H5xx_HAL_Driver/Inc -IC:/Users/novak/Desktop/30626/h533-300626/Drivers/STM32H5xx_HAL_Driver/Inc/Legacy -IC:/Users/novak/Desktop/30626/h533-300626/Drivers/CMSIS/Device/ST/STM32H5xx/Include -IC:/Users/novak/Desktop/30626/h533-300626/Drivers/CMSIS/Include
   OBJECT_DIR = CMakeFiles\stm32h533.elf.dir
   OBJECT_FILE_DIR = CMakeFiles\stm32h533.elf.dir\Core\Src
@@ -77,10 +85,11 @@ build CMakeFiles/stm32h533.elf.dir/Core/Src/stm32h5xx_it.c.obj: C_COMPILER__stm3
   TARGET_PDB = stm32h533.elf.pdb
   TARGET_SUPPORT_DIR = CMakeFiles\stm32h533.elf.dir
 
-build CMakeFiles/stm32h533.elf.dir/Core/Src/syscalls.c.obj: C_COMPILER__stm32h533.2eelf_unscanned_ C$:/Users/novak/Desktop/30626/h533-300626/Core/Src/syscalls.c || cmake_object_order_depends_target_stm32h533.elf
-  DEFINES = -DCFG_TUD_ENABLED=1 -DCFG_TUD_NET=0 -DCFG_TUH_ENABLED=0 -DCFG_TUSB_INIT_MANUAL=1 -DCFG_TUSB_MCU=OPT_MCU_STM32H5 -DCFG_TUSB_OS=OPT_OS_NONE -DCFG_TUSB_RHPORT0_MODE=OPT_MODE_DEVICE -DSTM32H533xx -DUSE_FULL_LL_DRIVER -DUSE_HAL_DRIVER
+build CMakeFiles/stm32h533.elf.dir/Core/Src/syscalls.c.obj: C_COMPILER__stm32h533.2eelf_unscanned_Debug C$:/Users/novak/Desktop/30626/h533-300626/Core/Src/syscalls.c || cmake_object_order_depends_target_stm32h533.elf
+  CONFIG = Debug
+  DEFINES = -DCFG_TUD_ENABLED=1 -DCFG_TUD_NET=0 -DCFG_TUH_ENABLED=1 -DCFG_TUSB_INIT_MANUAL=1 -DCFG_TUSB_MCU=OPT_MCU_STM32H5 -DCFG_TUSB_OS=OPT_OS_NONE -DSTM32H533xx -DUSE_FULL_LL_DRIVER -DUSE_HAL_DRIVER
   DEP_FILE = CMakeFiles\stm32h533.elf.dir\Core\Src\syscalls.c.obj.d
-  FLAGS = -std=gnu11 -mcpu=cortex-m33 -mthumb -mfpu=fpv5-sp-d16 -mfloat-abi=hard -Wall -Wextra -ffunction-sections -fdata-sections -O0 -g3
+  FLAGS = -g -std=gnu11 -mcpu=cortex-m33 -mthumb -mfpu=fpv5-sp-d16 -mfloat-abi=hard -Wall -Wextra -ffunction-sections -fdata-sections -O0 -g3
   INCLUDES = -IC:/Users/novak/Desktop/30626/h533-300626/Core/Inc -IC:/Users/novak/Desktop/30626/h533-300626/Core/App -IC:/Users/novak/Desktop/30626/h533-300626/Core/USB -IC:/Users/novak/Desktop/30626/h533-300626/Core/Board -IC:/Users/novak/Desktop/30626/h533-300626/Core/USB/tinyusb/src -IC:/Users/novak/Desktop/30626/h533-300626/Drivers/STM32H5xx_HAL_Driver/Inc -IC:/Users/novak/Desktop/30626/h533-300626/Drivers/STM32H5xx_HAL_Driver/Inc/Legacy -IC:/Users/novak/Desktop/30626/h533-300626/Drivers/CMSIS/Device/ST/STM32H5xx/Include -IC:/Users/novak/Desktop/30626/h533-300626/Drivers/CMSIS/Include
   OBJECT_DIR = CMakeFiles\stm32h533.elf.dir
   OBJECT_FILE_DIR = CMakeFiles\stm32h533.elf.dir\Core\Src
@@ -88,10 +97,11 @@ build CMakeFiles/stm32h533.elf.dir/Core/Src/syscalls.c.obj: C_COMPILER__stm32h53
   TARGET_PDB = stm32h533.elf.pdb
   TARGET_SUPPORT_DIR = CMakeFiles\stm32h533.elf.dir
 
-build CMakeFiles/stm32h533.elf.dir/Core/Src/sysmem.c.obj: C_COMPILER__stm32h533.2eelf_unscanned_ C$:/Users/novak/Desktop/30626/h533-300626/Core/Src/sysmem.c || cmake_object_order_depends_target_stm32h533.elf
-  DEFINES = -DCFG_TUD_ENABLED=1 -DCFG_TUD_NET=0 -DCFG_TUH_ENABLED=0 -DCFG_TUSB_INIT_MANUAL=1 -DCFG_TUSB_MCU=OPT_MCU_STM32H5 -DCFG_TUSB_OS=OPT_OS_NONE -DCFG_TUSB_RHPORT0_MODE=OPT_MODE_DEVICE -DSTM32H533xx -DUSE_FULL_LL_DRIVER -DUSE_HAL_DRIVER
+build CMakeFiles/stm32h533.elf.dir/Core/Src/sysmem.c.obj: C_COMPILER__stm32h533.2eelf_unscanned_Debug C$:/Users/novak/Desktop/30626/h533-300626/Core/Src/sysmem.c || cmake_object_order_depends_target_stm32h533.elf
+  CONFIG = Debug
+  DEFINES = -DCFG_TUD_ENABLED=1 -DCFG_TUD_NET=0 -DCFG_TUH_ENABLED=1 -DCFG_TUSB_INIT_MANUAL=1 -DCFG_TUSB_MCU=OPT_MCU_STM32H5 -DCFG_TUSB_OS=OPT_OS_NONE -DSTM32H533xx -DUSE_FULL_LL_DRIVER -DUSE_HAL_DRIVER
   DEP_FILE = CMakeFiles\stm32h533.elf.dir\Core\Src\sysmem.c.obj.d
-  FLAGS = -std=gnu11 -mcpu=cortex-m33 -mthumb -mfpu=fpv5-sp-d16 -mfloat-abi=hard -Wall -Wextra -ffunction-sections -fdata-sections -O0 -g3
+  FLAGS = -g -std=gnu11 -mcpu=cortex-m33 -mthumb -mfpu=fpv5-sp-d16 -mfloat-abi=hard -Wall -Wextra -ffunction-sections -fdata-sections -O0 -g3
   INCLUDES = -IC:/Users/novak/Desktop/30626/h533-300626/Core/Inc -IC:/Users/novak/Desktop/30626/h533-300626/Core/App -IC:/Users/novak/Desktop/30626/h533-300626/Core/USB -IC:/Users/novak/Desktop/30626/h533-300626/Core/Board -IC:/Users/novak/Desktop/30626/h533-300626/Core/USB/tinyusb/src -IC:/Users/novak/Desktop/30626/h533-300626/Drivers/STM32H5xx_HAL_Driver/Inc -IC:/Users/novak/Desktop/30626/h533-300626/Drivers/STM32H5xx_HAL_Driver/Inc/Legacy -IC:/Users/novak/Desktop/30626/h533-300626/Drivers/CMSIS/Device/ST/STM32H5xx/Include -IC:/Users/novak/Desktop/30626/h533-300626/Drivers/CMSIS/Include
   OBJECT_DIR = CMakeFiles\stm32h533.elf.dir
   OBJECT_FILE_DIR = CMakeFiles\stm32h533.elf.dir\Core\Src
@@ -99,10 +109,11 @@ build CMakeFiles/stm32h533.elf.dir/Core/Src/sysmem.c.obj: C_COMPILER__stm32h533.
   TARGET_PDB = stm32h533.elf.pdb
   TARGET_SUPPORT_DIR = CMakeFiles\stm32h533.elf.dir
 
-build CMakeFiles/stm32h533.elf.dir/Core/Src/system_stm32h5xx.c.obj: C_COMPILER__stm32h533.2eelf_unscanned_ C$:/Users/novak/Desktop/30626/h533-300626/Core/Src/system_stm32h5xx.c || cmake_object_order_depends_target_stm32h533.elf
-  DEFINES = -DCFG_TUD_ENABLED=1 -DCFG_TUD_NET=0 -DCFG_TUH_ENABLED=0 -DCFG_TUSB_INIT_MANUAL=1 -DCFG_TUSB_MCU=OPT_MCU_STM32H5 -DCFG_TUSB_OS=OPT_OS_NONE -DCFG_TUSB_RHPORT0_MODE=OPT_MODE_DEVICE -DSTM32H533xx -DUSE_FULL_LL_DRIVER -DUSE_HAL_DRIVER
+build CMakeFiles/stm32h533.elf.dir/Core/Src/system_stm32h5xx.c.obj: C_COMPILER__stm32h533.2eelf_unscanned_Debug C$:/Users/novak/Desktop/30626/h533-300626/Core/Src/system_stm32h5xx.c || cmake_object_order_depends_target_stm32h533.elf
+  CONFIG = Debug
+  DEFINES = -DCFG_TUD_ENABLED=1 -DCFG_TUD_NET=0 -DCFG_TUH_ENABLED=1 -DCFG_TUSB_INIT_MANUAL=1 -DCFG_TUSB_MCU=OPT_MCU_STM32H5 -DCFG_TUSB_OS=OPT_OS_NONE -DSTM32H533xx -DUSE_FULL_LL_DRIVER -DUSE_HAL_DRIVER
   DEP_FILE = CMakeFiles\stm32h533.elf.dir\Core\Src\system_stm32h5xx.c.obj.d
-  FLAGS = -std=gnu11 -mcpu=cortex-m33 -mthumb -mfpu=fpv5-sp-d16 -mfloat-abi=hard -Wall -Wextra -ffunction-sections -fdata-sections -O0 -g3
+  FLAGS = -g -std=gnu11 -mcpu=cortex-m33 -mthumb -mfpu=fpv5-sp-d16 -mfloat-abi=hard -Wall -Wextra -ffunction-sections -fdata-sections -O0 -g3
   INCLUDES = -IC:/Users/novak/Desktop/30626/h533-300626/Core/Inc -IC:/Users/novak/Desktop/30626/h533-300626/Core/App -IC:/Users/novak/Desktop/30626/h533-300626/Core/USB -IC:/Users/novak/Desktop/30626/h533-300626/Core/Board -IC:/Users/novak/Desktop/30626/h533-300626/Core/USB/tinyusb/src -IC:/Users/novak/Desktop/30626/h533-300626/Drivers/STM32H5xx_HAL_Driver/Inc -IC:/Users/novak/Desktop/30626/h533-300626/Drivers/STM32H5xx_HAL_Driver/Inc/Legacy -IC:/Users/novak/Desktop/30626/h533-300626/Drivers/CMSIS/Device/ST/STM32H5xx/Include -IC:/Users/novak/Desktop/30626/h533-300626/Drivers/CMSIS/Include
   OBJECT_DIR = CMakeFiles\stm32h533.elf.dir
   OBJECT_FILE_DIR = CMakeFiles\stm32h533.elf.dir\Core\Src
@@ -110,10 +121,11 @@ build CMakeFiles/stm32h533.elf.dir/Core/Src/system_stm32h5xx.c.obj: C_COMPILER__
   TARGET_PDB = stm32h533.elf.pdb
   TARGET_SUPPORT_DIR = CMakeFiles\stm32h533.elf.dir
 
-build CMakeFiles/stm32h533.elf.dir/Core/App/drp_fsm.c.obj: C_COMPILER__stm32h533.2eelf_unscanned_ C$:/Users/novak/Desktop/30626/h533-300626/Core/App/drp_fsm.c || cmake_object_order_depends_target_stm32h533.elf
-  DEFINES = -DCFG_TUD_ENABLED=1 -DCFG_TUD_NET=0 -DCFG_TUH_ENABLED=0 -DCFG_TUSB_INIT_MANUAL=1 -DCFG_TUSB_MCU=OPT_MCU_STM32H5 -DCFG_TUSB_OS=OPT_OS_NONE -DCFG_TUSB_RHPORT0_MODE=OPT_MODE_DEVICE -DSTM32H533xx -DUSE_FULL_LL_DRIVER -DUSE_HAL_DRIVER
+build CMakeFiles/stm32h533.elf.dir/Core/App/drp_fsm.c.obj: C_COMPILER__stm32h533.2eelf_unscanned_Debug C$:/Users/novak/Desktop/30626/h533-300626/Core/App/drp_fsm.c || cmake_object_order_depends_target_stm32h533.elf
+  CONFIG = Debug
+  DEFINES = -DCFG_TUD_ENABLED=1 -DCFG_TUD_NET=0 -DCFG_TUH_ENABLED=1 -DCFG_TUSB_INIT_MANUAL=1 -DCFG_TUSB_MCU=OPT_MCU_STM32H5 -DCFG_TUSB_OS=OPT_OS_NONE -DSTM32H533xx -DUSE_FULL_LL_DRIVER -DUSE_HAL_DRIVER
   DEP_FILE = CMakeFiles\stm32h533.elf.dir\Core\App\drp_fsm.c.obj.d
-  FLAGS = -std=gnu11 -mcpu=cortex-m33 -mthumb -mfpu=fpv5-sp-d16 -mfloat-abi=hard -Wall -Wextra -ffunction-sections -fdata-sections -O0 -g3
+  FLAGS = -g -std=gnu11 -mcpu=cortex-m33 -mthumb -mfpu=fpv5-sp-d16 -mfloat-abi=hard -Wall -Wextra -ffunction-sections -fdata-sections -O0 -g3
   INCLUDES = -IC:/Users/novak/Desktop/30626/h533-300626/Core/Inc -IC:/Users/novak/Desktop/30626/h533-300626/Core/App -IC:/Users/novak/Desktop/30626/h533-300626/Core/USB -IC:/Users/novak/Desktop/30626/h533-300626/Core/Board -IC:/Users/novak/Desktop/30626/h533-300626/Core/USB/tinyusb/src -IC:/Users/novak/Desktop/30626/h533-300626/Drivers/STM32H5xx_HAL_Driver/Inc -IC:/Users/novak/Desktop/30626/h533-300626/Drivers/STM32H5xx_HAL_Driver/Inc/Legacy -IC:/Users/novak/Desktop/30626/h533-300626/Drivers/CMSIS/Device/ST/STM32H5xx/Include -IC:/Users/novak/Desktop/30626/h533-300626/Drivers/CMSIS/Include
   OBJECT_DIR = CMakeFiles\stm32h533.elf.dir
   OBJECT_FILE_DIR = CMakeFiles\stm32h533.elf.dir\Core\App
@@ -121,10 +133,23 @@ build CMakeFiles/stm32h533.elf.dir/Core/App/drp_fsm.c.obj: C_COMPILER__stm32h533
   TARGET_PDB = stm32h533.elf.pdb
   TARGET_SUPPORT_DIR = CMakeFiles\stm32h533.elf.dir
 
-build CMakeFiles/stm32h533.elf.dir/Core/App/usb_debug.c.obj: C_COMPILER__stm32h533.2eelf_unscanned_ C$:/Users/novak/Desktop/30626/h533-300626/Core/App/usb_debug.c || cmake_object_order_depends_target_stm32h533.elf
-  DEFINES = -DCFG_TUD_ENABLED=1 -DCFG_TUD_NET=0 -DCFG_TUH_ENABLED=0 -DCFG_TUSB_INIT_MANUAL=1 -DCFG_TUSB_MCU=OPT_MCU_STM32H5 -DCFG_TUSB_OS=OPT_OS_NONE -DCFG_TUSB_RHPORT0_MODE=OPT_MODE_DEVICE -DSTM32H533xx -DUSE_FULL_LL_DRIVER -DUSE_HAL_DRIVER
+build CMakeFiles/stm32h533.elf.dir/Core/App/ucpd_diag.c.obj: C_COMPILER__stm32h533.2eelf_unscanned_Debug C$:/Users/novak/Desktop/30626/h533-300626/Core/App/ucpd_diag.c || cmake_object_order_depends_target_stm32h533.elf
+  CONFIG = Debug
+  DEFINES = -DCFG_TUD_ENABLED=1 -DCFG_TUD_NET=0 -DCFG_TUH_ENABLED=1 -DCFG_TUSB_INIT_MANUAL=1 -DCFG_TUSB_MCU=OPT_MCU_STM32H5 -DCFG_TUSB_OS=OPT_OS_NONE -DSTM32H533xx -DUSE_FULL_LL_DRIVER -DUSE_HAL_DRIVER
+  DEP_FILE = CMakeFiles\stm32h533.elf.dir\Core\App\ucpd_diag.c.obj.d
+  FLAGS = -g -std=gnu11 -mcpu=cortex-m33 -mthumb -mfpu=fpv5-sp-d16 -mfloat-abi=hard -Wall -Wextra -ffunction-sections -fdata-sections -O0 -g3
+  INCLUDES = -IC:/Users/novak/Desktop/30626/h533-300626/Core/Inc -IC:/Users/novak/Desktop/30626/h533-300626/Core/App -IC:/Users/novak/Desktop/30626/h533-300626/Core/USB -IC:/Users/novak/Desktop/30626/h533-300626/Core/Board -IC:/Users/novak/Desktop/30626/h533-300626/Core/USB/tinyusb/src -IC:/Users/novak/Desktop/30626/h533-300626/Drivers/STM32H5xx_HAL_Driver/Inc -IC:/Users/novak/Desktop/30626/h533-300626/Drivers/STM32H5xx_HAL_Driver/Inc/Legacy -IC:/Users/novak/Desktop/30626/h533-300626/Drivers/CMSIS/Device/ST/STM32H5xx/Include -IC:/Users/novak/Desktop/30626/h533-300626/Drivers/CMSIS/Include
+  OBJECT_DIR = CMakeFiles\stm32h533.elf.dir
+  OBJECT_FILE_DIR = CMakeFiles\stm32h533.elf.dir\Core\App
+  TARGET_COMPILE_PDB = CMakeFiles\stm32h533.elf.dir\
+  TARGET_PDB = stm32h533.elf.pdb
+  TARGET_SUPPORT_DIR = CMakeFiles\stm32h533.elf.dir
+
+build CMakeFiles/stm32h533.elf.dir/Core/App/usb_debug.c.obj: C_COMPILER__stm32h533.2eelf_unscanned_Debug C$:/Users/novak/Desktop/30626/h533-300626/Core/App/usb_debug.c || cmake_object_order_depends_target_stm32h533.elf
+  CONFIG = Debug
+  DEFINES = -DCFG_TUD_ENABLED=1 -DCFG_TUD_NET=0 -DCFG_TUH_ENABLED=1 -DCFG_TUSB_INIT_MANUAL=1 -DCFG_TUSB_MCU=OPT_MCU_STM32H5 -DCFG_TUSB_OS=OPT_OS_NONE -DSTM32H533xx -DUSE_FULL_LL_DRIVER -DUSE_HAL_DRIVER
   DEP_FILE = CMakeFiles\stm32h533.elf.dir\Core\App\usb_debug.c.obj.d
-  FLAGS = -std=gnu11 -mcpu=cortex-m33 -mthumb -mfpu=fpv5-sp-d16 -mfloat-abi=hard -Wall -Wextra -ffunction-sections -fdata-sections -O0 -g3
+  FLAGS = -g -std=gnu11 -mcpu=cortex-m33 -mthumb -mfpu=fpv5-sp-d16 -mfloat-abi=hard -Wall -Wextra -ffunction-sections -fdata-sections -O0 -g3
   INCLUDES = -IC:/Users/novak/Desktop/30626/h533-300626/Core/Inc -IC:/Users/novak/Desktop/30626/h533-300626/Core/App -IC:/Users/novak/Desktop/30626/h533-300626/Core/USB -IC:/Users/novak/Desktop/30626/h533-300626/Core/Board -IC:/Users/novak/Desktop/30626/h533-300626/Core/USB/tinyusb/src -IC:/Users/novak/Desktop/30626/h533-300626/Drivers/STM32H5xx_HAL_Driver/Inc -IC:/Users/novak/Desktop/30626/h533-300626/Drivers/STM32H5xx_HAL_Driver/Inc/Legacy -IC:/Users/novak/Desktop/30626/h533-300626/Drivers/CMSIS/Device/ST/STM32H5xx/Include -IC:/Users/novak/Desktop/30626/h533-300626/Drivers/CMSIS/Include
   OBJECT_DIR = CMakeFiles\stm32h533.elf.dir
   OBJECT_FILE_DIR = CMakeFiles\stm32h533.elf.dir\Core\App
@@ -132,10 +157,11 @@ build CMakeFiles/stm32h533.elf.dir/Core/App/usb_debug.c.obj: C_COMPILER__stm32h5
   TARGET_PDB = stm32h533.elf.pdb
   TARGET_SUPPORT_DIR = CMakeFiles\stm32h533.elf.dir
 
-build CMakeFiles/stm32h533.elf.dir/Core/App/usb_manager.c.obj: C_COMPILER__stm32h533.2eelf_unscanned_ C$:/Users/novak/Desktop/30626/h533-300626/Core/App/usb_manager.c || cmake_object_order_depends_target_stm32h533.elf
-  DEFINES = -DCFG_TUD_ENABLED=1 -DCFG_TUD_NET=0 -DCFG_TUH_ENABLED=0 -DCFG_TUSB_INIT_MANUAL=1 -DCFG_TUSB_MCU=OPT_MCU_STM32H5 -DCFG_TUSB_OS=OPT_OS_NONE -DCFG_TUSB_RHPORT0_MODE=OPT_MODE_DEVICE -DSTM32H533xx -DUSE_FULL_LL_DRIVER -DUSE_HAL_DRIVER
+build CMakeFiles/stm32h533.elf.dir/Core/App/usb_manager.c.obj: C_COMPILER__stm32h533.2eelf_unscanned_Debug C$:/Users/novak/Desktop/30626/h533-300626/Core/App/usb_manager.c || cmake_object_order_depends_target_stm32h533.elf
+  CONFIG = Debug
+  DEFINES = -DCFG_TUD_ENABLED=1 -DCFG_TUD_NET=0 -DCFG_TUH_ENABLED=1 -DCFG_TUSB_INIT_MANUAL=1 -DCFG_TUSB_MCU=OPT_MCU_STM32H5 -DCFG_TUSB_OS=OPT_OS_NONE -DSTM32H533xx -DUSE_FULL_LL_DRIVER -DUSE_HAL_DRIVER
   DEP_FILE = CMakeFiles\stm32h533.elf.dir\Core\App\usb_manager.c.obj.d
-  FLAGS = -std=gnu11 -mcpu=cortex-m33 -mthumb -mfpu=fpv5-sp-d16 -mfloat-abi=hard -Wall -Wextra -ffunction-sections -fdata-sections -O0 -g3
+  FLAGS = -g -std=gnu11 -mcpu=cortex-m33 -mthumb -mfpu=fpv5-sp-d16 -mfloat-abi=hard -Wall -Wextra -ffunction-sections -fdata-sections -O0 -g3
   INCLUDES = -IC:/Users/novak/Desktop/30626/h533-300626/Core/Inc -IC:/Users/novak/Desktop/30626/h533-300626/Core/App -IC:/Users/novak/Desktop/30626/h533-300626/Core/USB -IC:/Users/novak/Desktop/30626/h533-300626/Core/Board -IC:/Users/novak/Desktop/30626/h533-300626/Core/USB/tinyusb/src -IC:/Users/novak/Desktop/30626/h533-300626/Drivers/STM32H5xx_HAL_Driver/Inc -IC:/Users/novak/Desktop/30626/h533-300626/Drivers/STM32H5xx_HAL_Driver/Inc/Legacy -IC:/Users/novak/Desktop/30626/h533-300626/Drivers/CMSIS/Device/ST/STM32H5xx/Include -IC:/Users/novak/Desktop/30626/h533-300626/Drivers/CMSIS/Include
   OBJECT_DIR = CMakeFiles\stm32h533.elf.dir
   OBJECT_FILE_DIR = CMakeFiles\stm32h533.elf.dir\Core\App
@@ -143,10 +169,23 @@ build CMakeFiles/stm32h533.elf.dir/Core/App/usb_manager.c.obj: C_COMPILER__stm32
   TARGET_PDB = stm32h533.elf.pdb
   TARGET_SUPPORT_DIR = CMakeFiles\stm32h533.elf.dir
 
-build CMakeFiles/stm32h533.elf.dir/Core/Board/usb_hw.c.obj: C_COMPILER__stm32h533.2eelf_unscanned_ C$:/Users/novak/Desktop/30626/h533-300626/Core/Board/usb_hw.c || cmake_object_order_depends_target_stm32h533.elf
-  DEFINES = -DCFG_TUD_ENABLED=1 -DCFG_TUD_NET=0 -DCFG_TUH_ENABLED=0 -DCFG_TUSB_INIT_MANUAL=1 -DCFG_TUSB_MCU=OPT_MCU_STM32H5 -DCFG_TUSB_OS=OPT_OS_NONE -DCFG_TUSB_RHPORT0_MODE=OPT_MODE_DEVICE -DSTM32H533xx -DUSE_FULL_LL_DRIVER -DUSE_HAL_DRIVER
-  DEP_FILE = CMakeFiles\stm32h533.elf.dir\Core\Board\usb_hw.c.obj.d
-  FLAGS = -std=gnu11 -mcpu=cortex-m33 -mthumb -mfpu=fpv5-sp-d16 -mfloat-abi=hard -Wall -Wextra -ffunction-sections -fdata-sections -O0 -g3
+build CMakeFiles/stm32h533.elf.dir/Core/App/usb_mode_button.c.obj: C_COMPILER__stm32h533.2eelf_unscanned_Debug C$:/Users/novak/Desktop/30626/h533-300626/Core/App/usb_mode_button.c || cmake_object_order_depends_target_stm32h533.elf
+  CONFIG = Debug
+  DEFINES = -DCFG_TUD_ENABLED=1 -DCFG_TUD_NET=0 -DCFG_TUH_ENABLED=1 -DCFG_TUSB_INIT_MANUAL=1 -DCFG_TUSB_MCU=OPT_MCU_STM32H5 -DCFG_TUSB_OS=OPT_OS_NONE -DSTM32H533xx -DUSE_FULL_LL_DRIVER -DUSE_HAL_DRIVER
+  DEP_FILE = CMakeFiles\stm32h533.elf.dir\Core\App\usb_mode_button.c.obj.d
+  FLAGS = -g -std=gnu11 -mcpu=cortex-m33 -mthumb -mfpu=fpv5-sp-d16 -mfloat-abi=hard -Wall -Wextra -ffunction-sections -fdata-sections -O0 -g3
+  INCLUDES = -IC:/Users/novak/Desktop/30626/h533-300626/Core/Inc -IC:/Users/novak/Desktop/30626/h533-300626/Core/App -IC:/Users/novak/Desktop/30626/h533-300626/Core/USB -IC:/Users/novak/Desktop/30626/h533-300626/Core/Board -IC:/Users/novak/Desktop/30626/h533-300626/Core/USB/tinyusb/src -IC:/Users/novak/Desktop/30626/h533-300626/Drivers/STM32H5xx_HAL_Driver/Inc -IC:/Users/novak/Desktop/30626/h533-300626/Drivers/STM32H5xx_HAL_Driver/Inc/Legacy -IC:/Users/novak/Desktop/30626/h533-300626/Drivers/CMSIS/Device/ST/STM32H5xx/Include -IC:/Users/novak/Desktop/30626/h533-300626/Drivers/CMSIS/Include
+  OBJECT_DIR = CMakeFiles\stm32h533.elf.dir
+  OBJECT_FILE_DIR = CMakeFiles\stm32h533.elf.dir\Core\App
+  TARGET_COMPILE_PDB = CMakeFiles\stm32h533.elf.dir\
+  TARGET_PDB = stm32h533.elf.pdb
+  TARGET_SUPPORT_DIR = CMakeFiles\stm32h533.elf.dir
+
+build CMakeFiles/stm32h533.elf.dir/Core/Board/uart.c.obj: C_COMPILER__stm32h533.2eelf_unscanned_Debug C$:/Users/novak/Desktop/30626/h533-300626/Core/Board/uart.c || cmake_object_order_depends_target_stm32h533.elf
+  CONFIG = Debug
+  DEFINES = -DCFG_TUD_ENABLED=1 -DCFG_TUD_NET=0 -DCFG_TUH_ENABLED=1 -DCFG_TUSB_INIT_MANUAL=1 -DCFG_TUSB_MCU=OPT_MCU_STM32H5 -DCFG_TUSB_OS=OPT_OS_NONE -DSTM32H533xx -DUSE_FULL_LL_DRIVER -DUSE_HAL_DRIVER
+  DEP_FILE = CMakeFiles\stm32h533.elf.dir\Core\Board\uart.c.obj.d
+  FLAGS = -g -std=gnu11 -mcpu=cortex-m33 -mthumb -mfpu=fpv5-sp-d16 -mfloat-abi=hard -Wall -Wextra -ffunction-sections -fdata-sections -O0 -g3
   INCLUDES = -IC:/Users/novak/Desktop/30626/h533-300626/Core/Inc -IC:/Users/novak/Desktop/30626/h533-300626/Core/App -IC:/Users/novak/Desktop/30626/h533-300626/Core/USB -IC:/Users/novak/Desktop/30626/h533-300626/Core/Board -IC:/Users/novak/Desktop/30626/h533-300626/Core/USB/tinyusb/src -IC:/Users/novak/Desktop/30626/h533-300626/Drivers/STM32H5xx_HAL_Driver/Inc -IC:/Users/novak/Desktop/30626/h533-300626/Drivers/STM32H5xx_HAL_Driver/Inc/Legacy -IC:/Users/novak/Desktop/30626/h533-300626/Drivers/CMSIS/Device/ST/STM32H5xx/Include -IC:/Users/novak/Desktop/30626/h533-300626/Drivers/CMSIS/Include
   OBJECT_DIR = CMakeFiles\stm32h533.elf.dir
   OBJECT_FILE_DIR = CMakeFiles\stm32h533.elf.dir\Core\Board
@@ -154,10 +193,23 @@ build CMakeFiles/stm32h533.elf.dir/Core/Board/usb_hw.c.obj: C_COMPILER__stm32h53
   TARGET_PDB = stm32h533.elf.pdb
   TARGET_SUPPORT_DIR = CMakeFiles\stm32h533.elf.dir
 
-build CMakeFiles/stm32h533.elf.dir/Core/USB/usb_device_tusb.c.obj: C_COMPILER__stm32h533.2eelf_unscanned_ C$:/Users/novak/Desktop/30626/h533-300626/Core/USB/usb_device_tusb.c || cmake_object_order_depends_target_stm32h533.elf
-  DEFINES = -DCFG_TUD_ENABLED=1 -DCFG_TUD_NET=0 -DCFG_TUH_ENABLED=0 -DCFG_TUSB_INIT_MANUAL=1 -DCFG_TUSB_MCU=OPT_MCU_STM32H5 -DCFG_TUSB_OS=OPT_OS_NONE -DCFG_TUSB_RHPORT0_MODE=OPT_MODE_DEVICE -DSTM32H533xx -DUSE_FULL_LL_DRIVER -DUSE_HAL_DRIVER
+build CMakeFiles/stm32h533.elf.dir/Core/Board/usb_hw.c.obj: C_COMPILER__stm32h533.2eelf_unscanned_Debug C$:/Users/novak/Desktop/30626/h533-300626/Core/Board/usb_hw.c || cmake_object_order_depends_target_stm32h533.elf
+  CONFIG = Debug
+  DEFINES = -DCFG_TUD_ENABLED=1 -DCFG_TUD_NET=0 -DCFG_TUH_ENABLED=1 -DCFG_TUSB_INIT_MANUAL=1 -DCFG_TUSB_MCU=OPT_MCU_STM32H5 -DCFG_TUSB_OS=OPT_OS_NONE -DSTM32H533xx -DUSE_FULL_LL_DRIVER -DUSE_HAL_DRIVER
+  DEP_FILE = CMakeFiles\stm32h533.elf.dir\Core\Board\usb_hw.c.obj.d
+  FLAGS = -g -std=gnu11 -mcpu=cortex-m33 -mthumb -mfpu=fpv5-sp-d16 -mfloat-abi=hard -Wall -Wextra -ffunction-sections -fdata-sections -O0 -g3
+  INCLUDES = -IC:/Users/novak/Desktop/30626/h533-300626/Core/Inc -IC:/Users/novak/Desktop/30626/h533-300626/Core/App -IC:/Users/novak/Desktop/30626/h533-300626/Core/USB -IC:/Users/novak/Desktop/30626/h533-300626/Core/Board -IC:/Users/novak/Desktop/30626/h533-300626/Core/USB/tinyusb/src -IC:/Users/novak/Desktop/30626/h533-300626/Drivers/STM32H5xx_HAL_Driver/Inc -IC:/Users/novak/Desktop/30626/h533-300626/Drivers/STM32H5xx_HAL_Driver/Inc/Legacy -IC:/Users/novak/Desktop/30626/h533-300626/Drivers/CMSIS/Device/ST/STM32H5xx/Include -IC:/Users/novak/Desktop/30626/h533-300626/Drivers/CMSIS/Include
+  OBJECT_DIR = CMakeFiles\stm32h533.elf.dir
+  OBJECT_FILE_DIR = CMakeFiles\stm32h533.elf.dir\Core\Board
+  TARGET_COMPILE_PDB = CMakeFiles\stm32h533.elf.dir\
+  TARGET_PDB = stm32h533.elf.pdb
+  TARGET_SUPPORT_DIR = CMakeFiles\stm32h533.elf.dir
+
+build CMakeFiles/stm32h533.elf.dir/Core/USB/usb_device_tusb.c.obj: C_COMPILER__stm32h533.2eelf_unscanned_Debug C$:/Users/novak/Desktop/30626/h533-300626/Core/USB/usb_device_tusb.c || cmake_object_order_depends_target_stm32h533.elf
+  CONFIG = Debug
+  DEFINES = -DCFG_TUD_ENABLED=1 -DCFG_TUD_NET=0 -DCFG_TUH_ENABLED=1 -DCFG_TUSB_INIT_MANUAL=1 -DCFG_TUSB_MCU=OPT_MCU_STM32H5 -DCFG_TUSB_OS=OPT_OS_NONE -DSTM32H533xx -DUSE_FULL_LL_DRIVER -DUSE_HAL_DRIVER
   DEP_FILE = CMakeFiles\stm32h533.elf.dir\Core\USB\usb_device_tusb.c.obj.d
-  FLAGS = -std=gnu11 -mcpu=cortex-m33 -mthumb -mfpu=fpv5-sp-d16 -mfloat-abi=hard -Wall -Wextra -ffunction-sections -fdata-sections -O0 -g3
+  FLAGS = -g -std=gnu11 -mcpu=cortex-m33 -mthumb -mfpu=fpv5-sp-d16 -mfloat-abi=hard -Wall -Wextra -ffunction-sections -fdata-sections -O0 -g3
   INCLUDES = -IC:/Users/novak/Desktop/30626/h533-300626/Core/Inc -IC:/Users/novak/Desktop/30626/h533-300626/Core/App -IC:/Users/novak/Desktop/30626/h533-300626/Core/USB -IC:/Users/novak/Desktop/30626/h533-300626/Core/Board -IC:/Users/novak/Desktop/30626/h533-300626/Core/USB/tinyusb/src -IC:/Users/novak/Desktop/30626/h533-300626/Drivers/STM32H5xx_HAL_Driver/Inc -IC:/Users/novak/Desktop/30626/h533-300626/Drivers/STM32H5xx_HAL_Driver/Inc/Legacy -IC:/Users/novak/Desktop/30626/h533-300626/Drivers/CMSIS/Device/ST/STM32H5xx/Include -IC:/Users/novak/Desktop/30626/h533-300626/Drivers/CMSIS/Include
   OBJECT_DIR = CMakeFiles\stm32h533.elf.dir
   OBJECT_FILE_DIR = CMakeFiles\stm32h533.elf.dir\Core\USB
@@ -165,10 +217,23 @@ build CMakeFiles/stm32h533.elf.dir/Core/USB/usb_device_tusb.c.obj: C_COMPILER__s
   TARGET_PDB = stm32h533.elf.pdb
   TARGET_SUPPORT_DIR = CMakeFiles\stm32h533.elf.dir
 
-build CMakeFiles/stm32h533.elf.dir/Core/Startup/startup_stm32h533retx.s.obj: ASM_COMPILER__stm32h533.2eelf_unscanned_ C$:/Users/novak/Desktop/30626/h533-300626/Core/Startup/startup_stm32h533retx.s || cmake_object_order_depends_target_stm32h533.elf
-  DEFINES = -DCFG_TUD_ENABLED=1 -DCFG_TUD_NET=0 -DCFG_TUH_ENABLED=0 -DCFG_TUSB_INIT_MANUAL=1 -DCFG_TUSB_MCU=OPT_MCU_STM32H5 -DCFG_TUSB_OS=OPT_OS_NONE -DCFG_TUSB_RHPORT0_MODE=OPT_MODE_DEVICE -DSTM32H533xx -DUSE_FULL_LL_DRIVER -DUSE_HAL_DRIVER
+build CMakeFiles/stm32h533.elf.dir/Core/USB/usb_host_tusb.c.obj: C_COMPILER__stm32h533.2eelf_unscanned_Debug C$:/Users/novak/Desktop/30626/h533-300626/Core/USB/usb_host_tusb.c || cmake_object_order_depends_target_stm32h533.elf
+  CONFIG = Debug
+  DEFINES = -DCFG_TUD_ENABLED=1 -DCFG_TUD_NET=0 -DCFG_TUH_ENABLED=1 -DCFG_TUSB_INIT_MANUAL=1 -DCFG_TUSB_MCU=OPT_MCU_STM32H5 -DCFG_TUSB_OS=OPT_OS_NONE -DSTM32H533xx -DUSE_FULL_LL_DRIVER -DUSE_HAL_DRIVER
+  DEP_FILE = CMakeFiles\stm32h533.elf.dir\Core\USB\usb_host_tusb.c.obj.d
+  FLAGS = -g -std=gnu11 -mcpu=cortex-m33 -mthumb -mfpu=fpv5-sp-d16 -mfloat-abi=hard -Wall -Wextra -ffunction-sections -fdata-sections -O0 -g3
+  INCLUDES = -IC:/Users/novak/Desktop/30626/h533-300626/Core/Inc -IC:/Users/novak/Desktop/30626/h533-300626/Core/App -IC:/Users/novak/Desktop/30626/h533-300626/Core/USB -IC:/Users/novak/Desktop/30626/h533-300626/Core/Board -IC:/Users/novak/Desktop/30626/h533-300626/Core/USB/tinyusb/src -IC:/Users/novak/Desktop/30626/h533-300626/Drivers/STM32H5xx_HAL_Driver/Inc -IC:/Users/novak/Desktop/30626/h533-300626/Drivers/STM32H5xx_HAL_Driver/Inc/Legacy -IC:/Users/novak/Desktop/30626/h533-300626/Drivers/CMSIS/Device/ST/STM32H5xx/Include -IC:/Users/novak/Desktop/30626/h533-300626/Drivers/CMSIS/Include
+  OBJECT_DIR = CMakeFiles\stm32h533.elf.dir
+  OBJECT_FILE_DIR = CMakeFiles\stm32h533.elf.dir\Core\USB
+  TARGET_COMPILE_PDB = CMakeFiles\stm32h533.elf.dir\
+  TARGET_PDB = stm32h533.elf.pdb
+  TARGET_SUPPORT_DIR = CMakeFiles\stm32h533.elf.dir
+
+build CMakeFiles/stm32h533.elf.dir/Core/Startup/startup_stm32h533retx.s.obj: ASM_COMPILER__stm32h533.2eelf_unscanned_Debug C$:/Users/novak/Desktop/30626/h533-300626/Core/Startup/startup_stm32h533retx.s || cmake_object_order_depends_target_stm32h533.elf
+  CONFIG = Debug
+  DEFINES = -DCFG_TUD_ENABLED=1 -DCFG_TUD_NET=0 -DCFG_TUH_ENABLED=1 -DCFG_TUSB_INIT_MANUAL=1 -DCFG_TUSB_MCU=OPT_MCU_STM32H5 -DCFG_TUSB_OS=OPT_OS_NONE -DSTM32H533xx -DUSE_FULL_LL_DRIVER -DUSE_HAL_DRIVER
   DEP_FILE = CMakeFiles\stm32h533.elf.dir\Core\Startup\startup_stm32h533retx.s.obj.d
-  FLAGS = -mcpu=cortex-m33 -mthumb -mfpu=fpv5-sp-d16 -mfloat-abi=hard -Wall -Wextra -ffunction-sections -fdata-sections -O0 -g3
+  FLAGS = -g -mcpu=cortex-m33 -mthumb -mfpu=fpv5-sp-d16 -mfloat-abi=hard -Wall -Wextra -ffunction-sections -fdata-sections -O0 -g3
   INCLUDES = -IC:/Users/novak/Desktop/30626/h533-300626/Core/Inc -IC:/Users/novak/Desktop/30626/h533-300626/Core/App -IC:/Users/novak/Desktop/30626/h533-300626/Core/USB -IC:/Users/novak/Desktop/30626/h533-300626/Core/Board -IC:/Users/novak/Desktop/30626/h533-300626/Core/USB/tinyusb/src -IC:/Users/novak/Desktop/30626/h533-300626/Drivers/STM32H5xx_HAL_Driver/Inc -IC:/Users/novak/Desktop/30626/h533-300626/Drivers/STM32H5xx_HAL_Driver/Inc/Legacy -IC:/Users/novak/Desktop/30626/h533-300626/Drivers/CMSIS/Device/ST/STM32H5xx/Include -IC:/Users/novak/Desktop/30626/h533-300626/Drivers/CMSIS/Include
   OBJECT_DIR = CMakeFiles\stm32h533.elf.dir
   OBJECT_FILE_DIR = CMakeFiles\stm32h533.elf.dir\Core\Startup
@@ -176,10 +241,11 @@ build CMakeFiles/stm32h533.elf.dir/Core/Startup/startup_stm32h533retx.s.obj: ASM
   TARGET_PDB = stm32h533.elf.pdb
   TARGET_SUPPORT_DIR = CMakeFiles\stm32h533.elf.dir
 
-build CMakeFiles/stm32h533.elf.dir/Core/USB/tinyusb/src/tusb.c.obj: C_COMPILER__stm32h533.2eelf_unscanned_ C$:/Users/novak/Desktop/30626/h533-300626/Core/USB/tinyusb/src/tusb.c || cmake_object_order_depends_target_stm32h533.elf
-  DEFINES = -DCFG_TUD_ENABLED=1 -DCFG_TUD_NET=0 -DCFG_TUH_ENABLED=0 -DCFG_TUSB_INIT_MANUAL=1 -DCFG_TUSB_MCU=OPT_MCU_STM32H5 -DCFG_TUSB_OS=OPT_OS_NONE -DCFG_TUSB_RHPORT0_MODE=OPT_MODE_DEVICE -DSTM32H533xx -DUSE_FULL_LL_DRIVER -DUSE_HAL_DRIVER
+build CMakeFiles/stm32h533.elf.dir/Core/USB/tinyusb/src/tusb.c.obj: C_COMPILER__stm32h533.2eelf_unscanned_Debug C$:/Users/novak/Desktop/30626/h533-300626/Core/USB/tinyusb/src/tusb.c || cmake_object_order_depends_target_stm32h533.elf
+  CONFIG = Debug
+  DEFINES = -DCFG_TUD_ENABLED=1 -DCFG_TUD_NET=0 -DCFG_TUH_ENABLED=1 -DCFG_TUSB_INIT_MANUAL=1 -DCFG_TUSB_MCU=OPT_MCU_STM32H5 -DCFG_TUSB_OS=OPT_OS_NONE -DSTM32H533xx -DUSE_FULL_LL_DRIVER -DUSE_HAL_DRIVER
   DEP_FILE = CMakeFiles\stm32h533.elf.dir\Core\USB\tinyusb\src\tusb.c.obj.d
-  FLAGS = -std=gnu11 -mcpu=cortex-m33 -mthumb -mfpu=fpv5-sp-d16 -mfloat-abi=hard -Wall -Wextra -ffunction-sections -fdata-sections -O0 -g3
+  FLAGS = -g -std=gnu11 -mcpu=cortex-m33 -mthumb -mfpu=fpv5-sp-d16 -mfloat-abi=hard -Wall -Wextra -ffunction-sections -fdata-sections -O0 -g3
   INCLUDES = -IC:/Users/novak/Desktop/30626/h533-300626/Core/Inc -IC:/Users/novak/Desktop/30626/h533-300626/Core/App -IC:/Users/novak/Desktop/30626/h533-300626/Core/USB -IC:/Users/novak/Desktop/30626/h533-300626/Core/Board -IC:/Users/novak/Desktop/30626/h533-300626/Core/USB/tinyusb/src -IC:/Users/novak/Desktop/30626/h533-300626/Drivers/STM32H5xx_HAL_Driver/Inc -IC:/Users/novak/Desktop/30626/h533-300626/Drivers/STM32H5xx_HAL_Driver/Inc/Legacy -IC:/Users/novak/Desktop/30626/h533-300626/Drivers/CMSIS/Device/ST/STM32H5xx/Include -IC:/Users/novak/Desktop/30626/h533-300626/Drivers/CMSIS/Include
   OBJECT_DIR = CMakeFiles\stm32h533.elf.dir
   OBJECT_FILE_DIR = CMakeFiles\stm32h533.elf.dir\Core\USB\tinyusb\src
@@ -187,10 +253,11 @@ build CMakeFiles/stm32h533.elf.dir/Core/USB/tinyusb/src/tusb.c.obj: C_COMPILER__
   TARGET_PDB = stm32h533.elf.pdb
   TARGET_SUPPORT_DIR = CMakeFiles\stm32h533.elf.dir
 
-build CMakeFiles/stm32h533.elf.dir/Core/USB/tinyusb/src/common/tusb_fifo.c.obj: C_COMPILER__stm32h533.2eelf_unscanned_ C$:/Users/novak/Desktop/30626/h533-300626/Core/USB/tinyusb/src/common/tusb_fifo.c || cmake_object_order_depends_target_stm32h533.elf
-  DEFINES = -DCFG_TUD_ENABLED=1 -DCFG_TUD_NET=0 -DCFG_TUH_ENABLED=0 -DCFG_TUSB_INIT_MANUAL=1 -DCFG_TUSB_MCU=OPT_MCU_STM32H5 -DCFG_TUSB_OS=OPT_OS_NONE -DCFG_TUSB_RHPORT0_MODE=OPT_MODE_DEVICE -DSTM32H533xx -DUSE_FULL_LL_DRIVER -DUSE_HAL_DRIVER
+build CMakeFiles/stm32h533.elf.dir/Core/USB/tinyusb/src/common/tusb_fifo.c.obj: C_COMPILER__stm32h533.2eelf_unscanned_Debug C$:/Users/novak/Desktop/30626/h533-300626/Core/USB/tinyusb/src/common/tusb_fifo.c || cmake_object_order_depends_target_stm32h533.elf
+  CONFIG = Debug
+  DEFINES = -DCFG_TUD_ENABLED=1 -DCFG_TUD_NET=0 -DCFG_TUH_ENABLED=1 -DCFG_TUSB_INIT_MANUAL=1 -DCFG_TUSB_MCU=OPT_MCU_STM32H5 -DCFG_TUSB_OS=OPT_OS_NONE -DSTM32H533xx -DUSE_FULL_LL_DRIVER -DUSE_HAL_DRIVER
   DEP_FILE = CMakeFiles\stm32h533.elf.dir\Core\USB\tinyusb\src\common\tusb_fifo.c.obj.d
-  FLAGS = -std=gnu11 -mcpu=cortex-m33 -mthumb -mfpu=fpv5-sp-d16 -mfloat-abi=hard -Wall -Wextra -ffunction-sections -fdata-sections -O0 -g3
+  FLAGS = -g -std=gnu11 -mcpu=cortex-m33 -mthumb -mfpu=fpv5-sp-d16 -mfloat-abi=hard -Wall -Wextra -ffunction-sections -fdata-sections -O0 -g3
   INCLUDES = -IC:/Users/novak/Desktop/30626/h533-300626/Core/Inc -IC:/Users/novak/Desktop/30626/h533-300626/Core/App -IC:/Users/novak/Desktop/30626/h533-300626/Core/USB -IC:/Users/novak/Desktop/30626/h533-300626/Core/Board -IC:/Users/novak/Desktop/30626/h533-300626/Core/USB/tinyusb/src -IC:/Users/novak/Desktop/30626/h533-300626/Drivers/STM32H5xx_HAL_Driver/Inc -IC:/Users/novak/Desktop/30626/h533-300626/Drivers/STM32H5xx_HAL_Driver/Inc/Legacy -IC:/Users/novak/Desktop/30626/h533-300626/Drivers/CMSIS/Device/ST/STM32H5xx/Include -IC:/Users/novak/Desktop/30626/h533-300626/Drivers/CMSIS/Include
   OBJECT_DIR = CMakeFiles\stm32h533.elf.dir
   OBJECT_FILE_DIR = CMakeFiles\stm32h533.elf.dir\Core\USB\tinyusb\src\common
@@ -198,10 +265,11 @@ build CMakeFiles/stm32h533.elf.dir/Core/USB/tinyusb/src/common/tusb_fifo.c.obj: 
   TARGET_PDB = stm32h533.elf.pdb
   TARGET_SUPPORT_DIR = CMakeFiles\stm32h533.elf.dir
 
-build CMakeFiles/stm32h533.elf.dir/Core/USB/tinyusb/src/device/usbd.c.obj: C_COMPILER__stm32h533.2eelf_unscanned_ C$:/Users/novak/Desktop/30626/h533-300626/Core/USB/tinyusb/src/device/usbd.c || cmake_object_order_depends_target_stm32h533.elf
-  DEFINES = -DCFG_TUD_ENABLED=1 -DCFG_TUD_NET=0 -DCFG_TUH_ENABLED=0 -DCFG_TUSB_INIT_MANUAL=1 -DCFG_TUSB_MCU=OPT_MCU_STM32H5 -DCFG_TUSB_OS=OPT_OS_NONE -DCFG_TUSB_RHPORT0_MODE=OPT_MODE_DEVICE -DSTM32H533xx -DUSE_FULL_LL_DRIVER -DUSE_HAL_DRIVER
+build CMakeFiles/stm32h533.elf.dir/Core/USB/tinyusb/src/device/usbd.c.obj: C_COMPILER__stm32h533.2eelf_unscanned_Debug C$:/Users/novak/Desktop/30626/h533-300626/Core/USB/tinyusb/src/device/usbd.c || cmake_object_order_depends_target_stm32h533.elf
+  CONFIG = Debug
+  DEFINES = -DCFG_TUD_ENABLED=1 -DCFG_TUD_NET=0 -DCFG_TUH_ENABLED=1 -DCFG_TUSB_INIT_MANUAL=1 -DCFG_TUSB_MCU=OPT_MCU_STM32H5 -DCFG_TUSB_OS=OPT_OS_NONE -DSTM32H533xx -DUSE_FULL_LL_DRIVER -DUSE_HAL_DRIVER
   DEP_FILE = CMakeFiles\stm32h533.elf.dir\Core\USB\tinyusb\src\device\usbd.c.obj.d
-  FLAGS = -std=gnu11 -mcpu=cortex-m33 -mthumb -mfpu=fpv5-sp-d16 -mfloat-abi=hard -Wall -Wextra -ffunction-sections -fdata-sections -O0 -g3
+  FLAGS = -g -std=gnu11 -mcpu=cortex-m33 -mthumb -mfpu=fpv5-sp-d16 -mfloat-abi=hard -Wall -Wextra -ffunction-sections -fdata-sections -O0 -g3
   INCLUDES = -IC:/Users/novak/Desktop/30626/h533-300626/Core/Inc -IC:/Users/novak/Desktop/30626/h533-300626/Core/App -IC:/Users/novak/Desktop/30626/h533-300626/Core/USB -IC:/Users/novak/Desktop/30626/h533-300626/Core/Board -IC:/Users/novak/Desktop/30626/h533-300626/Core/USB/tinyusb/src -IC:/Users/novak/Desktop/30626/h533-300626/Drivers/STM32H5xx_HAL_Driver/Inc -IC:/Users/novak/Desktop/30626/h533-300626/Drivers/STM32H5xx_HAL_Driver/Inc/Legacy -IC:/Users/novak/Desktop/30626/h533-300626/Drivers/CMSIS/Device/ST/STM32H5xx/Include -IC:/Users/novak/Desktop/30626/h533-300626/Drivers/CMSIS/Include
   OBJECT_DIR = CMakeFiles\stm32h533.elf.dir
   OBJECT_FILE_DIR = CMakeFiles\stm32h533.elf.dir\Core\USB\tinyusb\src\device
@@ -209,10 +277,23 @@ build CMakeFiles/stm32h533.elf.dir/Core/USB/tinyusb/src/device/usbd.c.obj: C_COM
   TARGET_PDB = stm32h533.elf.pdb
   TARGET_SUPPORT_DIR = CMakeFiles\stm32h533.elf.dir
 
-build CMakeFiles/stm32h533.elf.dir/Core/USB/tinyusb/src/class/cdc/cdc_device.c.obj: C_COMPILER__stm32h533.2eelf_unscanned_ C$:/Users/novak/Desktop/30626/h533-300626/Core/USB/tinyusb/src/class/cdc/cdc_device.c || cmake_object_order_depends_target_stm32h533.elf
-  DEFINES = -DCFG_TUD_ENABLED=1 -DCFG_TUD_NET=0 -DCFG_TUH_ENABLED=0 -DCFG_TUSB_INIT_MANUAL=1 -DCFG_TUSB_MCU=OPT_MCU_STM32H5 -DCFG_TUSB_OS=OPT_OS_NONE -DCFG_TUSB_RHPORT0_MODE=OPT_MODE_DEVICE -DSTM32H533xx -DUSE_FULL_LL_DRIVER -DUSE_HAL_DRIVER
+build CMakeFiles/stm32h533.elf.dir/Core/USB/tinyusb/src/host/usbh.c.obj: C_COMPILER__stm32h533.2eelf_unscanned_Debug C$:/Users/novak/Desktop/30626/h533-300626/Core/USB/tinyusb/src/host/usbh.c || cmake_object_order_depends_target_stm32h533.elf
+  CONFIG = Debug
+  DEFINES = -DCFG_TUD_ENABLED=1 -DCFG_TUD_NET=0 -DCFG_TUH_ENABLED=1 -DCFG_TUSB_INIT_MANUAL=1 -DCFG_TUSB_MCU=OPT_MCU_STM32H5 -DCFG_TUSB_OS=OPT_OS_NONE -DSTM32H533xx -DUSE_FULL_LL_DRIVER -DUSE_HAL_DRIVER
+  DEP_FILE = CMakeFiles\stm32h533.elf.dir\Core\USB\tinyusb\src\host\usbh.c.obj.d
+  FLAGS = -g -std=gnu11 -mcpu=cortex-m33 -mthumb -mfpu=fpv5-sp-d16 -mfloat-abi=hard -Wall -Wextra -ffunction-sections -fdata-sections -O0 -g3
+  INCLUDES = -IC:/Users/novak/Desktop/30626/h533-300626/Core/Inc -IC:/Users/novak/Desktop/30626/h533-300626/Core/App -IC:/Users/novak/Desktop/30626/h533-300626/Core/USB -IC:/Users/novak/Desktop/30626/h533-300626/Core/Board -IC:/Users/novak/Desktop/30626/h533-300626/Core/USB/tinyusb/src -IC:/Users/novak/Desktop/30626/h533-300626/Drivers/STM32H5xx_HAL_Driver/Inc -IC:/Users/novak/Desktop/30626/h533-300626/Drivers/STM32H5xx_HAL_Driver/Inc/Legacy -IC:/Users/novak/Desktop/30626/h533-300626/Drivers/CMSIS/Device/ST/STM32H5xx/Include -IC:/Users/novak/Desktop/30626/h533-300626/Drivers/CMSIS/Include
+  OBJECT_DIR = CMakeFiles\stm32h533.elf.dir
+  OBJECT_FILE_DIR = CMakeFiles\stm32h533.elf.dir\Core\USB\tinyusb\src\host
+  TARGET_COMPILE_PDB = CMakeFiles\stm32h533.elf.dir\
+  TARGET_PDB = stm32h533.elf.pdb
+  TARGET_SUPPORT_DIR = CMakeFiles\stm32h533.elf.dir
+
+build CMakeFiles/stm32h533.elf.dir/Core/USB/tinyusb/src/class/cdc/cdc_device.c.obj: C_COMPILER__stm32h533.2eelf_unscanned_Debug C$:/Users/novak/Desktop/30626/h533-300626/Core/USB/tinyusb/src/class/cdc/cdc_device.c || cmake_object_order_depends_target_stm32h533.elf
+  CONFIG = Debug
+  DEFINES = -DCFG_TUD_ENABLED=1 -DCFG_TUD_NET=0 -DCFG_TUH_ENABLED=1 -DCFG_TUSB_INIT_MANUAL=1 -DCFG_TUSB_MCU=OPT_MCU_STM32H5 -DCFG_TUSB_OS=OPT_OS_NONE -DSTM32H533xx -DUSE_FULL_LL_DRIVER -DUSE_HAL_DRIVER
   DEP_FILE = CMakeFiles\stm32h533.elf.dir\Core\USB\tinyusb\src\class\cdc\cdc_device.c.obj.d
-  FLAGS = -std=gnu11 -mcpu=cortex-m33 -mthumb -mfpu=fpv5-sp-d16 -mfloat-abi=hard -Wall -Wextra -ffunction-sections -fdata-sections -O0 -g3
+  FLAGS = -g -std=gnu11 -mcpu=cortex-m33 -mthumb -mfpu=fpv5-sp-d16 -mfloat-abi=hard -Wall -Wextra -ffunction-sections -fdata-sections -O0 -g3
   INCLUDES = -IC:/Users/novak/Desktop/30626/h533-300626/Core/Inc -IC:/Users/novak/Desktop/30626/h533-300626/Core/App -IC:/Users/novak/Desktop/30626/h533-300626/Core/USB -IC:/Users/novak/Desktop/30626/h533-300626/Core/Board -IC:/Users/novak/Desktop/30626/h533-300626/Core/USB/tinyusb/src -IC:/Users/novak/Desktop/30626/h533-300626/Drivers/STM32H5xx_HAL_Driver/Inc -IC:/Users/novak/Desktop/30626/h533-300626/Drivers/STM32H5xx_HAL_Driver/Inc/Legacy -IC:/Users/novak/Desktop/30626/h533-300626/Drivers/CMSIS/Device/ST/STM32H5xx/Include -IC:/Users/novak/Desktop/30626/h533-300626/Drivers/CMSIS/Include
   OBJECT_DIR = CMakeFiles\stm32h533.elf.dir
   OBJECT_FILE_DIR = CMakeFiles\stm32h533.elf.dir\Core\USB\tinyusb\src\class\cdc
@@ -220,10 +301,11 @@ build CMakeFiles/stm32h533.elf.dir/Core/USB/tinyusb/src/class/cdc/cdc_device.c.o
   TARGET_PDB = stm32h533.elf.pdb
   TARGET_SUPPORT_DIR = CMakeFiles\stm32h533.elf.dir
 
-build CMakeFiles/stm32h533.elf.dir/Core/USB/tinyusb/src/portable/st/stm32_fsdev/fsdev_common.c.obj: C_COMPILER__stm32h533.2eelf_unscanned_ C$:/Users/novak/Desktop/30626/h533-300626/Core/USB/tinyusb/src/portable/st/stm32_fsdev/fsdev_common.c || cmake_object_order_depends_target_stm32h533.elf
-  DEFINES = -DCFG_TUD_ENABLED=1 -DCFG_TUD_NET=0 -DCFG_TUH_ENABLED=0 -DCFG_TUSB_INIT_MANUAL=1 -DCFG_TUSB_MCU=OPT_MCU_STM32H5 -DCFG_TUSB_OS=OPT_OS_NONE -DCFG_TUSB_RHPORT0_MODE=OPT_MODE_DEVICE -DSTM32H533xx -DUSE_FULL_LL_DRIVER -DUSE_HAL_DRIVER
+build CMakeFiles/stm32h533.elf.dir/Core/USB/tinyusb/src/portable/st/stm32_fsdev/fsdev_common.c.obj: C_COMPILER__stm32h533.2eelf_unscanned_Debug C$:/Users/novak/Desktop/30626/h533-300626/Core/USB/tinyusb/src/portable/st/stm32_fsdev/fsdev_common.c || cmake_object_order_depends_target_stm32h533.elf
+  CONFIG = Debug
+  DEFINES = -DCFG_TUD_ENABLED=1 -DCFG_TUD_NET=0 -DCFG_TUH_ENABLED=1 -DCFG_TUSB_INIT_MANUAL=1 -DCFG_TUSB_MCU=OPT_MCU_STM32H5 -DCFG_TUSB_OS=OPT_OS_NONE -DSTM32H533xx -DUSE_FULL_LL_DRIVER -DUSE_HAL_DRIVER
   DEP_FILE = CMakeFiles\stm32h533.elf.dir\Core\USB\tinyusb\src\portable\st\stm32_fsdev\fsdev_common.c.obj.d
-  FLAGS = -std=gnu11 -mcpu=cortex-m33 -mthumb -mfpu=fpv5-sp-d16 -mfloat-abi=hard -Wall -Wextra -ffunction-sections -fdata-sections -O0 -g3
+  FLAGS = -g -std=gnu11 -mcpu=cortex-m33 -mthumb -mfpu=fpv5-sp-d16 -mfloat-abi=hard -Wall -Wextra -ffunction-sections -fdata-sections -O0 -g3
   INCLUDES = -IC:/Users/novak/Desktop/30626/h533-300626/Core/Inc -IC:/Users/novak/Desktop/30626/h533-300626/Core/App -IC:/Users/novak/Desktop/30626/h533-300626/Core/USB -IC:/Users/novak/Desktop/30626/h533-300626/Core/Board -IC:/Users/novak/Desktop/30626/h533-300626/Core/USB/tinyusb/src -IC:/Users/novak/Desktop/30626/h533-300626/Drivers/STM32H5xx_HAL_Driver/Inc -IC:/Users/novak/Desktop/30626/h533-300626/Drivers/STM32H5xx_HAL_Driver/Inc/Legacy -IC:/Users/novak/Desktop/30626/h533-300626/Drivers/CMSIS/Device/ST/STM32H5xx/Include -IC:/Users/novak/Desktop/30626/h533-300626/Drivers/CMSIS/Include
   OBJECT_DIR = CMakeFiles\stm32h533.elf.dir
   OBJECT_FILE_DIR = CMakeFiles\stm32h533.elf.dir\Core\USB\tinyusb\src\portable\st\stm32_fsdev
@@ -231,10 +313,11 @@ build CMakeFiles/stm32h533.elf.dir/Core/USB/tinyusb/src/portable/st/stm32_fsdev/
   TARGET_PDB = stm32h533.elf.pdb
   TARGET_SUPPORT_DIR = CMakeFiles\stm32h533.elf.dir
 
-build CMakeFiles/stm32h533.elf.dir/Core/USB/tinyusb/src/portable/st/stm32_fsdev/dcd_stm32_fsdev.c.obj: C_COMPILER__stm32h533.2eelf_unscanned_ C$:/Users/novak/Desktop/30626/h533-300626/Core/USB/tinyusb/src/portable/st/stm32_fsdev/dcd_stm32_fsdev.c || cmake_object_order_depends_target_stm32h533.elf
-  DEFINES = -DCFG_TUD_ENABLED=1 -DCFG_TUD_NET=0 -DCFG_TUH_ENABLED=0 -DCFG_TUSB_INIT_MANUAL=1 -DCFG_TUSB_MCU=OPT_MCU_STM32H5 -DCFG_TUSB_OS=OPT_OS_NONE -DCFG_TUSB_RHPORT0_MODE=OPT_MODE_DEVICE -DSTM32H533xx -DUSE_FULL_LL_DRIVER -DUSE_HAL_DRIVER
+build CMakeFiles/stm32h533.elf.dir/Core/USB/tinyusb/src/portable/st/stm32_fsdev/dcd_stm32_fsdev.c.obj: C_COMPILER__stm32h533.2eelf_unscanned_Debug C$:/Users/novak/Desktop/30626/h533-300626/Core/USB/tinyusb/src/portable/st/stm32_fsdev/dcd_stm32_fsdev.c || cmake_object_order_depends_target_stm32h533.elf
+  CONFIG = Debug
+  DEFINES = -DCFG_TUD_ENABLED=1 -DCFG_TUD_NET=0 -DCFG_TUH_ENABLED=1 -DCFG_TUSB_INIT_MANUAL=1 -DCFG_TUSB_MCU=OPT_MCU_STM32H5 -DCFG_TUSB_OS=OPT_OS_NONE -DSTM32H533xx -DUSE_FULL_LL_DRIVER -DUSE_HAL_DRIVER
   DEP_FILE = CMakeFiles\stm32h533.elf.dir\Core\USB\tinyusb\src\portable\st\stm32_fsdev\dcd_stm32_fsdev.c.obj.d
-  FLAGS = -std=gnu11 -mcpu=cortex-m33 -mthumb -mfpu=fpv5-sp-d16 -mfloat-abi=hard -Wall -Wextra -ffunction-sections -fdata-sections -O0 -g3
+  FLAGS = -g -std=gnu11 -mcpu=cortex-m33 -mthumb -mfpu=fpv5-sp-d16 -mfloat-abi=hard -Wall -Wextra -ffunction-sections -fdata-sections -O0 -g3
   INCLUDES = -IC:/Users/novak/Desktop/30626/h533-300626/Core/Inc -IC:/Users/novak/Desktop/30626/h533-300626/Core/App -IC:/Users/novak/Desktop/30626/h533-300626/Core/USB -IC:/Users/novak/Desktop/30626/h533-300626/Core/Board -IC:/Users/novak/Desktop/30626/h533-300626/Core/USB/tinyusb/src -IC:/Users/novak/Desktop/30626/h533-300626/Drivers/STM32H5xx_HAL_Driver/Inc -IC:/Users/novak/Desktop/30626/h533-300626/Drivers/STM32H5xx_HAL_Driver/Inc/Legacy -IC:/Users/novak/Desktop/30626/h533-300626/Drivers/CMSIS/Device/ST/STM32H5xx/Include -IC:/Users/novak/Desktop/30626/h533-300626/Drivers/CMSIS/Include
   OBJECT_DIR = CMakeFiles\stm32h533.elf.dir
   OBJECT_FILE_DIR = CMakeFiles\stm32h533.elf.dir\Core\USB\tinyusb\src\portable\st\stm32_fsdev
@@ -242,10 +325,23 @@ build CMakeFiles/stm32h533.elf.dir/Core/USB/tinyusb/src/portable/st/stm32_fsdev/
   TARGET_PDB = stm32h533.elf.pdb
   TARGET_SUPPORT_DIR = CMakeFiles\stm32h533.elf.dir
 
-build CMakeFiles/stm32h533.elf.dir/Drivers/STM32H5xx_HAL_Driver/Src/stm32h5xx_hal.c.obj: C_COMPILER__stm32h533.2eelf_unscanned_ C$:/Users/novak/Desktop/30626/h533-300626/Drivers/STM32H5xx_HAL_Driver/Src/stm32h5xx_hal.c || cmake_object_order_depends_target_stm32h533.elf
-  DEFINES = -DCFG_TUD_ENABLED=1 -DCFG_TUD_NET=0 -DCFG_TUH_ENABLED=0 -DCFG_TUSB_INIT_MANUAL=1 -DCFG_TUSB_MCU=OPT_MCU_STM32H5 -DCFG_TUSB_OS=OPT_OS_NONE -DCFG_TUSB_RHPORT0_MODE=OPT_MODE_DEVICE -DSTM32H533xx -DUSE_FULL_LL_DRIVER -DUSE_HAL_DRIVER
+build CMakeFiles/stm32h533.elf.dir/Core/USB/tinyusb/src/portable/st/stm32_fsdev/hcd_stm32_fsdev.c.obj: C_COMPILER__stm32h533.2eelf_unscanned_Debug C$:/Users/novak/Desktop/30626/h533-300626/Core/USB/tinyusb/src/portable/st/stm32_fsdev/hcd_stm32_fsdev.c || cmake_object_order_depends_target_stm32h533.elf
+  CONFIG = Debug
+  DEFINES = -DCFG_TUD_ENABLED=1 -DCFG_TUD_NET=0 -DCFG_TUH_ENABLED=1 -DCFG_TUSB_INIT_MANUAL=1 -DCFG_TUSB_MCU=OPT_MCU_STM32H5 -DCFG_TUSB_OS=OPT_OS_NONE -DSTM32H533xx -DUSE_FULL_LL_DRIVER -DUSE_HAL_DRIVER
+  DEP_FILE = CMakeFiles\stm32h533.elf.dir\Core\USB\tinyusb\src\portable\st\stm32_fsdev\hcd_stm32_fsdev.c.obj.d
+  FLAGS = -g -std=gnu11 -mcpu=cortex-m33 -mthumb -mfpu=fpv5-sp-d16 -mfloat-abi=hard -Wall -Wextra -ffunction-sections -fdata-sections -O0 -g3
+  INCLUDES = -IC:/Users/novak/Desktop/30626/h533-300626/Core/Inc -IC:/Users/novak/Desktop/30626/h533-300626/Core/App -IC:/Users/novak/Desktop/30626/h533-300626/Core/USB -IC:/Users/novak/Desktop/30626/h533-300626/Core/Board -IC:/Users/novak/Desktop/30626/h533-300626/Core/USB/tinyusb/src -IC:/Users/novak/Desktop/30626/h533-300626/Drivers/STM32H5xx_HAL_Driver/Inc -IC:/Users/novak/Desktop/30626/h533-300626/Drivers/STM32H5xx_HAL_Driver/Inc/Legacy -IC:/Users/novak/Desktop/30626/h533-300626/Drivers/CMSIS/Device/ST/STM32H5xx/Include -IC:/Users/novak/Desktop/30626/h533-300626/Drivers/CMSIS/Include
+  OBJECT_DIR = CMakeFiles\stm32h533.elf.dir
+  OBJECT_FILE_DIR = CMakeFiles\stm32h533.elf.dir\Core\USB\tinyusb\src\portable\st\stm32_fsdev
+  TARGET_COMPILE_PDB = CMakeFiles\stm32h533.elf.dir\
+  TARGET_PDB = stm32h533.elf.pdb
+  TARGET_SUPPORT_DIR = CMakeFiles\stm32h533.elf.dir
+
+build CMakeFiles/stm32h533.elf.dir/Drivers/STM32H5xx_HAL_Driver/Src/stm32h5xx_hal.c.obj: C_COMPILER__stm32h533.2eelf_unscanned_Debug C$:/Users/novak/Desktop/30626/h533-300626/Drivers/STM32H5xx_HAL_Driver/Src/stm32h5xx_hal.c || cmake_object_order_depends_target_stm32h533.elf
+  CONFIG = Debug
+  DEFINES = -DCFG_TUD_ENABLED=1 -DCFG_TUD_NET=0 -DCFG_TUH_ENABLED=1 -DCFG_TUSB_INIT_MANUAL=1 -DCFG_TUSB_MCU=OPT_MCU_STM32H5 -DCFG_TUSB_OS=OPT_OS_NONE -DSTM32H533xx -DUSE_FULL_LL_DRIVER -DUSE_HAL_DRIVER
   DEP_FILE = CMakeFiles\stm32h533.elf.dir\Drivers\STM32H5xx_HAL_Driver\Src\stm32h5xx_hal.c.obj.d
-  FLAGS = -std=gnu11 -mcpu=cortex-m33 -mthumb -mfpu=fpv5-sp-d16 -mfloat-abi=hard -Wall -Wextra -ffunction-sections -fdata-sections -O0 -g3
+  FLAGS = -g -std=gnu11 -mcpu=cortex-m33 -mthumb -mfpu=fpv5-sp-d16 -mfloat-abi=hard -Wall -Wextra -ffunction-sections -fdata-sections -O0 -g3
   INCLUDES = -IC:/Users/novak/Desktop/30626/h533-300626/Core/Inc -IC:/Users/novak/Desktop/30626/h533-300626/Core/App -IC:/Users/novak/Desktop/30626/h533-300626/Core/USB -IC:/Users/novak/Desktop/30626/h533-300626/Core/Board -IC:/Users/novak/Desktop/30626/h533-300626/Core/USB/tinyusb/src -IC:/Users/novak/Desktop/30626/h533-300626/Drivers/STM32H5xx_HAL_Driver/Inc -IC:/Users/novak/Desktop/30626/h533-300626/Drivers/STM32H5xx_HAL_Driver/Inc/Legacy -IC:/Users/novak/Desktop/30626/h533-300626/Drivers/CMSIS/Device/ST/STM32H5xx/Include -IC:/Users/novak/Desktop/30626/h533-300626/Drivers/CMSIS/Include
   OBJECT_DIR = CMakeFiles\stm32h533.elf.dir
   OBJECT_FILE_DIR = CMakeFiles\stm32h533.elf.dir\Drivers\STM32H5xx_HAL_Driver\Src
@@ -253,10 +349,11 @@ build CMakeFiles/stm32h533.elf.dir/Drivers/STM32H5xx_HAL_Driver/Src/stm32h5xx_ha
   TARGET_PDB = stm32h533.elf.pdb
   TARGET_SUPPORT_DIR = CMakeFiles\stm32h533.elf.dir
 
-build CMakeFiles/stm32h533.elf.dir/Drivers/STM32H5xx_HAL_Driver/Src/stm32h5xx_hal_cortex.c.obj: C_COMPILER__stm32h533.2eelf_unscanned_ C$:/Users/novak/Desktop/30626/h533-300626/Drivers/STM32H5xx_HAL_Driver/Src/stm32h5xx_hal_cortex.c || cmake_object_order_depends_target_stm32h533.elf
-  DEFINES = -DCFG_TUD_ENABLED=1 -DCFG_TUD_NET=0 -DCFG_TUH_ENABLED=0 -DCFG_TUSB_INIT_MANUAL=1 -DCFG_TUSB_MCU=OPT_MCU_STM32H5 -DCFG_TUSB_OS=OPT_OS_NONE -DCFG_TUSB_RHPORT0_MODE=OPT_MODE_DEVICE -DSTM32H533xx -DUSE_FULL_LL_DRIVER -DUSE_HAL_DRIVER
+build CMakeFiles/stm32h533.elf.dir/Drivers/STM32H5xx_HAL_Driver/Src/stm32h5xx_hal_cortex.c.obj: C_COMPILER__stm32h533.2eelf_unscanned_Debug C$:/Users/novak/Desktop/30626/h533-300626/Drivers/STM32H5xx_HAL_Driver/Src/stm32h5xx_hal_cortex.c || cmake_object_order_depends_target_stm32h533.elf
+  CONFIG = Debug
+  DEFINES = -DCFG_TUD_ENABLED=1 -DCFG_TUD_NET=0 -DCFG_TUH_ENABLED=1 -DCFG_TUSB_INIT_MANUAL=1 -DCFG_TUSB_MCU=OPT_MCU_STM32H5 -DCFG_TUSB_OS=OPT_OS_NONE -DSTM32H533xx -DUSE_FULL_LL_DRIVER -DUSE_HAL_DRIVER
   DEP_FILE = CMakeFiles\stm32h533.elf.dir\Drivers\STM32H5xx_HAL_Driver\Src\stm32h5xx_hal_cortex.c.obj.d
-  FLAGS = -std=gnu11 -mcpu=cortex-m33 -mthumb -mfpu=fpv5-sp-d16 -mfloat-abi=hard -Wall -Wextra -ffunction-sections -fdata-sections -O0 -g3
+  FLAGS = -g -std=gnu11 -mcpu=cortex-m33 -mthumb -mfpu=fpv5-sp-d16 -mfloat-abi=hard -Wall -Wextra -ffunction-sections -fdata-sections -O0 -g3
   INCLUDES = -IC:/Users/novak/Desktop/30626/h533-300626/Core/Inc -IC:/Users/novak/Desktop/30626/h533-300626/Core/App -IC:/Users/novak/Desktop/30626/h533-300626/Core/USB -IC:/Users/novak/Desktop/30626/h533-300626/Core/Board -IC:/Users/novak/Desktop/30626/h533-300626/Core/USB/tinyusb/src -IC:/Users/novak/Desktop/30626/h533-300626/Drivers/STM32H5xx_HAL_Driver/Inc -IC:/Users/novak/Desktop/30626/h533-300626/Drivers/STM32H5xx_HAL_Driver/Inc/Legacy -IC:/Users/novak/Desktop/30626/h533-300626/Drivers/CMSIS/Device/ST/STM32H5xx/Include -IC:/Users/novak/Desktop/30626/h533-300626/Drivers/CMSIS/Include
   OBJECT_DIR = CMakeFiles\stm32h533.elf.dir
   OBJECT_FILE_DIR = CMakeFiles\stm32h533.elf.dir\Drivers\STM32H5xx_HAL_Driver\Src
@@ -264,10 +361,11 @@ build CMakeFiles/stm32h533.elf.dir/Drivers/STM32H5xx_HAL_Driver/Src/stm32h5xx_ha
   TARGET_PDB = stm32h533.elf.pdb
   TARGET_SUPPORT_DIR = CMakeFiles\stm32h533.elf.dir
 
-build CMakeFiles/stm32h533.elf.dir/Drivers/STM32H5xx_HAL_Driver/Src/stm32h5xx_hal_dma.c.obj: C_COMPILER__stm32h533.2eelf_unscanned_ C$:/Users/novak/Desktop/30626/h533-300626/Drivers/STM32H5xx_HAL_Driver/Src/stm32h5xx_hal_dma.c || cmake_object_order_depends_target_stm32h533.elf
-  DEFINES = -DCFG_TUD_ENABLED=1 -DCFG_TUD_NET=0 -DCFG_TUH_ENABLED=0 -DCFG_TUSB_INIT_MANUAL=1 -DCFG_TUSB_MCU=OPT_MCU_STM32H5 -DCFG_TUSB_OS=OPT_OS_NONE -DCFG_TUSB_RHPORT0_MODE=OPT_MODE_DEVICE -DSTM32H533xx -DUSE_FULL_LL_DRIVER -DUSE_HAL_DRIVER
+build CMakeFiles/stm32h533.elf.dir/Drivers/STM32H5xx_HAL_Driver/Src/stm32h5xx_hal_dma.c.obj: C_COMPILER__stm32h533.2eelf_unscanned_Debug C$:/Users/novak/Desktop/30626/h533-300626/Drivers/STM32H5xx_HAL_Driver/Src/stm32h5xx_hal_dma.c || cmake_object_order_depends_target_stm32h533.elf
+  CONFIG = Debug
+  DEFINES = -DCFG_TUD_ENABLED=1 -DCFG_TUD_NET=0 -DCFG_TUH_ENABLED=1 -DCFG_TUSB_INIT_MANUAL=1 -DCFG_TUSB_MCU=OPT_MCU_STM32H5 -DCFG_TUSB_OS=OPT_OS_NONE -DSTM32H533xx -DUSE_FULL_LL_DRIVER -DUSE_HAL_DRIVER
   DEP_FILE = CMakeFiles\stm32h533.elf.dir\Drivers\STM32H5xx_HAL_Driver\Src\stm32h5xx_hal_dma.c.obj.d
-  FLAGS = -std=gnu11 -mcpu=cortex-m33 -mthumb -mfpu=fpv5-sp-d16 -mfloat-abi=hard -Wall -Wextra -ffunction-sections -fdata-sections -O0 -g3
+  FLAGS = -g -std=gnu11 -mcpu=cortex-m33 -mthumb -mfpu=fpv5-sp-d16 -mfloat-abi=hard -Wall -Wextra -ffunction-sections -fdata-sections -O0 -g3
   INCLUDES = -IC:/Users/novak/Desktop/30626/h533-300626/Core/Inc -IC:/Users/novak/Desktop/30626/h533-300626/Core/App -IC:/Users/novak/Desktop/30626/h533-300626/Core/USB -IC:/Users/novak/Desktop/30626/h533-300626/Core/Board -IC:/Users/novak/Desktop/30626/h533-300626/Core/USB/tinyusb/src -IC:/Users/novak/Desktop/30626/h533-300626/Drivers/STM32H5xx_HAL_Driver/Inc -IC:/Users/novak/Desktop/30626/h533-300626/Drivers/STM32H5xx_HAL_Driver/Inc/Legacy -IC:/Users/novak/Desktop/30626/h533-300626/Drivers/CMSIS/Device/ST/STM32H5xx/Include -IC:/Users/novak/Desktop/30626/h533-300626/Drivers/CMSIS/Include
   OBJECT_DIR = CMakeFiles\stm32h533.elf.dir
   OBJECT_FILE_DIR = CMakeFiles\stm32h533.elf.dir\Drivers\STM32H5xx_HAL_Driver\Src
@@ -275,10 +373,11 @@ build CMakeFiles/stm32h533.elf.dir/Drivers/STM32H5xx_HAL_Driver/Src/stm32h5xx_ha
   TARGET_PDB = stm32h533.elf.pdb
   TARGET_SUPPORT_DIR = CMakeFiles\stm32h533.elf.dir
 
-build CMakeFiles/stm32h533.elf.dir/Drivers/STM32H5xx_HAL_Driver/Src/stm32h5xx_hal_dma_ex.c.obj: C_COMPILER__stm32h533.2eelf_unscanned_ C$:/Users/novak/Desktop/30626/h533-300626/Drivers/STM32H5xx_HAL_Driver/Src/stm32h5xx_hal_dma_ex.c || cmake_object_order_depends_target_stm32h533.elf
-  DEFINES = -DCFG_TUD_ENABLED=1 -DCFG_TUD_NET=0 -DCFG_TUH_ENABLED=0 -DCFG_TUSB_INIT_MANUAL=1 -DCFG_TUSB_MCU=OPT_MCU_STM32H5 -DCFG_TUSB_OS=OPT_OS_NONE -DCFG_TUSB_RHPORT0_MODE=OPT_MODE_DEVICE -DSTM32H533xx -DUSE_FULL_LL_DRIVER -DUSE_HAL_DRIVER
+build CMakeFiles/stm32h533.elf.dir/Drivers/STM32H5xx_HAL_Driver/Src/stm32h5xx_hal_dma_ex.c.obj: C_COMPILER__stm32h533.2eelf_unscanned_Debug C$:/Users/novak/Desktop/30626/h533-300626/Drivers/STM32H5xx_HAL_Driver/Src/stm32h5xx_hal_dma_ex.c || cmake_object_order_depends_target_stm32h533.elf
+  CONFIG = Debug
+  DEFINES = -DCFG_TUD_ENABLED=1 -DCFG_TUD_NET=0 -DCFG_TUH_ENABLED=1 -DCFG_TUSB_INIT_MANUAL=1 -DCFG_TUSB_MCU=OPT_MCU_STM32H5 -DCFG_TUSB_OS=OPT_OS_NONE -DSTM32H533xx -DUSE_FULL_LL_DRIVER -DUSE_HAL_DRIVER
   DEP_FILE = CMakeFiles\stm32h533.elf.dir\Drivers\STM32H5xx_HAL_Driver\Src\stm32h5xx_hal_dma_ex.c.obj.d
-  FLAGS = -std=gnu11 -mcpu=cortex-m33 -mthumb -mfpu=fpv5-sp-d16 -mfloat-abi=hard -Wall -Wextra -ffunction-sections -fdata-sections -O0 -g3
+  FLAGS = -g -std=gnu11 -mcpu=cortex-m33 -mthumb -mfpu=fpv5-sp-d16 -mfloat-abi=hard -Wall -Wextra -ffunction-sections -fdata-sections -O0 -g3
   INCLUDES = -IC:/Users/novak/Desktop/30626/h533-300626/Core/Inc -IC:/Users/novak/Desktop/30626/h533-300626/Core/App -IC:/Users/novak/Desktop/30626/h533-300626/Core/USB -IC:/Users/novak/Desktop/30626/h533-300626/Core/Board -IC:/Users/novak/Desktop/30626/h533-300626/Core/USB/tinyusb/src -IC:/Users/novak/Desktop/30626/h533-300626/Drivers/STM32H5xx_HAL_Driver/Inc -IC:/Users/novak/Desktop/30626/h533-300626/Drivers/STM32H5xx_HAL_Driver/Inc/Legacy -IC:/Users/novak/Desktop/30626/h533-300626/Drivers/CMSIS/Device/ST/STM32H5xx/Include -IC:/Users/novak/Desktop/30626/h533-300626/Drivers/CMSIS/Include
   OBJECT_DIR = CMakeFiles\stm32h533.elf.dir
   OBJECT_FILE_DIR = CMakeFiles\stm32h533.elf.dir\Drivers\STM32H5xx_HAL_Driver\Src
@@ -286,10 +385,11 @@ build CMakeFiles/stm32h533.elf.dir/Drivers/STM32H5xx_HAL_Driver/Src/stm32h5xx_ha
   TARGET_PDB = stm32h533.elf.pdb
   TARGET_SUPPORT_DIR = CMakeFiles\stm32h533.elf.dir
 
-build CMakeFiles/stm32h533.elf.dir/Drivers/STM32H5xx_HAL_Driver/Src/stm32h5xx_hal_exti.c.obj: C_COMPILER__stm32h533.2eelf_unscanned_ C$:/Users/novak/Desktop/30626/h533-300626/Drivers/STM32H5xx_HAL_Driver/Src/stm32h5xx_hal_exti.c || cmake_object_order_depends_target_stm32h533.elf
-  DEFINES = -DCFG_TUD_ENABLED=1 -DCFG_TUD_NET=0 -DCFG_TUH_ENABLED=0 -DCFG_TUSB_INIT_MANUAL=1 -DCFG_TUSB_MCU=OPT_MCU_STM32H5 -DCFG_TUSB_OS=OPT_OS_NONE -DCFG_TUSB_RHPORT0_MODE=OPT_MODE_DEVICE -DSTM32H533xx -DUSE_FULL_LL_DRIVER -DUSE_HAL_DRIVER
+build CMakeFiles/stm32h533.elf.dir/Drivers/STM32H5xx_HAL_Driver/Src/stm32h5xx_hal_exti.c.obj: C_COMPILER__stm32h533.2eelf_unscanned_Debug C$:/Users/novak/Desktop/30626/h533-300626/Drivers/STM32H5xx_HAL_Driver/Src/stm32h5xx_hal_exti.c || cmake_object_order_depends_target_stm32h533.elf
+  CONFIG = Debug
+  DEFINES = -DCFG_TUD_ENABLED=1 -DCFG_TUD_NET=0 -DCFG_TUH_ENABLED=1 -DCFG_TUSB_INIT_MANUAL=1 -DCFG_TUSB_MCU=OPT_MCU_STM32H5 -DCFG_TUSB_OS=OPT_OS_NONE -DSTM32H533xx -DUSE_FULL_LL_DRIVER -DUSE_HAL_DRIVER
   DEP_FILE = CMakeFiles\stm32h533.elf.dir\Drivers\STM32H5xx_HAL_Driver\Src\stm32h5xx_hal_exti.c.obj.d
-  FLAGS = -std=gnu11 -mcpu=cortex-m33 -mthumb -mfpu=fpv5-sp-d16 -mfloat-abi=hard -Wall -Wextra -ffunction-sections -fdata-sections -O0 -g3
+  FLAGS = -g -std=gnu11 -mcpu=cortex-m33 -mthumb -mfpu=fpv5-sp-d16 -mfloat-abi=hard -Wall -Wextra -ffunction-sections -fdata-sections -O0 -g3
   INCLUDES = -IC:/Users/novak/Desktop/30626/h533-300626/Core/Inc -IC:/Users/novak/Desktop/30626/h533-300626/Core/App -IC:/Users/novak/Desktop/30626/h533-300626/Core/USB -IC:/Users/novak/Desktop/30626/h533-300626/Core/Board -IC:/Users/novak/Desktop/30626/h533-300626/Core/USB/tinyusb/src -IC:/Users/novak/Desktop/30626/h533-300626/Drivers/STM32H5xx_HAL_Driver/Inc -IC:/Users/novak/Desktop/30626/h533-300626/Drivers/STM32H5xx_HAL_Driver/Inc/Legacy -IC:/Users/novak/Desktop/30626/h533-300626/Drivers/CMSIS/Device/ST/STM32H5xx/Include -IC:/Users/novak/Desktop/30626/h533-300626/Drivers/CMSIS/Include
   OBJECT_DIR = CMakeFiles\stm32h533.elf.dir
   OBJECT_FILE_DIR = CMakeFiles\stm32h533.elf.dir\Drivers\STM32H5xx_HAL_Driver\Src
@@ -297,10 +397,11 @@ build CMakeFiles/stm32h533.elf.dir/Drivers/STM32H5xx_HAL_Driver/Src/stm32h5xx_ha
   TARGET_PDB = stm32h533.elf.pdb
   TARGET_SUPPORT_DIR = CMakeFiles\stm32h533.elf.dir
 
-build CMakeFiles/stm32h533.elf.dir/Drivers/STM32H5xx_HAL_Driver/Src/stm32h5xx_hal_flash.c.obj: C_COMPILER__stm32h533.2eelf_unscanned_ C$:/Users/novak/Desktop/30626/h533-300626/Drivers/STM32H5xx_HAL_Driver/Src/stm32h5xx_hal_flash.c || cmake_object_order_depends_target_stm32h533.elf
-  DEFINES = -DCFG_TUD_ENABLED=1 -DCFG_TUD_NET=0 -DCFG_TUH_ENABLED=0 -DCFG_TUSB_INIT_MANUAL=1 -DCFG_TUSB_MCU=OPT_MCU_STM32H5 -DCFG_TUSB_OS=OPT_OS_NONE -DCFG_TUSB_RHPORT0_MODE=OPT_MODE_DEVICE -DSTM32H533xx -DUSE_FULL_LL_DRIVER -DUSE_HAL_DRIVER
+build CMakeFiles/stm32h533.elf.dir/Drivers/STM32H5xx_HAL_Driver/Src/stm32h5xx_hal_flash.c.obj: C_COMPILER__stm32h533.2eelf_unscanned_Debug C$:/Users/novak/Desktop/30626/h533-300626/Drivers/STM32H5xx_HAL_Driver/Src/stm32h5xx_hal_flash.c || cmake_object_order_depends_target_stm32h533.elf
+  CONFIG = Debug
+  DEFINES = -DCFG_TUD_ENABLED=1 -DCFG_TUD_NET=0 -DCFG_TUH_ENABLED=1 -DCFG_TUSB_INIT_MANUAL=1 -DCFG_TUSB_MCU=OPT_MCU_STM32H5 -DCFG_TUSB_OS=OPT_OS_NONE -DSTM32H533xx -DUSE_FULL_LL_DRIVER -DUSE_HAL_DRIVER
   DEP_FILE = CMakeFiles\stm32h533.elf.dir\Drivers\STM32H5xx_HAL_Driver\Src\stm32h5xx_hal_flash.c.obj.d
-  FLAGS = -std=gnu11 -mcpu=cortex-m33 -mthumb -mfpu=fpv5-sp-d16 -mfloat-abi=hard -Wall -Wextra -ffunction-sections -fdata-sections -O0 -g3
+  FLAGS = -g -std=gnu11 -mcpu=cortex-m33 -mthumb -mfpu=fpv5-sp-d16 -mfloat-abi=hard -Wall -Wextra -ffunction-sections -fdata-sections -O0 -g3
   INCLUDES = -IC:/Users/novak/Desktop/30626/h533-300626/Core/Inc -IC:/Users/novak/Desktop/30626/h533-300626/Core/App -IC:/Users/novak/Desktop/30626/h533-300626/Core/USB -IC:/Users/novak/Desktop/30626/h533-300626/Core/Board -IC:/Users/novak/Desktop/30626/h533-300626/Core/USB/tinyusb/src -IC:/Users/novak/Desktop/30626/h533-300626/Drivers/STM32H5xx_HAL_Driver/Inc -IC:/Users/novak/Desktop/30626/h533-300626/Drivers/STM32H5xx_HAL_Driver/Inc/Legacy -IC:/Users/novak/Desktop/30626/h533-300626/Drivers/CMSIS/Device/ST/STM32H5xx/Include -IC:/Users/novak/Desktop/30626/h533-300626/Drivers/CMSIS/Include
   OBJECT_DIR = CMakeFiles\stm32h533.elf.dir
   OBJECT_FILE_DIR = CMakeFiles\stm32h533.elf.dir\Drivers\STM32H5xx_HAL_Driver\Src
@@ -308,10 +409,11 @@ build CMakeFiles/stm32h533.elf.dir/Drivers/STM32H5xx_HAL_Driver/Src/stm32h5xx_ha
   TARGET_PDB = stm32h533.elf.pdb
   TARGET_SUPPORT_DIR = CMakeFiles\stm32h533.elf.dir
 
-build CMakeFiles/stm32h533.elf.dir/Drivers/STM32H5xx_HAL_Driver/Src/stm32h5xx_hal_flash_ex.c.obj: C_COMPILER__stm32h533.2eelf_unscanned_ C$:/Users/novak/Desktop/30626/h533-300626/Drivers/STM32H5xx_HAL_Driver/Src/stm32h5xx_hal_flash_ex.c || cmake_object_order_depends_target_stm32h533.elf
-  DEFINES = -DCFG_TUD_ENABLED=1 -DCFG_TUD_NET=0 -DCFG_TUH_ENABLED=0 -DCFG_TUSB_INIT_MANUAL=1 -DCFG_TUSB_MCU=OPT_MCU_STM32H5 -DCFG_TUSB_OS=OPT_OS_NONE -DCFG_TUSB_RHPORT0_MODE=OPT_MODE_DEVICE -DSTM32H533xx -DUSE_FULL_LL_DRIVER -DUSE_HAL_DRIVER
+build CMakeFiles/stm32h533.elf.dir/Drivers/STM32H5xx_HAL_Driver/Src/stm32h5xx_hal_flash_ex.c.obj: C_COMPILER__stm32h533.2eelf_unscanned_Debug C$:/Users/novak/Desktop/30626/h533-300626/Drivers/STM32H5xx_HAL_Driver/Src/stm32h5xx_hal_flash_ex.c || cmake_object_order_depends_target_stm32h533.elf
+  CONFIG = Debug
+  DEFINES = -DCFG_TUD_ENABLED=1 -DCFG_TUD_NET=0 -DCFG_TUH_ENABLED=1 -DCFG_TUSB_INIT_MANUAL=1 -DCFG_TUSB_MCU=OPT_MCU_STM32H5 -DCFG_TUSB_OS=OPT_OS_NONE -DSTM32H533xx -DUSE_FULL_LL_DRIVER -DUSE_HAL_DRIVER
   DEP_FILE = CMakeFiles\stm32h533.elf.dir\Drivers\STM32H5xx_HAL_Driver\Src\stm32h5xx_hal_flash_ex.c.obj.d
-  FLAGS = -std=gnu11 -mcpu=cortex-m33 -mthumb -mfpu=fpv5-sp-d16 -mfloat-abi=hard -Wall -Wextra -ffunction-sections -fdata-sections -O0 -g3
+  FLAGS = -g -std=gnu11 -mcpu=cortex-m33 -mthumb -mfpu=fpv5-sp-d16 -mfloat-abi=hard -Wall -Wextra -ffunction-sections -fdata-sections -O0 -g3
   INCLUDES = -IC:/Users/novak/Desktop/30626/h533-300626/Core/Inc -IC:/Users/novak/Desktop/30626/h533-300626/Core/App -IC:/Users/novak/Desktop/30626/h533-300626/Core/USB -IC:/Users/novak/Desktop/30626/h533-300626/Core/Board -IC:/Users/novak/Desktop/30626/h533-300626/Core/USB/tinyusb/src -IC:/Users/novak/Desktop/30626/h533-300626/Drivers/STM32H5xx_HAL_Driver/Inc -IC:/Users/novak/Desktop/30626/h533-300626/Drivers/STM32H5xx_HAL_Driver/Inc/Legacy -IC:/Users/novak/Desktop/30626/h533-300626/Drivers/CMSIS/Device/ST/STM32H5xx/Include -IC:/Users/novak/Desktop/30626/h533-300626/Drivers/CMSIS/Include
   OBJECT_DIR = CMakeFiles\stm32h533.elf.dir
   OBJECT_FILE_DIR = CMakeFiles\stm32h533.elf.dir\Drivers\STM32H5xx_HAL_Driver\Src
@@ -319,10 +421,11 @@ build CMakeFiles/stm32h533.elf.dir/Drivers/STM32H5xx_HAL_Driver/Src/stm32h5xx_ha
   TARGET_PDB = stm32h533.elf.pdb
   TARGET_SUPPORT_DIR = CMakeFiles\stm32h533.elf.dir
 
-build CMakeFiles/stm32h533.elf.dir/Drivers/STM32H5xx_HAL_Driver/Src/stm32h5xx_hal_gpio.c.obj: C_COMPILER__stm32h533.2eelf_unscanned_ C$:/Users/novak/Desktop/30626/h533-300626/Drivers/STM32H5xx_HAL_Driver/Src/stm32h5xx_hal_gpio.c || cmake_object_order_depends_target_stm32h533.elf
-  DEFINES = -DCFG_TUD_ENABLED=1 -DCFG_TUD_NET=0 -DCFG_TUH_ENABLED=0 -DCFG_TUSB_INIT_MANUAL=1 -DCFG_TUSB_MCU=OPT_MCU_STM32H5 -DCFG_TUSB_OS=OPT_OS_NONE -DCFG_TUSB_RHPORT0_MODE=OPT_MODE_DEVICE -DSTM32H533xx -DUSE_FULL_LL_DRIVER -DUSE_HAL_DRIVER
+build CMakeFiles/stm32h533.elf.dir/Drivers/STM32H5xx_HAL_Driver/Src/stm32h5xx_hal_gpio.c.obj: C_COMPILER__stm32h533.2eelf_unscanned_Debug C$:/Users/novak/Desktop/30626/h533-300626/Drivers/STM32H5xx_HAL_Driver/Src/stm32h5xx_hal_gpio.c || cmake_object_order_depends_target_stm32h533.elf
+  CONFIG = Debug
+  DEFINES = -DCFG_TUD_ENABLED=1 -DCFG_TUD_NET=0 -DCFG_TUH_ENABLED=1 -DCFG_TUSB_INIT_MANUAL=1 -DCFG_TUSB_MCU=OPT_MCU_STM32H5 -DCFG_TUSB_OS=OPT_OS_NONE -DSTM32H533xx -DUSE_FULL_LL_DRIVER -DUSE_HAL_DRIVER
   DEP_FILE = CMakeFiles\stm32h533.elf.dir\Drivers\STM32H5xx_HAL_Driver\Src\stm32h5xx_hal_gpio.c.obj.d
-  FLAGS = -std=gnu11 -mcpu=cortex-m33 -mthumb -mfpu=fpv5-sp-d16 -mfloat-abi=hard -Wall -Wextra -ffunction-sections -fdata-sections -O0 -g3
+  FLAGS = -g -std=gnu11 -mcpu=cortex-m33 -mthumb -mfpu=fpv5-sp-d16 -mfloat-abi=hard -Wall -Wextra -ffunction-sections -fdata-sections -O0 -g3
   INCLUDES = -IC:/Users/novak/Desktop/30626/h533-300626/Core/Inc -IC:/Users/novak/Desktop/30626/h533-300626/Core/App -IC:/Users/novak/Desktop/30626/h533-300626/Core/USB -IC:/Users/novak/Desktop/30626/h533-300626/Core/Board -IC:/Users/novak/Desktop/30626/h533-300626/Core/USB/tinyusb/src -IC:/Users/novak/Desktop/30626/h533-300626/Drivers/STM32H5xx_HAL_Driver/Inc -IC:/Users/novak/Desktop/30626/h533-300626/Drivers/STM32H5xx_HAL_Driver/Inc/Legacy -IC:/Users/novak/Desktop/30626/h533-300626/Drivers/CMSIS/Device/ST/STM32H5xx/Include -IC:/Users/novak/Desktop/30626/h533-300626/Drivers/CMSIS/Include
   OBJECT_DIR = CMakeFiles\stm32h533.elf.dir
   OBJECT_FILE_DIR = CMakeFiles\stm32h533.elf.dir\Drivers\STM32H5xx_HAL_Driver\Src
@@ -330,10 +433,11 @@ build CMakeFiles/stm32h533.elf.dir/Drivers/STM32H5xx_HAL_Driver/Src/stm32h5xx_ha
   TARGET_PDB = stm32h533.elf.pdb
   TARGET_SUPPORT_DIR = CMakeFiles\stm32h533.elf.dir
 
-build CMakeFiles/stm32h533.elf.dir/Drivers/STM32H5xx_HAL_Driver/Src/stm32h5xx_hal_icache.c.obj: C_COMPILER__stm32h533.2eelf_unscanned_ C$:/Users/novak/Desktop/30626/h533-300626/Drivers/STM32H5xx_HAL_Driver/Src/stm32h5xx_hal_icache.c || cmake_object_order_depends_target_stm32h533.elf
-  DEFINES = -DCFG_TUD_ENABLED=1 -DCFG_TUD_NET=0 -DCFG_TUH_ENABLED=0 -DCFG_TUSB_INIT_MANUAL=1 -DCFG_TUSB_MCU=OPT_MCU_STM32H5 -DCFG_TUSB_OS=OPT_OS_NONE -DCFG_TUSB_RHPORT0_MODE=OPT_MODE_DEVICE -DSTM32H533xx -DUSE_FULL_LL_DRIVER -DUSE_HAL_DRIVER
+build CMakeFiles/stm32h533.elf.dir/Drivers/STM32H5xx_HAL_Driver/Src/stm32h5xx_hal_icache.c.obj: C_COMPILER__stm32h533.2eelf_unscanned_Debug C$:/Users/novak/Desktop/30626/h533-300626/Drivers/STM32H5xx_HAL_Driver/Src/stm32h5xx_hal_icache.c || cmake_object_order_depends_target_stm32h533.elf
+  CONFIG = Debug
+  DEFINES = -DCFG_TUD_ENABLED=1 -DCFG_TUD_NET=0 -DCFG_TUH_ENABLED=1 -DCFG_TUSB_INIT_MANUAL=1 -DCFG_TUSB_MCU=OPT_MCU_STM32H5 -DCFG_TUSB_OS=OPT_OS_NONE -DSTM32H533xx -DUSE_FULL_LL_DRIVER -DUSE_HAL_DRIVER
   DEP_FILE = CMakeFiles\stm32h533.elf.dir\Drivers\STM32H5xx_HAL_Driver\Src\stm32h5xx_hal_icache.c.obj.d
-  FLAGS = -std=gnu11 -mcpu=cortex-m33 -mthumb -mfpu=fpv5-sp-d16 -mfloat-abi=hard -Wall -Wextra -ffunction-sections -fdata-sections -O0 -g3
+  FLAGS = -g -std=gnu11 -mcpu=cortex-m33 -mthumb -mfpu=fpv5-sp-d16 -mfloat-abi=hard -Wall -Wextra -ffunction-sections -fdata-sections -O0 -g3
   INCLUDES = -IC:/Users/novak/Desktop/30626/h533-300626/Core/Inc -IC:/Users/novak/Desktop/30626/h533-300626/Core/App -IC:/Users/novak/Desktop/30626/h533-300626/Core/USB -IC:/Users/novak/Desktop/30626/h533-300626/Core/Board -IC:/Users/novak/Desktop/30626/h533-300626/Core/USB/tinyusb/src -IC:/Users/novak/Desktop/30626/h533-300626/Drivers/STM32H5xx_HAL_Driver/Inc -IC:/Users/novak/Desktop/30626/h533-300626/Drivers/STM32H5xx_HAL_Driver/Inc/Legacy -IC:/Users/novak/Desktop/30626/h533-300626/Drivers/CMSIS/Device/ST/STM32H5xx/Include -IC:/Users/novak/Desktop/30626/h533-300626/Drivers/CMSIS/Include
   OBJECT_DIR = CMakeFiles\stm32h533.elf.dir
   OBJECT_FILE_DIR = CMakeFiles\stm32h533.elf.dir\Drivers\STM32H5xx_HAL_Driver\Src
@@ -341,10 +445,11 @@ build CMakeFiles/stm32h533.elf.dir/Drivers/STM32H5xx_HAL_Driver/Src/stm32h5xx_ha
   TARGET_PDB = stm32h533.elf.pdb
   TARGET_SUPPORT_DIR = CMakeFiles\stm32h533.elf.dir
 
-build CMakeFiles/stm32h533.elf.dir/Drivers/STM32H5xx_HAL_Driver/Src/stm32h5xx_hal_pwr.c.obj: C_COMPILER__stm32h533.2eelf_unscanned_ C$:/Users/novak/Desktop/30626/h533-300626/Drivers/STM32H5xx_HAL_Driver/Src/stm32h5xx_hal_pwr.c || cmake_object_order_depends_target_stm32h533.elf
-  DEFINES = -DCFG_TUD_ENABLED=1 -DCFG_TUD_NET=0 -DCFG_TUH_ENABLED=0 -DCFG_TUSB_INIT_MANUAL=1 -DCFG_TUSB_MCU=OPT_MCU_STM32H5 -DCFG_TUSB_OS=OPT_OS_NONE -DCFG_TUSB_RHPORT0_MODE=OPT_MODE_DEVICE -DSTM32H533xx -DUSE_FULL_LL_DRIVER -DUSE_HAL_DRIVER
+build CMakeFiles/stm32h533.elf.dir/Drivers/STM32H5xx_HAL_Driver/Src/stm32h5xx_hal_pwr.c.obj: C_COMPILER__stm32h533.2eelf_unscanned_Debug C$:/Users/novak/Desktop/30626/h533-300626/Drivers/STM32H5xx_HAL_Driver/Src/stm32h5xx_hal_pwr.c || cmake_object_order_depends_target_stm32h533.elf
+  CONFIG = Debug
+  DEFINES = -DCFG_TUD_ENABLED=1 -DCFG_TUD_NET=0 -DCFG_TUH_ENABLED=1 -DCFG_TUSB_INIT_MANUAL=1 -DCFG_TUSB_MCU=OPT_MCU_STM32H5 -DCFG_TUSB_OS=OPT_OS_NONE -DSTM32H533xx -DUSE_FULL_LL_DRIVER -DUSE_HAL_DRIVER
   DEP_FILE = CMakeFiles\stm32h533.elf.dir\Drivers\STM32H5xx_HAL_Driver\Src\stm32h5xx_hal_pwr.c.obj.d
-  FLAGS = -std=gnu11 -mcpu=cortex-m33 -mthumb -mfpu=fpv5-sp-d16 -mfloat-abi=hard -Wall -Wextra -ffunction-sections -fdata-sections -O0 -g3
+  FLAGS = -g -std=gnu11 -mcpu=cortex-m33 -mthumb -mfpu=fpv5-sp-d16 -mfloat-abi=hard -Wall -Wextra -ffunction-sections -fdata-sections -O0 -g3
   INCLUDES = -IC:/Users/novak/Desktop/30626/h533-300626/Core/Inc -IC:/Users/novak/Desktop/30626/h533-300626/Core/App -IC:/Users/novak/Desktop/30626/h533-300626/Core/USB -IC:/Users/novak/Desktop/30626/h533-300626/Core/Board -IC:/Users/novak/Desktop/30626/h533-300626/Core/USB/tinyusb/src -IC:/Users/novak/Desktop/30626/h533-300626/Drivers/STM32H5xx_HAL_Driver/Inc -IC:/Users/novak/Desktop/30626/h533-300626/Drivers/STM32H5xx_HAL_Driver/Inc/Legacy -IC:/Users/novak/Desktop/30626/h533-300626/Drivers/CMSIS/Device/ST/STM32H5xx/Include -IC:/Users/novak/Desktop/30626/h533-300626/Drivers/CMSIS/Include
   OBJECT_DIR = CMakeFiles\stm32h533.elf.dir
   OBJECT_FILE_DIR = CMakeFiles\stm32h533.elf.dir\Drivers\STM32H5xx_HAL_Driver\Src
@@ -352,10 +457,11 @@ build CMakeFiles/stm32h533.elf.dir/Drivers/STM32H5xx_HAL_Driver/Src/stm32h5xx_ha
   TARGET_PDB = stm32h533.elf.pdb
   TARGET_SUPPORT_DIR = CMakeFiles\stm32h533.elf.dir
 
-build CMakeFiles/stm32h533.elf.dir/Drivers/STM32H5xx_HAL_Driver/Src/stm32h5xx_hal_pwr_ex.c.obj: C_COMPILER__stm32h533.2eelf_unscanned_ C$:/Users/novak/Desktop/30626/h533-300626/Drivers/STM32H5xx_HAL_Driver/Src/stm32h5xx_hal_pwr_ex.c || cmake_object_order_depends_target_stm32h533.elf
-  DEFINES = -DCFG_TUD_ENABLED=1 -DCFG_TUD_NET=0 -DCFG_TUH_ENABLED=0 -DCFG_TUSB_INIT_MANUAL=1 -DCFG_TUSB_MCU=OPT_MCU_STM32H5 -DCFG_TUSB_OS=OPT_OS_NONE -DCFG_TUSB_RHPORT0_MODE=OPT_MODE_DEVICE -DSTM32H533xx -DUSE_FULL_LL_DRIVER -DUSE_HAL_DRIVER
+build CMakeFiles/stm32h533.elf.dir/Drivers/STM32H5xx_HAL_Driver/Src/stm32h5xx_hal_pwr_ex.c.obj: C_COMPILER__stm32h533.2eelf_unscanned_Debug C$:/Users/novak/Desktop/30626/h533-300626/Drivers/STM32H5xx_HAL_Driver/Src/stm32h5xx_hal_pwr_ex.c || cmake_object_order_depends_target_stm32h533.elf
+  CONFIG = Debug
+  DEFINES = -DCFG_TUD_ENABLED=1 -DCFG_TUD_NET=0 -DCFG_TUH_ENABLED=1 -DCFG_TUSB_INIT_MANUAL=1 -DCFG_TUSB_MCU=OPT_MCU_STM32H5 -DCFG_TUSB_OS=OPT_OS_NONE -DSTM32H533xx -DUSE_FULL_LL_DRIVER -DUSE_HAL_DRIVER
   DEP_FILE = CMakeFiles\stm32h533.elf.dir\Drivers\STM32H5xx_HAL_Driver\Src\stm32h5xx_hal_pwr_ex.c.obj.d
-  FLAGS = -std=gnu11 -mcpu=cortex-m33 -mthumb -mfpu=fpv5-sp-d16 -mfloat-abi=hard -Wall -Wextra -ffunction-sections -fdata-sections -O0 -g3
+  FLAGS = -g -std=gnu11 -mcpu=cortex-m33 -mthumb -mfpu=fpv5-sp-d16 -mfloat-abi=hard -Wall -Wextra -ffunction-sections -fdata-sections -O0 -g3
   INCLUDES = -IC:/Users/novak/Desktop/30626/h533-300626/Core/Inc -IC:/Users/novak/Desktop/30626/h533-300626/Core/App -IC:/Users/novak/Desktop/30626/h533-300626/Core/USB -IC:/Users/novak/Desktop/30626/h533-300626/Core/Board -IC:/Users/novak/Desktop/30626/h533-300626/Core/USB/tinyusb/src -IC:/Users/novak/Desktop/30626/h533-300626/Drivers/STM32H5xx_HAL_Driver/Inc -IC:/Users/novak/Desktop/30626/h533-300626/Drivers/STM32H5xx_HAL_Driver/Inc/Legacy -IC:/Users/novak/Desktop/30626/h533-300626/Drivers/CMSIS/Device/ST/STM32H5xx/Include -IC:/Users/novak/Desktop/30626/h533-300626/Drivers/CMSIS/Include
   OBJECT_DIR = CMakeFiles\stm32h533.elf.dir
   OBJECT_FILE_DIR = CMakeFiles\stm32h533.elf.dir\Drivers\STM32H5xx_HAL_Driver\Src
@@ -363,10 +469,11 @@ build CMakeFiles/stm32h533.elf.dir/Drivers/STM32H5xx_HAL_Driver/Src/stm32h5xx_ha
   TARGET_PDB = stm32h533.elf.pdb
   TARGET_SUPPORT_DIR = CMakeFiles\stm32h533.elf.dir
 
-build CMakeFiles/stm32h533.elf.dir/Drivers/STM32H5xx_HAL_Driver/Src/stm32h5xx_hal_rcc.c.obj: C_COMPILER__stm32h533.2eelf_unscanned_ C$:/Users/novak/Desktop/30626/h533-300626/Drivers/STM32H5xx_HAL_Driver/Src/stm32h5xx_hal_rcc.c || cmake_object_order_depends_target_stm32h533.elf
-  DEFINES = -DCFG_TUD_ENABLED=1 -DCFG_TUD_NET=0 -DCFG_TUH_ENABLED=0 -DCFG_TUSB_INIT_MANUAL=1 -DCFG_TUSB_MCU=OPT_MCU_STM32H5 -DCFG_TUSB_OS=OPT_OS_NONE -DCFG_TUSB_RHPORT0_MODE=OPT_MODE_DEVICE -DSTM32H533xx -DUSE_FULL_LL_DRIVER -DUSE_HAL_DRIVER
+build CMakeFiles/stm32h533.elf.dir/Drivers/STM32H5xx_HAL_Driver/Src/stm32h5xx_hal_rcc.c.obj: C_COMPILER__stm32h533.2eelf_unscanned_Debug C$:/Users/novak/Desktop/30626/h533-300626/Drivers/STM32H5xx_HAL_Driver/Src/stm32h5xx_hal_rcc.c || cmake_object_order_depends_target_stm32h533.elf
+  CONFIG = Debug
+  DEFINES = -DCFG_TUD_ENABLED=1 -DCFG_TUD_NET=0 -DCFG_TUH_ENABLED=1 -DCFG_TUSB_INIT_MANUAL=1 -DCFG_TUSB_MCU=OPT_MCU_STM32H5 -DCFG_TUSB_OS=OPT_OS_NONE -DSTM32H533xx -DUSE_FULL_LL_DRIVER -DUSE_HAL_DRIVER
   DEP_FILE = CMakeFiles\stm32h533.elf.dir\Drivers\STM32H5xx_HAL_Driver\Src\stm32h5xx_hal_rcc.c.obj.d
-  FLAGS = -std=gnu11 -mcpu=cortex-m33 -mthumb -mfpu=fpv5-sp-d16 -mfloat-abi=hard -Wall -Wextra -ffunction-sections -fdata-sections -O0 -g3
+  FLAGS = -g -std=gnu11 -mcpu=cortex-m33 -mthumb -mfpu=fpv5-sp-d16 -mfloat-abi=hard -Wall -Wextra -ffunction-sections -fdata-sections -O0 -g3
   INCLUDES = -IC:/Users/novak/Desktop/30626/h533-300626/Core/Inc -IC:/Users/novak/Desktop/30626/h533-300626/Core/App -IC:/Users/novak/Desktop/30626/h533-300626/Core/USB -IC:/Users/novak/Desktop/30626/h533-300626/Core/Board -IC:/Users/novak/Desktop/30626/h533-300626/Core/USB/tinyusb/src -IC:/Users/novak/Desktop/30626/h533-300626/Drivers/STM32H5xx_HAL_Driver/Inc -IC:/Users/novak/Desktop/30626/h533-300626/Drivers/STM32H5xx_HAL_Driver/Inc/Legacy -IC:/Users/novak/Desktop/30626/h533-300626/Drivers/CMSIS/Device/ST/STM32H5xx/Include -IC:/Users/novak/Desktop/30626/h533-300626/Drivers/CMSIS/Include
   OBJECT_DIR = CMakeFiles\stm32h533.elf.dir
   OBJECT_FILE_DIR = CMakeFiles\stm32h533.elf.dir\Drivers\STM32H5xx_HAL_Driver\Src
@@ -374,10 +481,11 @@ build CMakeFiles/stm32h533.elf.dir/Drivers/STM32H5xx_HAL_Driver/Src/stm32h5xx_ha
   TARGET_PDB = stm32h533.elf.pdb
   TARGET_SUPPORT_DIR = CMakeFiles\stm32h533.elf.dir
 
-build CMakeFiles/stm32h533.elf.dir/Drivers/STM32H5xx_HAL_Driver/Src/stm32h5xx_hal_rcc_ex.c.obj: C_COMPILER__stm32h533.2eelf_unscanned_ C$:/Users/novak/Desktop/30626/h533-300626/Drivers/STM32H5xx_HAL_Driver/Src/stm32h5xx_hal_rcc_ex.c || cmake_object_order_depends_target_stm32h533.elf
-  DEFINES = -DCFG_TUD_ENABLED=1 -DCFG_TUD_NET=0 -DCFG_TUH_ENABLED=0 -DCFG_TUSB_INIT_MANUAL=1 -DCFG_TUSB_MCU=OPT_MCU_STM32H5 -DCFG_TUSB_OS=OPT_OS_NONE -DCFG_TUSB_RHPORT0_MODE=OPT_MODE_DEVICE -DSTM32H533xx -DUSE_FULL_LL_DRIVER -DUSE_HAL_DRIVER
+build CMakeFiles/stm32h533.elf.dir/Drivers/STM32H5xx_HAL_Driver/Src/stm32h5xx_hal_rcc_ex.c.obj: C_COMPILER__stm32h533.2eelf_unscanned_Debug C$:/Users/novak/Desktop/30626/h533-300626/Drivers/STM32H5xx_HAL_Driver/Src/stm32h5xx_hal_rcc_ex.c || cmake_object_order_depends_target_stm32h533.elf
+  CONFIG = Debug
+  DEFINES = -DCFG_TUD_ENABLED=1 -DCFG_TUD_NET=0 -DCFG_TUH_ENABLED=1 -DCFG_TUSB_INIT_MANUAL=1 -DCFG_TUSB_MCU=OPT_MCU_STM32H5 -DCFG_TUSB_OS=OPT_OS_NONE -DSTM32H533xx -DUSE_FULL_LL_DRIVER -DUSE_HAL_DRIVER
   DEP_FILE = CMakeFiles\stm32h533.elf.dir\Drivers\STM32H5xx_HAL_Driver\Src\stm32h5xx_hal_rcc_ex.c.obj.d
-  FLAGS = -std=gnu11 -mcpu=cortex-m33 -mthumb -mfpu=fpv5-sp-d16 -mfloat-abi=hard -Wall -Wextra -ffunction-sections -fdata-sections -O0 -g3
+  FLAGS = -g -std=gnu11 -mcpu=cortex-m33 -mthumb -mfpu=fpv5-sp-d16 -mfloat-abi=hard -Wall -Wextra -ffunction-sections -fdata-sections -O0 -g3
   INCLUDES = -IC:/Users/novak/Desktop/30626/h533-300626/Core/Inc -IC:/Users/novak/Desktop/30626/h533-300626/Core/App -IC:/Users/novak/Desktop/30626/h533-300626/Core/USB -IC:/Users/novak/Desktop/30626/h533-300626/Core/Board -IC:/Users/novak/Desktop/30626/h533-300626/Core/USB/tinyusb/src -IC:/Users/novak/Desktop/30626/h533-300626/Drivers/STM32H5xx_HAL_Driver/Inc -IC:/Users/novak/Desktop/30626/h533-300626/Drivers/STM32H5xx_HAL_Driver/Inc/Legacy -IC:/Users/novak/Desktop/30626/h533-300626/Drivers/CMSIS/Device/ST/STM32H5xx/Include -IC:/Users/novak/Desktop/30626/h533-300626/Drivers/CMSIS/Include
   OBJECT_DIR = CMakeFiles\stm32h533.elf.dir
   OBJECT_FILE_DIR = CMakeFiles\stm32h533.elf.dir\Drivers\STM32H5xx_HAL_Driver\Src
@@ -393,7 +501,9 @@ build CMakeFiles/stm32h533.elf.dir/Drivers/STM32H5xx_HAL_Driver/Src/stm32h5xx_ha
 #############################################
 # Link the executable stm32h533.elf
 
-build stm32h533.elf: C_EXECUTABLE_LINKER__stm32h533.2eelf_ CMakeFiles/stm32h533.elf.dir/Core/Src/main.c.obj CMakeFiles/stm32h533.elf.dir/Core/Src/stm32h5xx_hal_msp.c.obj CMakeFiles/stm32h533.elf.dir/Core/Src/stm32h5xx_it.c.obj CMakeFiles/stm32h533.elf.dir/Core/Src/syscalls.c.obj CMakeFiles/stm32h533.elf.dir/Core/Src/sysmem.c.obj CMakeFiles/stm32h533.elf.dir/Core/Src/system_stm32h5xx.c.obj CMakeFiles/stm32h533.elf.dir/Core/App/drp_fsm.c.obj CMakeFiles/stm32h533.elf.dir/Core/App/usb_debug.c.obj CMakeFiles/stm32h533.elf.dir/Core/App/usb_manager.c.obj CMakeFiles/stm32h533.elf.dir/Core/Board/usb_hw.c.obj CMakeFiles/stm32h533.elf.dir/Core/USB/usb_device_tusb.c.obj CMakeFiles/stm32h533.elf.dir/Core/Startup/startup_stm32h533retx.s.obj CMakeFiles/stm32h533.elf.dir/Core/USB/tinyusb/src/tusb.c.obj CMakeFiles/stm32h533.elf.dir/Core/USB/tinyusb/src/common/tusb_fifo.c.obj CMakeFiles/stm32h533.elf.dir/Core/USB/tinyusb/src/device/usbd.c.obj CMakeFiles/stm32h533.elf.dir/Core/USB/tinyusb/src/class/cdc/cdc_device.c.obj CMakeFiles/stm32h533.elf.dir/Core/USB/tinyusb/src/portable/st/stm32_fsdev/fsdev_common.c.obj CMakeFiles/stm32h533.elf.dir/Core/USB/tinyusb/src/portable/st/stm32_fsdev/dcd_stm32_fsdev.c.obj CMakeFiles/stm32h533.elf.dir/Drivers/STM32H5xx_HAL_Driver/Src/stm32h5xx_hal.c.obj CMakeFiles/stm32h533.elf.dir/Drivers/STM32H5xx_HAL_Driver/Src/stm32h5xx_hal_cortex.c.obj CMakeFiles/stm32h533.elf.dir/Drivers/STM32H5xx_HAL_Driver/Src/stm32h5xx_hal_dma.c.obj CMakeFiles/stm32h533.elf.dir/Drivers/STM32H5xx_HAL_Driver/Src/stm32h5xx_hal_dma_ex.c.obj CMakeFiles/stm32h533.elf.dir/Drivers/STM32H5xx_HAL_Driver/Src/stm32h5xx_hal_exti.c.obj CMakeFiles/stm32h533.elf.dir/Drivers/STM32H5xx_HAL_Driver/Src/stm32h5xx_hal_flash.c.obj CMakeFiles/stm32h533.elf.dir/Drivers/STM32H5xx_HAL_Driver/Src/stm32h5xx_hal_flash_ex.c.obj CMakeFiles/stm32h533.elf.dir/Drivers/STM32H5xx_HAL_Driver/Src/stm32h5xx_hal_gpio.c.obj CMakeFiles/stm32h533.elf.dir/Drivers/STM32H5xx_HAL_Driver/Src/stm32h5xx_hal_icache.c.obj CMakeFiles/stm32h533.elf.dir/Drivers/STM32H5xx_HAL_Driver/Src/stm32h5xx_hal_pwr.c.obj CMakeFiles/stm32h533.elf.dir/Drivers/STM32H5xx_HAL_Driver/Src/stm32h5xx_hal_pwr_ex.c.obj CMakeFiles/stm32h533.elf.dir/Drivers/STM32H5xx_HAL_Driver/Src/stm32h5xx_hal_rcc.c.obj CMakeFiles/stm32h533.elf.dir/Drivers/STM32H5xx_HAL_Driver/Src/stm32h5xx_hal_rcc_ex.c.obj
+build stm32h533.elf: C_EXECUTABLE_LINKER__stm32h533.2eelf_Debug CMakeFiles/stm32h533.elf.dir/Core/Src/main.c.obj CMakeFiles/stm32h533.elf.dir/Core/Src/stm32h5xx_hal_msp.c.obj CMakeFiles/stm32h533.elf.dir/Core/Src/stm32h5xx_it.c.obj CMakeFiles/stm32h533.elf.dir/Core/Src/syscalls.c.obj CMakeFiles/stm32h533.elf.dir/Core/Src/sysmem.c.obj CMakeFiles/stm32h533.elf.dir/Core/Src/system_stm32h5xx.c.obj CMakeFiles/stm32h533.elf.dir/Core/App/drp_fsm.c.obj CMakeFiles/stm32h533.elf.dir/Core/App/ucpd_diag.c.obj CMakeFiles/stm32h533.elf.dir/Core/App/usb_debug.c.obj CMakeFiles/stm32h533.elf.dir/Core/App/usb_manager.c.obj CMakeFiles/stm32h533.elf.dir/Core/App/usb_mode_button.c.obj CMakeFiles/stm32h533.elf.dir/Core/Board/uart.c.obj CMakeFiles/stm32h533.elf.dir/Core/Board/usb_hw.c.obj CMakeFiles/stm32h533.elf.dir/Core/USB/usb_device_tusb.c.obj CMakeFiles/stm32h533.elf.dir/Core/USB/usb_host_tusb.c.obj CMakeFiles/stm32h533.elf.dir/Core/Startup/startup_stm32h533retx.s.obj CMakeFiles/stm32h533.elf.dir/Core/USB/tinyusb/src/tusb.c.obj CMakeFiles/stm32h533.elf.dir/Core/USB/tinyusb/src/common/tusb_fifo.c.obj CMakeFiles/stm32h533.elf.dir/Core/USB/tinyusb/src/device/usbd.c.obj CMakeFiles/stm32h533.elf.dir/Core/USB/tinyusb/src/host/usbh.c.obj CMakeFiles/stm32h533.elf.dir/Core/USB/tinyusb/src/class/cdc/cdc_device.c.obj CMakeFiles/stm32h533.elf.dir/Core/USB/tinyusb/src/portable/st/stm32_fsdev/fsdev_common.c.obj CMakeFiles/stm32h533.elf.dir/Core/USB/tinyusb/src/portable/st/stm32_fsdev/dcd_stm32_fsdev.c.obj CMakeFiles/stm32h533.elf.dir/Core/USB/tinyusb/src/portable/st/stm32_fsdev/hcd_stm32_fsdev.c.obj CMakeFiles/stm32h533.elf.dir/Drivers/STM32H5xx_HAL_Driver/Src/stm32h5xx_hal.c.obj CMakeFiles/stm32h533.elf.dir/Drivers/STM32H5xx_HAL_Driver/Src/stm32h5xx_hal_cortex.c.obj CMakeFiles/stm32h533.elf.dir/Drivers/STM32H5xx_HAL_Driver/Src/stm32h5xx_hal_dma.c.obj CMakeFiles/stm32h533.elf.dir/Drivers/STM32H5xx_HAL_Driver/Src/stm32h5xx_hal_dma_ex.c.obj CMakeFiles/stm32h533.elf.dir/Drivers/STM32H5xx_HAL_Driver/Src/stm32h5xx_hal_exti.c.obj CMakeFiles/stm32h533.elf.dir/Drivers/STM32H5xx_HAL_Driver/Src/stm32h5xx_hal_flash.c.obj CMakeFiles/stm32h533.elf.dir/Drivers/STM32H5xx_HAL_Driver/Src/stm32h5xx_hal_flash_ex.c.obj CMakeFiles/stm32h533.elf.dir/Drivers/STM32H5xx_HAL_Driver/Src/stm32h5xx_hal_gpio.c.obj CMakeFiles/stm32h533.elf.dir/Drivers/STM32H5xx_HAL_Driver/Src/stm32h5xx_hal_icache.c.obj CMakeFiles/stm32h533.elf.dir/Drivers/STM32H5xx_HAL_Driver/Src/stm32h5xx_hal_pwr.c.obj CMakeFiles/stm32h533.elf.dir/Drivers/STM32H5xx_HAL_Driver/Src/stm32h5xx_hal_pwr_ex.c.obj CMakeFiles/stm32h533.elf.dir/Drivers/STM32H5xx_HAL_Driver/Src/stm32h5xx_hal_rcc.c.obj CMakeFiles/stm32h533.elf.dir/Drivers/STM32H5xx_HAL_Driver/Src/stm32h5xx_hal_rcc_ex.c.obj
+  CONFIG = Debug
+  FLAGS = -g
   LINK_FLAGS = -TC:/Users/novak/Desktop/30626/h533-300626/STM32H533RETX_FLASH.ld -mcpu=cortex-m33 -mthumb -mfpu=fpv5-sp-d16 -mfloat-abi=hard -Wl,--gc-sections
   OBJECT_DIR = CMakeFiles\stm32h533.elf.dir
   POST_BUILD = cd .

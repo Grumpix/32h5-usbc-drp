@@ -1,0 +1,31 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "STM32H533 - CubeIDE STLINK GDB",
+      "type": "cortex-debug",
+      "request": "launch",
+
+      "cwd": "${workspaceFolder}",
+      "executable": "${workspaceFolder}/build/stm32h533.elf",
+
+      "servertype": "external",
+
+      "gdbPath": "C:/Program Files (x86)/Arm/arm-gnu-toolchain-15.x/bin/arm-none-eabi-gdb.exe",
+
+      "runToEntryPoint": "main",
+
+      "showDevDebugOutput": "raw",
+
+      "preLaunchTask": "build",
+
+      "gdbTarget": "localhost:50000",
+
+      "postLaunchCommands": [
+        "monitor reset halt",
+        "load",
+        "monitor reset init"
+      ]
+    }
+  ]
+}
