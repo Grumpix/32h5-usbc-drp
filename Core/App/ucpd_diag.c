@@ -1,13 +1,33 @@
 #include "ucpd_diag.h"
+
+#include "main.h"
+#include "uart.h"
 #include "stm32h5xx_ll_ucpd.h"
 #include "stm32h5xx_ll_bus.h"
 #include "stm32h5xx_ll_cortex.h"
 
-/* =========================
-   external UART logger
-   ========================= */
+#define UCPD_DIAG_EVENT_CC1  (1UL << 0)
+#define UCPD_DIAG_EVENT_CC2  (1UL << 1)
 
-extern void uart1_write_str(const char *s);
+static volatile uint32_t ucpd_diag_pending_events = 0U;
+static uint8_t ucpd_diag_last_vbus_state = 0U;
+
+static void ucpd_diag_write_vbus_state(uint8_t state)
+{
+    if (state != 0U)
+    {
+        uart_write_str("[VBUS] ON\r\n");
+    }
+    else
+    {
+        uart_write_str("[VBUS] OFF\r\n");
+    }
+}
+
+static uint8_t ucpd_diag_read_vbus_state(void)
+{
+    return LL_GPIO_IsInputPinSet(GPIOC, LL_GPIO_PIN_4) ? 1U : 0U;
+}
 
 /* =========================
    init
@@ -15,18 +35,26 @@ extern void uart1_write_str(const char *s);
 
 void ucpd_diag_init(void)
 {
-    /* enable clock */
+    LL_AHB2_GRP1_EnableClock(LL_AHB2_GRP1_PERIPH_GPIOC);
     LL_APB1_GRP2_EnableClock(LL_APB1_GRP2_PERIPH_UCPD1);
 
-    /* enable interrupts (TypeC CC events) */
+    LL_GPIO_SetPinMode(GPIOC, LL_GPIO_PIN_4, LL_GPIO_MODE_INPUT);
+    LL_GPIO_SetPinPull(GPIOC, LL_GPIO_PIN_4, LL_GPIO_PULL_NO);
+
+    ucpd_diag_pending_events = 0U;
+    ucpd_diag_last_vbus_state = ucpd_diag_read_vbus_state();
+
+    LL_UCPD_ClearFlag_TypeCEventCC1(UCPD1);
+    LL_UCPD_ClearFlag_TypeCEventCC2(UCPD1);
+
     LL_UCPD_EnableIT_TypeCEventCC1(UCPD1);
     LL_UCPD_EnableIT_TypeCEventCC2(UCPD1);
 
-    /* enable NVIC */
     NVIC_SetPriority(UCPD1_IRQn, 5);
     NVIC_EnableIRQ(UCPD1_IRQn);
 
-    uart1_write_str("UCPD DIAG INIT\r\n");
+    uart_write_str("[UCPD] DIAG INIT\r\n");
+    ucpd_diag_write_vbus_state(ucpd_diag_last_vbus_state);
 }
 
 /* =========================
@@ -35,55 +63,44 @@ void ucpd_diag_init(void)
 
 void ucpd_diag_irq(void)
 {
-    /* CC1 event */
     if (LL_UCPD_IsActiveFlag_TypeCEventCC1(UCPD1))
     {
         LL_UCPD_ClearFlag_TypeCEventCC1(UCPD1);
-        uart1_write_str("CC1 event\r\n");
+        ucpd_diag_pending_events |= UCPD_DIAG_EVENT_CC1;
     }
 
-    /* CC2 event */
     if (LL_UCPD_IsActiveFlag_TypeCEventCC2(UCPD1))
     {
         LL_UCPD_ClearFlag_TypeCEventCC2(UCPD1);
-        uart1_write_str("CC2 event\r\n");
+        ucpd_diag_pending_events |= UCPD_DIAG_EVENT_CC2;
     }
 }
 
-/* =========================
-   attach / detach
-   ========================= */
-
-void ucpd_diag_on_attach(void)
+void ucpd_diag_task(void)
 {
-    uart1_write_str("[UCPD] ATTACH\r\n");
-}
+    uint32_t pending_events;
+    uint8_t vbus_state;
 
-void ucpd_diag_on_detach(void)
-{
-    uart1_write_str("[UCPD] DETACH\r\n");
-}
+    __disable_irq();
+    pending_events = ucpd_diag_pending_events;
+    ucpd_diag_pending_events = 0U;
+    __enable_irq();
 
-/* =========================
-   role
-   ========================= */
+    if ((pending_events & UCPD_DIAG_EVENT_CC1) != 0U)
+    {
+        uart_write_str("[UCPD] CC1 event\r\n");
+    }
 
-void ucpd_diag_role(uint8_t is_source)
-{
-    if (is_source)
-        uart1_write_str("[UCPD] ROLE: SOURCE (HOST)\r\n");
-    else
-        uart1_write_str("[UCPD] ROLE: SINK (DEVICE)\r\n");
-}
+    if ((pending_events & UCPD_DIAG_EVENT_CC2) != 0U)
+    {
+        uart_write_str("[UCPD] CC2 event\r\n");
+    }
 
-/* =========================
-   VBUS state
-   ========================= */
+    vbus_state = ucpd_diag_read_vbus_state();
 
-void ucpd_diag_vbus(uint8_t state)
-{
-    if (state)
-        uart1_write_str("[VBUS] ON\r\n");
-    else
-        uart1_write_str("[VBUS] OFF\r\n");
+    if (vbus_state != ucpd_diag_last_vbus_state)
+    {
+        ucpd_diag_last_vbus_state = vbus_state;
+        ucpd_diag_write_vbus_state(vbus_state);
+    }
 }

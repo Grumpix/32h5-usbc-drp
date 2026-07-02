@@ -1,6 +1,7 @@
 #include <string.h>
 
 #include "tusb.h"
+#include "uart.h"
 
 #define USB_VID 0xCafe
 #define USB_PID 0x4000
@@ -124,12 +125,12 @@ uint16_t const *tud_descriptor_string_cb(uint8_t index, uint16_t langid)
 
 void tud_mount_cb(void)
 {
-    /* device connected */
+    uart_write_str("[USB] ATTACH\r\n");
 }
 
 void tud_umount_cb(void)
 {
-    /* device disconnected */
+    uart_write_str("[USB] DETACH\r\n");
 }
 
 void tud_suspend_cb(bool remote_wakeup_en)

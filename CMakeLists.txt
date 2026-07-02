@@ -31,9 +31,9 @@ add_compile_definitions(
 # =========================
 # SOURCES
 # =========================
-file(GLOB CORE_SOURCES Core/Src/*.c)
-file(GLOB APP_LAYER_SOURCES Core/App/*.c)
-file(GLOB BOARD_SOURCES Core/Board/*.c)
+file(GLOB CORE_SOURCES CONFIGURE_DEPENDS Core/Src/*.c)
+file(GLOB APP_LAYER_SOURCES CONFIGURE_DEPENDS Core/App/*.c)
+file(GLOB BOARD_SOURCES CONFIGURE_DEPENDS Core/Board/*.c)
 
 set(APP_SOURCES
     ${CORE_SOURCES}

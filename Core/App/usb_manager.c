@@ -1,6 +1,7 @@
 #include "usb_manager.h"
 #include "main.h"
 #include "tusb.h"
+#include "uart.h"
 #include "usb_host_tusb.h"
 #include "usb_hw.h"
 #include <stdbool.h>
@@ -25,6 +26,18 @@ typedef enum
 } usb_led_pattern_t;
 
 static usb_led_pattern_t led_pattern = USB_LED_OFF;
+
+static void usb_manager_log_mode(usb_mode_t mode)
+{
+    if (mode == USB_MODE_HOST)
+    {
+        uart_write_str("[USB] HOST mode\r\n");
+    }
+    else if (mode == USB_MODE_DEVICE)
+    {
+        uart_write_str("[USB] DEVICE mode\r\n");
+    }
+}
 
 /* =========================
    LED handling
@@ -81,6 +94,7 @@ static void usb_manager_set_error(void)
     error_state = 1;
     current_mode = USB_MODE_NONE;
     led_pattern = USB_LED_ERROR_DOUBLE;
+    uart_write_str("[USB] ERROR\r\n");
 }
 
 /* =========================
@@ -112,6 +126,7 @@ static bool usb_manager_start_mode(usb_mode_t mode)
         running = 1;
         host_ready = 0;
         led_pattern = USB_LED_DEVICE_SLOW;
+        usb_manager_log_mode(current_mode);
         return true;
     }
 
@@ -131,6 +146,7 @@ static bool usb_manager_start_mode(usb_mode_t mode)
     host_ready = 0;
     host_init_started_ms = HAL_GetTick();
     led_pattern = USB_LED_HOST_INIT_FAST;
+    usb_manager_log_mode(current_mode);
 
     return true;
 }

@@ -1,6 +1,8 @@
 #include "main.h"
+#include "uart.h"
 #include "usb_manager.h"
 #include "drp_fsm.h"
+#include "ucpd_diag.h"
 #include "usb_mode_button.h"
 
 void SystemClock_Config(void);
@@ -18,11 +20,13 @@ int main(void)
     MX_GPIO_Init();
     MX_ICACHE_Init();
 
+    uart_init();
+    uart_write_str("BOOT UART OK\r\n");
+
     HAL_Delay(5);
 
-    
     drp_init();
-    
+    ucpd_diag_init();
     usb_mode_button_init();
 
     usb_manager_init();
@@ -40,6 +44,7 @@ int main(void)
         }
 
         drp_task();
+        ucpd_diag_task();
         usb_manager_task();
     }
 }
