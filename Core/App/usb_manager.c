@@ -4,10 +4,11 @@
 #include "uart.h"
 #include "usb_host_tusb.h"
 #include "usb_hw.h"
+#include "usb_time.h"
 #include <stdbool.h>
 
 /* =========================
-   state
+   STATE
    ========================= */
 
 static volatile usb_mode_t current_mode = USB_MODE_NONE;
@@ -16,6 +17,7 @@ static volatile uint8_t host_ready = 0;
 static volatile uint8_t error_state = 0;
 static uint32_t host_init_started_ms = 0;
 
+/* LED */
 typedef enum
 {
     USB_LED_OFF = 0,
@@ -27,20 +29,20 @@ typedef enum
 
 static usb_led_pattern_t led_pattern = USB_LED_OFF;
 
+/* =========================
+   LOG
+   ========================= */
+
 static void usb_manager_log_mode(usb_mode_t mode)
 {
     if (mode == USB_MODE_HOST)
-    {
         uart_write_str("[USB] HOST mode\r\n");
-    }
     else if (mode == USB_MODE_DEVICE)
-    {
         uart_write_str("[USB] DEVICE mode\r\n");
-    }
 }
 
 /* =========================
-   LED handling
+   LED
    ========================= */
 
 static void usb_manager_update_led(void)
@@ -55,12 +57,12 @@ static void usb_manager_update_led(void)
 
         case USB_LED_DEVICE_SLOW:
             HAL_GPIO_WritePin(LED_GPIO_Port, LED_Pin,
-                              ((tick / 500U) & 0x1U) ? GPIO_PIN_SET : GPIO_PIN_RESET);
+                              ((tick / 500U) & 1U) ? GPIO_PIN_SET : GPIO_PIN_RESET);
             break;
 
         case USB_LED_HOST_INIT_FAST:
             HAL_GPIO_WritePin(LED_GPIO_Port, LED_Pin,
-                              ((tick / 100U) & 0x1U) ? GPIO_PIN_SET : GPIO_PIN_RESET);
+                              ((tick / 100U) & 1U) ? GPIO_PIN_SET : GPIO_PIN_RESET);
             break;
 
         case USB_LED_HOST_READY:
@@ -73,9 +75,7 @@ static void usb_manager_update_led(void)
             GPIO_PinState level = GPIO_PIN_RESET;
 
             if ((phase < 80U) || ((phase >= 180U) && (phase < 260U)))
-            {
                 level = GPIO_PIN_SET;
-            }
 
             HAL_GPIO_WritePin(LED_GPIO_Port, LED_Pin, level);
             break;
@@ -84,7 +84,7 @@ static void usb_manager_update_led(void)
 }
 
 /* =========================
-   error handling
+   ERROR
    ========================= */
 
 static void usb_manager_set_error(void)
@@ -94,25 +94,33 @@ static void usb_manager_set_error(void)
     error_state = 1;
     current_mode = USB_MODE_NONE;
     led_pattern = USB_LED_ERROR_DOUBLE;
+
     uart_write_str("[USB] ERROR\r\n");
 }
 
 /* =========================
-   start mode
+   INTERNAL START
    ========================= */
 
 static bool usb_manager_start_mode(usb_mode_t mode)
 {
-    tusb_rhport_init_t rh_init = {
-        .role = (mode == USB_MODE_HOST) ? TUSB_ROLE_HOST : TUSB_ROLE_DEVICE,
+    tusb_rhport_init_t rh_init =
+    {
+        .role  = (mode == USB_MODE_HOST) ? TUSB_ROLE_HOST : TUSB_ROLE_DEVICE,
         .speed = TUSB_SPEED_FULL
     };
 
     error_state = 0;
 
+    /* =====================================================
+       DEVICE MODE (PRIMARY FIX AREA)
+       ===================================================== */
     if (mode == USB_MODE_DEVICE)
     {
         usb_hw_enable_device();
+
+        /* IMPORTANT: settle time before stack start */
+        HAL_Delay(50);
 
         if (!tusb_rhport_init(0, &rh_init))
         {
@@ -120,19 +128,24 @@ static bool usb_manager_start_mode(usb_mode_t mode)
             return false;
         }
 
-        (void) tud_connect();
+        tud_connect();
 
         current_mode = USB_MODE_DEVICE;
         running = 1;
         host_ready = 0;
         led_pattern = USB_LED_DEVICE_SLOW;
+
         usb_manager_log_mode(current_mode);
         return true;
     }
 
-    /* HOST */
+    /* =====================================================
+       HOST MODE (ONLY EXPLICIT)
+       ===================================================== */
     usb_hw_enable_host();
     usb_host_tusb_init();
+
+    tusb_init();
 
     if (!tusb_rhport_init(0, &rh_init))
     {
@@ -146,13 +159,13 @@ static bool usb_manager_start_mode(usb_mode_t mode)
     host_ready = 0;
     host_init_started_ms = HAL_GetTick();
     led_pattern = USB_LED_HOST_INIT_FAST;
-    usb_manager_log_mode(current_mode);
 
+    usb_manager_log_mode(current_mode);
     return true;
 }
 
 /* =========================
-   public API
+   PUBLIC API
    ========================= */
 
 void usb_manager_init(void)
@@ -164,22 +177,19 @@ void usb_manager_init(void)
     led_pattern = USB_LED_OFF;
 }
 
+/* STOP (IMPORTANT: NO HARD RESET EVERY TIME) */
 void usb_manager_stop(void)
 {
     if (running)
     {
         if (current_mode == USB_MODE_DEVICE)
-        {
-            (void) tud_disconnect();
-        }
+            tud_disconnect();
 
         if (current_mode == USB_MODE_HOST)
-        {
             usb_host_tusb_deinit();
-        }
 
-        (void) tusb_deinit(0);
-        usb_hw_reset_peripheral();
+        tusb_deinit(0);
+
         usb_hw_deinit();
     }
 
@@ -190,6 +200,7 @@ void usb_manager_stop(void)
     led_pattern = USB_LED_OFF;
 }
 
+/* SWITCH (BUT NOT VBUS DRIVEN ANYMORE) */
 bool usb_manager_switch_mode(usb_mode_t mode)
 {
     if (mode == USB_MODE_NONE)
@@ -198,17 +209,16 @@ bool usb_manager_switch_mode(usb_mode_t mode)
         return true;
     }
 
-    if ((running != 0U) && (current_mode == mode) && (error_state == 0U))
-    {
+    if (running && current_mode == mode && !error_state)
         return true;
-    }
 
     usb_manager_stop();
-    HAL_Delay(2);
+    HAL_Delay(50);
 
     return usb_manager_start_mode(mode);
 }
 
+/* FORCE MODES */
 bool usb_manager_start_device(void)
 {
     return usb_manager_switch_mode(USB_MODE_DEVICE);
@@ -221,19 +231,19 @@ bool usb_manager_start_host(void)
 
 bool usb_manager_toggle_mode(void)
 {
-    usb_mode_t next_mode =
+    usb_mode_t next =
         (current_mode == USB_MODE_HOST) ? USB_MODE_DEVICE : USB_MODE_HOST;
 
-    return usb_manager_switch_mode(next_mode);
+    return usb_manager_switch_mode(next);
 }
 
 /* =========================
-   main task
+   TASK
    ========================= */
 
 void usb_manager_task(void)
 {
-    if (running != 0U)
+    if (running)
     {
         if (current_mode == USB_MODE_DEVICE)
         {
@@ -243,8 +253,9 @@ void usb_manager_task(void)
         {
             tuh_task_ext(0, false);
 
-            if ((host_ready == 0U) && tuh_rhport_is_active(0) &&
-                ((HAL_GetTick() - host_init_started_ms) >= 200U))
+            if (!host_ready &&
+                tuh_rhport_is_active(0) &&
+                (HAL_GetTick() - host_init_started_ms > 200))
             {
                 host_ready = 1;
                 led_pattern = USB_LED_HOST_READY;
@@ -255,6 +266,10 @@ void usb_manager_task(void)
     usb_manager_update_led();
 }
 
+/* =========================
+   GETTERS
+   ========================= */
+
 usb_mode_t usb_manager_get_mode(void)
 {
     return current_mode;
@@ -262,5 +277,5 @@ usb_mode_t usb_manager_get_mode(void)
 
 bool usb_manager_is_host_ready(void)
 {
-    return (host_ready != 0U);
+    return host_ready;
 }

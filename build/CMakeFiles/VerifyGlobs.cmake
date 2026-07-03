@@ -10,6 +10,7 @@ set(OLD_GLOB
   "C:/Users/novak/Desktop/30626/h533-300626/Core/App/usb_debug.c"
   "C:/Users/novak/Desktop/30626/h533-300626/Core/App/usb_manager.c"
   "C:/Users/novak/Desktop/30626/h533-300626/Core/App/usb_mode_button.c"
+  "C:/Users/novak/Desktop/30626/h533-300626/Core/App/usb_time.c"
   )
 if(NOT "${NEW_GLOB}" STREQUAL "${OLD_GLOB}")
   message("-- GLOB mismatch!")
@@ -35,6 +36,7 @@ endif()
 # BOARD_SOURCES at CMakeLists.txt:36 (file)
 file(GLOB NEW_GLOB LIST_DIRECTORIES true "C:/Users/novak/Desktop/30626/h533-300626/Core/Board/*.c")
 set(OLD_GLOB
+  "C:/Users/novak/Desktop/30626/h533-300626/Core/Board/board.c"
   "C:/Users/novak/Desktop/30626/h533-300626/Core/Board/usb_hw.c"
   )
 if(NOT "${NEW_GLOB}" STREQUAL "${OLD_GLOB}")

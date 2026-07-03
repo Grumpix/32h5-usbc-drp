@@ -3,7 +3,34 @@
 #include <stdbool.h>
 
 /* =========================================================
-   VBUS power switch (output control)
+   INTERNAL RESET (shared)
+   ========================================================= */
+
+static void usb_hw_force_stop(void)
+{
+    HAL_NVIC_DisableIRQ(USB_DRD_FS_IRQn);
+
+    __HAL_RCC_USB_FORCE_RESET();
+    for (volatile int i = 0; i < 1000; i++) { __NOP(); }
+    __HAL_RCC_USB_RELEASE_RESET();
+
+    __HAL_RCC_USB_CLK_DISABLE();
+
+    HAL_Delay(10);
+}
+
+/* =========================================================
+   EXPORTED RESET (FIX for linker)
+   ========================================================= */
+
+void usb_hw_reset_peripheral(void)
+{
+    /* THIS MUST EXIST because usb_manager calls it */
+    usb_hw_force_stop();
+}
+
+/* =========================================================
+   VBUS
    ========================================================= */
 
 void usb_hw_set_vbus(bool enabled)
@@ -14,20 +41,18 @@ void usb_hw_set_vbus(bool enabled)
 }
 
 /* =========================================================
-   VBUS sense (NUCLEO = PC4)
+   VBUS sense
    ========================================================= */
 
 void board_vbus_init(void)
 {
-    /* Enable GPIOC clock */
     __HAL_RCC_GPIOC_CLK_ENABLE();
 
-    /* Configure PC4 as input (VBUS detect) */
     GPIO_InitTypeDef GPIO_InitStruct = {0};
 
-    GPIO_InitStruct.Pin  = GPIO_PIN_4;
+    GPIO_InitStruct.Pin = GPIO_PIN_4;
     GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
-    GPIO_InitStruct.Pull = GPIO_NOPULL;
+    GPIO_InitStruct.Pull = GPIO_PULLDOWN;
 
     HAL_GPIO_Init(GPIOC, &GPIO_InitStruct);
 }
@@ -38,10 +63,10 @@ bool board_vbus_present(void)
 }
 
 /* =========================================================
-   USB peripheral init
+   INIT BASE
    ========================================================= */
 
-void usb_hw_init(void)
+static void usb_hw_base_init(void)
 {
     HAL_PWREx_EnableVddUSB();
 
@@ -51,41 +76,40 @@ void usb_hw_init(void)
     HAL_NVIC_EnableIRQ(USB_DRD_FS_IRQn);
 }
 
-void usb_hw_reset_peripheral(void)
-{
-    __HAL_RCC_USB_FORCE_RESET();
-
-    for (volatile uint32_t i = 0; i < 64; i++)
-    {
-        __NOP();
-    }
-
-    __HAL_RCC_USB_RELEASE_RESET();
-}
-
 /* =========================================================
-   Mode control
+   DEVICE
    ========================================================= */
 
 void usb_hw_enable_device(void)
 {
-    usb_hw_set_vbus(false);
-    usb_hw_init();
     usb_hw_reset_peripheral();
+
+    usb_hw_set_vbus(false);
+    HAL_Delay(20);
+
+    usb_hw_base_init();
 }
+
+/* =========================================================
+   HOST
+   ========================================================= */
 
 void usb_hw_enable_host(void)
 {
-    usb_hw_set_vbus(true);
-    HAL_Delay(20);
-
-    usb_hw_init();
     usb_hw_reset_peripheral();
+
+    usb_hw_set_vbus(true);
+    HAL_Delay(80);
+
+    usb_hw_base_init();
 }
+
+/* =========================================================
+   DEINIT
+   ========================================================= */
 
 void usb_hw_deinit(void)
 {
-    HAL_NVIC_DisableIRQ(USB_DRD_FS_IRQn);
+    usb_hw_reset_peripheral();
     usb_hw_set_vbus(false);
-    __HAL_RCC_USB_CLK_DISABLE();
 }

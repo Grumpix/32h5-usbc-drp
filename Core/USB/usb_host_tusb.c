@@ -4,15 +4,32 @@
 #include "tusb.h"
 
 static volatile uint8_t host_device_attached = 0;
+static volatile uint8_t attach_flag = 0;
 
 void usb_host_tusb_init(void)
 {
     host_device_attached = 0;
+    uart_write_str("[HOST] INIT\r\n");
+}
+
+void usb_host_tusb_task_log(void)
+{
+    if (attach_flag)
+    {
+        uart_write_str("[USB] ATTACH\r\n");
+        attach_flag = 0;
+    }
+}
+
+void usb_host_tusb_task(void)
+{
+    tuh_task_ext(0, false);
 }
 
 void usb_host_tusb_deinit(void)
 {
     host_device_attached = 0;
+    uart_write_str("[HOST] DEINIT\r\n");
 }
 
 bool usb_host_tusb_is_device_attached(void)
@@ -22,16 +39,15 @@ bool usb_host_tusb_is_device_attached(void)
 
 void tuh_mount_cb(uint8_t daddr)
 {
-    (void) daddr;
+    (void)daddr;
     host_device_attached = 1;
-    uart_write_str("[USB] ATTACH\r\n");
+    attach_flag = 1;
 }
 
 void tuh_umount_cb(uint8_t daddr)
 {
     (void) daddr;
     host_device_attached = 0;
-    uart_write_str("[USB] DETACH\r\n");
 }
 
 void tuh_event_hook_cb(uint8_t rhport, uint32_t eventid, bool in_isr)
