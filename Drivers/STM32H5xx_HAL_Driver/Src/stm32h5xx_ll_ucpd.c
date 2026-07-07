@@ -123,7 +123,7 @@ ErrorStatus LL_UCPD_Init(UCPD_TypeDef *UCPDx, const LL_UCPD_InitTypeDef *UCPD_In
   }
 
 
-  LL_UCPD_Disable(UCPDx);
+   LL_UCPD_Disable(UCPDx);
 
   /*---------------------------- UCPDx CFG1 Configuration ------------------------*/
   MODIFY_REG(UCPDx->CFG1,
