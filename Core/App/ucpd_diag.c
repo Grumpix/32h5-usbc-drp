@@ -5,7 +5,6 @@
 #include "stm32h5xx_ll_ucpd.h"
 #include "stm32h5xx_ll_bus.h"
 #include "stm32h5xx_ll_gpio.h"
-
 #include <stdbool.h>
 
 
@@ -31,8 +30,40 @@ static uint8_t stable_role = 0xFF;
 static uint32_t vbus_last_change_ms = 0U;
 
 
+
 /* =========================
-   PUBLIC GETTER
+   UCPD LOW LEVEL INIT
+   ========================= */
+
+static void ucpd_hw_init(void)
+{
+    LL_UCPD_InitTypeDef UCPD_InitStruct;
+
+    LL_UCPD_StructInit(&UCPD_InitStruct);
+
+
+    UCPD_InitStruct.psc_ucpdclk = LL_UCPD_PSC_DIV1;
+    UCPD_InitStruct.transwin = 15;
+    UCPD_InitStruct.IfrGap = 17;
+    UCPD_InitStruct.HbitClockDiv = 5;
+
+
+    LL_UCPD_Init(UCPD1, &UCPD_InitStruct);
+
+
+    uart_write_str("[UCPD] AFTER LL_INIT CR=");
+    uart_write_hex(UCPD1->CR);
+
+    uart_write_str(" CFG1=");
+    uart_write_hex(UCPD1->CFG1);
+
+    uart_write_str("\r\n");
+}
+
+
+
+/* =========================
+   GETTER
    ========================= */
 
 uint8_t ucpd_diag_is_source(void)
@@ -41,8 +72,9 @@ uint8_t ucpd_diag_is_source(void)
 }
 
 
+
 /* =========================
-   VBUS READ
+   VBUS
    ========================= */
 
 static uint8_t ucpd_diag_read_vbus(void)
@@ -53,43 +85,24 @@ static uint8_t ucpd_diag_read_vbus(void)
 }
 
 
+
 /* =========================
    INIT
    ========================= */
 
 void ucpd_diag_init(void)
 {
-    /* clocks */
 
-    LL_AHB2_GRP1_EnableClock(LL_AHB2_GRP1_PERIPH_GPIOB);
     LL_AHB2_GRP1_EnableClock(LL_AHB2_GRP1_PERIPH_GPIOC);
+    LL_AHB2_GRP1_EnableClock(LL_AHB2_GRP1_PERIPH_GPIOB);
+
 
     LL_APB1_GRP2_EnableClock(LL_APB1_GRP2_PERIPH_UCPD1);
 
 
-    /*
-     * UCPD pins
-     *
-     * CC1 = PB13
-     * CC2 = PB14
-     *
-     * AF depends on STM32H533 mapping
-     */
-
-    LL_GPIO_SetPinMode(GPIOB,
-                       LL_GPIO_PIN_13 | LL_GPIO_PIN_14,
-                       LL_GPIO_MODE_ALTERNATE);
-
-    LL_GPIO_SetPinPull(GPIOB,
-                       LL_GPIO_PIN_13 | LL_GPIO_PIN_14,
-                       LL_GPIO_PULL_NO);
-
 
     /*
      * VBUS sense
-     *
-     * Dev board:
-     * PC4
      */
 
     LL_GPIO_SetPinMode(GPIOC,
@@ -101,66 +114,153 @@ void ucpd_diag_init(void)
                        LL_GPIO_PULL_NO);
 
 
+
     /*
-     * UCPD configuration
+     * CC pins
+     */
+
+    LL_GPIO_SetPinMode(GPIOB,
+                       LL_GPIO_PIN_13 | LL_GPIO_PIN_14,
+                       LL_GPIO_MODE_ALTERNATE);
+
+    LL_GPIO_SetPinPull(GPIOB,
+                       LL_GPIO_PIN_13 | LL_GPIO_PIN_14,
+                       LL_GPIO_PULL_NO);
+
+
+
+    /*
+     * UCPD init
+     */
+
+    LL_UCPD_Disable(UCPD1);
+
+
+    ucpd_hw_init();
+
+
+
+    /*
+     * Manual CR setup
      *
-     * Start as Sink
+     * LL macros on this H5 driver
+     * write incorrect value.
      */
-
-    LL_UCPD_SetSNKRole(UCPD1);
 
 
     /*
-     * Enable CC detection
+     * Sink role
+     *
+     * ANAMODE = 1 means sink on STM32H5
      */
 
-    LL_UCPD_SetccEnable(
-        UCPD1,
-        LL_UCPD_CCENABLE_CC1CC2
-    );
+    SET_BIT(UCPD1->CR, UCPD_CR_ANAMODE);
+
+
+    uart_write_str("[UCPD] AFTER SNK CR=");
+    uart_write_hex(UCPD1->CR);
+    uart_write_str("\r\n");
+
 
 
     /*
-     * Select CC1 as default monitor
+     * Enable CC1 + CC2
      */
 
-    LL_UCPD_SetCCPin(
-        UCPD1,
-        LL_UCPD_CCPIN_CC1
-    );
+    SET_BIT(UCPD1->CR, UCPD_CR_CCENABLE);
+
+
+    uart_write_str("[UCPD] AFTER CCENABLE CR=");
+    uart_write_hex(UCPD1->CR);
+    uart_write_str("\r\n");
+
 
 
     /*
-     * Enable receiver
+     * Type-C detection
+     */
+
+    LL_UCPD_TypeCDetectionCC1Enable(UCPD1);
+    LL_UCPD_TypeCDetectionCC2Enable(UCPD1);
+
+
+
+    /*
+     * RX
      */
 
     LL_UCPD_RxEnable(UCPD1);
+
+
+
+    /*
+     * Enable peripheral
+     */
+
+    LL_UCPD_Enable(UCPD1);
+
+
+
+    /*
+     * Clear events
+     */
+
+    LL_UCPD_ClearFlag_TypeCEventCC1(UCPD1);
+    LL_UCPD_ClearFlag_TypeCEventCC2(UCPD1);
+
 
 
     /*
      * Interrupts
      */
 
+    LL_UCPD_EnableIT_TypeCEventCC1(UCPD1);
+    LL_UCPD_EnableIT_TypeCEventCC2(UCPD1);
+
+
+
     ucpd_diag_pending_events = 0U;
 
     last_vbus = ucpd_diag_read_vbus();
+
     stable_role = 0xFF;
+
     vbus_last_change_ms = HAL_GetTick();
 
-
-    LL_UCPD_ClearFlag_TypeCEventCC1(UCPD1);
-    LL_UCPD_ClearFlag_TypeCEventCC2(UCPD1);
-
-    LL_UCPD_EnableIT_TypeCEventCC1(UCPD1);
-    LL_UCPD_EnableIT_TypeCEventCC2(UCPD1);
 
 
     NVIC_SetPriority(UCPD1_IRQn, 5);
     NVIC_EnableIRQ(UCPD1_IRQn);
 
 
+
+    uart_write_str("[UCPD] CR=");
+    uart_write_hex(UCPD1->CR);
+
+    uart_write_str(" CFG1=");
+    uart_write_hex(UCPD1->CFG1);
+
+    uart_write_str(" SR=");
+    uart_write_hex(UCPD1->SR);
+
+    uart_write_str(" IMR=");
+    uart_write_hex(UCPD1->IMR);
+
+    uart_write_str("\r\n");
+
+
+    uart_write_str("[UCPD] CC1=");
+    uart_write_hex(LL_UCPD_GetTypeCVstateCC1(UCPD1));
+
+    uart_write_str(" CC2=");
+    uart_write_hex(LL_UCPD_GetTypeCVstateCC2(UCPD1));
+
+    uart_write_str("\r\n");
+
+
     uart_write_str("[UCPD] DIAG INIT\r\n");
 }
+
 
 
 /* =========================
@@ -172,6 +272,7 @@ void ucpd_diag_irq(void)
     if (LL_UCPD_IsActiveFlag_TypeCEventCC1(UCPD1))
     {
         LL_UCPD_ClearFlag_TypeCEventCC1(UCPD1);
+
         ucpd_diag_pending_events |= UCPD_DIAG_EVENT_CC1;
     }
 
@@ -179,9 +280,11 @@ void ucpd_diag_irq(void)
     if (LL_UCPD_IsActiveFlag_TypeCEventCC2(UCPD1))
     {
         LL_UCPD_ClearFlag_TypeCEventCC2(UCPD1);
+
         ucpd_diag_pending_events |= UCPD_DIAG_EVENT_CC2;
     }
 }
+
 
 
 /* =========================
@@ -195,9 +298,11 @@ void ucpd_diag_task(void)
     uint32_t now = HAL_GetTick();
 
 
+
     __disable_irq();
 
     events = ucpd_diag_pending_events;
+
     ucpd_diag_pending_events = 0U;
 
     __enable_irq();
@@ -217,11 +322,8 @@ void ucpd_diag_task(void)
 
 
 
-    /*
-     * VBUS debounce
-     */
-
     vbus = ucpd_diag_read_vbus();
+
 
 
     if (vbus != last_vbus)
@@ -229,11 +331,14 @@ void ucpd_diag_task(void)
         if ((now - vbus_last_change_ms) > 50U)
         {
             vbus_last_change_ms = now;
+
             last_vbus = vbus;
 
+
             uart_write_str(
-                vbus ? "[VBUS] ON\r\n"
-                     : "[VBUS] OFF\r\n"
+                vbus ?
+                "[VBUS] ON\r\n" :
+                "[VBUS] OFF\r\n"
             );
         }
     }
@@ -241,9 +346,7 @@ void ucpd_diag_task(void)
 
 
     /*
-     * Temporary role indication
-     *
-     * Real role will later come from CC state.
+     * Diagnostic only
      */
 
     if (last_vbus)
@@ -251,6 +354,7 @@ void ucpd_diag_task(void)
         if (stable_role != 0U)
         {
             stable_role = 0U;
+
             ucpd_is_source = 0U;
 
             uart_write_str("[UCPD] ROLE: DEVICE\r\n");
@@ -261,6 +365,7 @@ void ucpd_diag_task(void)
         if (stable_role != 1U)
         {
             stable_role = 1U;
+
             ucpd_is_source = 1U;
 
             uart_write_str("[UCPD] ROLE: HOST\r\n");
