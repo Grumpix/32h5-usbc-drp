@@ -4,6 +4,19 @@
 #include "drp_fsm.h"
 #include "ucpd_diag.h"
 #include "usb_mode_button.h"
+void SystemClock_Config(void);
+
+void MPU_Config(void)
+{
+}
+
+void MX_GPIO_Init(void)
+{
+}
+
+void MX_ICACHE_Init(void)
+{
+}
 
 int main(void)
 {
