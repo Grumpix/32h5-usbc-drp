@@ -21,12 +21,22 @@ add_compile_definitions(
 
     CFG_TUSB_MCU=OPT_MCU_STM32H5
     CFG_TUSB_OS=OPT_OS_NONE
-
     CFG_TUSB_INIT_MANUAL=1
 
-    CFG_TUD_NET=0
     CFG_TUD_ENABLED=1
+    CFG_TUD_CDC=1
+    CFG_TUD_CDC_COUNT=1
+    CFG_TUD_NET=0
+    CFG_TUD_RNDIS=0
+    CFG_TUD_ECM_RNDIS=0
+
     CFG_TUH_ENABLED=1
+    CFG_TUH_MSC=1
+    CFG_TUH_HID=0
+    CFG_TUH_HUB=0
+    CFG_TUH_DEVICE_MAX=4
+    CFG_TUH_MSC_MAXLUN=1
+    CFG_TUH_ENUMERATION_BUFSIZE=256
 )
 
 
@@ -63,9 +73,13 @@ set(TINYUSB_SOURCES
     ${TINYUSB_SRC}/device/usbd.c
     ${TINYUSB_SRC}/host/usbh.c
 
+    # Device classes
     ${TINYUSB_SRC}/class/cdc/cdc_device.c
 
+    # Host classes
+    ${TINYUSB_SRC}/class/msc/msc_host.c
 
+    # STM32 FSDEV device + host backend
     ${TINYUSB_SRC}/portable/st/stm32_fsdev/fsdev_common.c
     ${TINYUSB_SRC}/portable/st/stm32_fsdev/dcd_stm32_fsdev.c
     ${TINYUSB_SRC}/portable/st/stm32_fsdev/hcd_stm32_fsdev.c
@@ -96,7 +110,6 @@ set(HAL_SOURCES
     Drivers/STM32H5xx_HAL_Driver/Src/stm32h5xx_hal_rcc.c
     Drivers/STM32H5xx_HAL_Driver/Src/stm32h5xx_hal_rcc_ex.c
 
-
     # =========================
     # UCPD LL DRIVER
     # =========================
@@ -122,15 +135,12 @@ add_executable(${PROJECT_NAME}.elf
 
 target_include_directories(${PROJECT_NAME}.elf PRIVATE
 
-
     Core/Inc
     Core/App
     Core/USB
     Core/Board
 
-
     ${TINYUSB_SRC}
-
 
     Drivers/STM32H5xx_HAL_Driver/Inc
     Drivers/STM32H5xx_HAL_Driver/Inc/Legacy
@@ -154,14 +164,11 @@ target_compile_options(${PROJECT_NAME}.elf PRIVATE
     -mfpu=fpv5-sp-d16
     -mfloat-abi=hard
 
-
     -Wall
     -Wextra
 
-
     -ffunction-sections
     -fdata-sections
-
 
     -O0
     -g3

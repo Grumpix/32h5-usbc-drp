@@ -2,6 +2,7 @@
 
 #include "main.h"
 #include "uart.h"
+#include "usb_manager.h"
 
 #include "stm32h5xx_ll_ucpd.h"
 #include "stm32h5xx_ll_bus.h"
@@ -11,9 +12,9 @@
 
 
 /*
- * SOURCE / HOST / Rp TEST - AUTO VBUS
+ * USB-C SOURCE / HOST BRING-UP TEST
  *
- * Nalezeny funkcni kandidat:
+ * Funkcni source/Rp rezim:
  *
  * CR = 0x00000C80
  *    = UCPD_CR_ANASUBMODE_0
@@ -21,12 +22,19 @@
  *    | UCPD_CR_CCENABLE_1
  *
  * Chovani:
- * - STM32 vystavi Rp jako source/host
- * - ceka na Rd od pripojeneho sink/device zarizeni
- * - kdyz detekuje attach na CC1/CC2, zapne VBUS pres PB8 P-MOS gate
- * - kdyz detekuje detach, vypne VBUS
  *
- * TinyUSB host zatim NEspoustime.
+ * - STM32 vystavi Rp jako USB-C Source
+ * - ceka na Rd od pripojeneho Sink/Device
+ * - detekuje orientaci CC1/CC2
+ * - zapne VBUS pres PB8 P-MOS gate
+ * - ceka na VBUS PRESENT z PC4
+ * - po 200 ms spusti TinyUSB Host pres usb_manager_start_host()
+ *
+ * Detach:
+ *
+ * - vypne VBUS
+ * - host stack zatim explicitne nezastavujeme, protoze ted testujeme bring-up
+ *   a nechceme volat API, ktere v projektu nemusi existovat.
  */
 
 
@@ -34,13 +42,14 @@
  * VBUS P-MOS gate control.
  *
  * Zapojeni:
- * Source P-MOS = +5V
+ *
+ * Source P-MOS = +5 V
  * Drain P-MOS  = USB-C VBUS
- * Gate P-MOS   = PB8 + 100k pull-up na Source/+5V
+ * Gate P-MOS   = PB8 + 100k pull-up na Source/+5 V
  *
  * OFF:
  *   PB8 = Hi-Z/input
- *   gate vytazena na +5V
+ *   gate vytazena na +5 V
  *
  * ON:
  *   PB8 = output LOW
@@ -64,11 +73,12 @@
 
 
 /*
- * Debounce / timing.
+ * Timings.
  */
 
 #define TYPEC_ATTACH_DEBOUNCE_MS      80U
 #define TYPEC_DETACH_DEBOUNCE_MS      120U
+#define USB_HOST_START_DELAY_MS       200U
 #define PERIODIC_DUMP_MS              2000U
 
 
@@ -84,21 +94,37 @@ typedef enum
 } typec_orientation_t;
 
 
+typedef enum
+{
+    HOST_TEST_STATE_UNATTACHED = 0,
+    HOST_TEST_STATE_ATTACHED_WAIT_VBUS,
+    HOST_TEST_STATE_ATTACHED_WAIT_USB_START,
+    HOST_TEST_STATE_USB_HOST_ACTIVE
+} host_test_state_t;
+
+
 static volatile uint32_t ucpd_diag_pending_events = 0U;
+
+static host_test_state_t host_state =
+    HOST_TEST_STATE_UNATTACHED;
+
+static typec_orientation_t source_orientation =
+    TYPEC_ORIENTATION_NONE;
+
+static uint8_t candidate_attached = 0U;
+static typec_orientation_t candidate_orientation =
+    TYPEC_ORIENTATION_NONE;
+
+static uint32_t candidate_since_ms = 0U;
 
 static uint8_t last_vbus = 0U;
 static uint32_t vbus_last_change_ms = 0U;
 
+static uint32_t host_start_wait_since_ms = 0U;
 static uint32_t periodic_dump_ms = 0U;
 
-static uint8_t source_attached = 0U;
-static typec_orientation_t source_orientation = TYPEC_ORIENTATION_NONE;
-
-static uint8_t candidate_attached = 0U;
-static typec_orientation_t candidate_orientation = TYPEC_ORIENTATION_NONE;
-static uint32_t candidate_since_ms = 0U;
-
 static uint8_t vbus_fet_enabled = 0U;
+static uint8_t usb_host_started = 0U;
 
 
 static uint8_t ucpd_diag_read_vbus(void)
@@ -128,8 +154,8 @@ static void vbus_fet_off_hiz(void)
 {
     /*
      * OFF:
-     * PB8 Hi-Z/input bez pullu.
-     * Externi gate-source pull-up vytahne gate na +5V.
+     * PB8 Hi-Z/input bez internich pullu.
+     * Externi gate-source pull-up vytahne gate na +5 V.
      */
 
     LL_GPIO_SetPinPull(
@@ -350,7 +376,10 @@ static void decode_pb13_pb14_pb8(void)
 
 static void ucpd_dump_state(void)
 {
-    uart_write_str("[UCPD] CFG1=");
+    uart_write_str("[UCPD] STATE=");
+    uart_write_hex((uint32_t)host_state);
+
+    uart_write_str(" CFG1=");
     uart_write_hex(UCPD1->CFG1);
 
     uart_write_str(" CFG2=");
@@ -382,6 +411,9 @@ static void ucpd_dump_state(void)
 
     uart_write_str(" FET=");
     uart_write_hex(vbus_fet_enabled);
+
+    uart_write_str(" HOST=");
+    uart_write_hex(usb_host_started);
 
     uart_write_str(" PWR_UCPDR=");
     uart_write_hex(PWR->UCPDR);
@@ -448,7 +480,7 @@ static void ucpd_hw_init_source_mode(void)
 
 
     /*
-     * SOURCE/Rp mode candidate found:
+     * SOURCE/Rp mode:
      *
      * CR = 0x00000C80
      */
@@ -486,13 +518,10 @@ static typec_orientation_t source_detect_orientation_from_sr(void)
 
 
     /*
-     * From observed source/Rp test:
+     * Observed in source/Rp mode:
      *
-     * unattached/open looked like vstate 2
-     * attached sink/Rd looked like vstate 1
-     *
-     * So for now:
-     * vstate == 1 => attached sink detected.
+     * open/unattached -> vstate 2
+     * sink/Rd attached -> vstate 1
      */
 
     if((cc1 == 1U) && (cc2 != 1U))
@@ -505,17 +534,32 @@ static typec_orientation_t source_detect_orientation_from_sr(void)
         return TYPEC_ORIENTATION_CC2;
     }
 
-    /*
-     * If both or none are 1, treat as no valid stable attach.
-     */
-
     return TYPEC_ORIENTATION_NONE;
+}
+
+
+static void usb_host_start_once(void)
+{
+    if(usb_host_started)
+    {
+        return;
+    }
+
+    uart_write_str("[USB-HOST] START\r\n");
+
+    usb_manager_start_host();
+
+    usb_host_started =
+        1U;
+
+    uart_write_str("[USB-HOST] START DONE\r\n");
 }
 
 
 uint8_t ucpd_diag_is_source(void)
 {
-    return source_attached ? 1U : 0U;
+    return
+        (host_state != HOST_TEST_STATE_UNATTACHED) ? 1U : 0U;
 }
 
 
@@ -669,12 +713,21 @@ void ucpd_diag_init(void)
     candidate_orientation = TYPEC_ORIENTATION_NONE;
     candidate_since_ms = HAL_GetTick();
 
-    source_attached = 0U;
-    source_orientation = TYPEC_ORIENTATION_NONE;
+    host_state =
+        HOST_TEST_STATE_UNATTACHED;
+
+    source_orientation =
+        TYPEC_ORIENTATION_NONE;
+
+    host_start_wait_since_ms =
+        0U;
+
+    usb_host_started =
+        0U;
 
 
-    uart_write_str("===== UCPD READY SOURCE/RP AUTO-VBUS TEST =====\r\n");
-    uart_write_str("[TEST] Connect USB-C sink/device. VBUS will turn on automatically after CC attach.\r\n");
+    uart_write_str("===== UCPD READY HOST BRING-UP TEST =====\r\n");
+    uart_write_str("[TEST] Connect USB-C sink/device. Host starts after VBUS PRESENT.\r\n");
 
     ucpd_dump_state();
 }
@@ -700,7 +753,7 @@ void ucpd_diag_irq(void)
 }
 
 
-static void source_state_machine_task(uint32_t now)
+static void host_state_machine_task(uint32_t now)
 {
     typec_orientation_t detected =
         source_detect_orientation_from_sr();
@@ -729,67 +782,166 @@ static void source_state_machine_task(uint32_t now)
     }
 
 
-    if(source_attached == 0U)
+    switch(host_state)
     {
-        if(candidate_attached)
+        case HOST_TEST_STATE_UNATTACHED:
         {
-            if((now - candidate_since_ms) >= TYPEC_ATTACH_DEBOUNCE_MS)
+            if(candidate_attached)
             {
-                source_attached =
-                    1U;
-
-                source_orientation =
-                    candidate_orientation;
-
-                if(source_orientation == TYPEC_ORIENTATION_CC1)
+                if((now - candidate_since_ms) >= TYPEC_ATTACH_DEBOUNCE_MS)
                 {
-                    uart_write_str("[TYPEC-SRC] SINK ATTACHED on CC1\r\n");
-                }
-                else if(source_orientation == TYPEC_ORIENTATION_CC2)
-                {
-                    uart_write_str("[TYPEC-SRC] SINK ATTACHED on CC2\r\n");
-                }
-                else
-                {
-                    uart_write_str("[TYPEC-SRC] SINK ATTACHED unknown orientation\r\n");
-                }
+                    source_orientation =
+                        candidate_orientation;
 
-                ucpd_dump_state();
+                    if(source_orientation == TYPEC_ORIENTATION_CC1)
+                    {
+                        uart_write_str("[TYPEC-SRC] SINK ATTACHED on CC1\r\n");
+                    }
+                    else if(source_orientation == TYPEC_ORIENTATION_CC2)
+                    {
+                        uart_write_str("[TYPEC-SRC] SINK ATTACHED on CC2\r\n");
+                    }
+                    else
+                    {
+                        uart_write_str("[TYPEC-SRC] SINK ATTACHED unknown orientation\r\n");
+                    }
 
-                /*
-                 * Source is allowed to provide VBUS after valid attach.
-                 */
+                    ucpd_dump_state();
 
-                vbus_fet_apply(1U);
+                    /*
+                     * Source provides VBUS only after valid attach.
+                     */
+
+                    vbus_fet_apply(1U);
+
+                    host_state =
+                        HOST_TEST_STATE_ATTACHED_WAIT_VBUS;
+                }
             }
+
+            break;
         }
-    }
-    else
-    {
-        /*
-         * Attached state: detach when no valid CC is stable.
-         */
 
-        if(candidate_attached == 0U)
+
+        case HOST_TEST_STATE_ATTACHED_WAIT_VBUS:
         {
-            if((now - candidate_since_ms) >= TYPEC_DETACH_DEBOUNCE_MS)
+            if(candidate_attached == 0U)
             {
-                uart_write_str("[TYPEC-SRC] DETACH\r\n");
+                if((now - candidate_since_ms) >= TYPEC_DETACH_DEBOUNCE_MS)
+                {
+                    uart_write_str("[TYPEC-SRC] DETACH before VBUS\r\n");
 
-                source_attached =
-                    0U;
+                    vbus_fet_apply(0U);
 
-                source_orientation =
-                    TYPEC_ORIENTATION_NONE;
+                    source_orientation =
+                        TYPEC_ORIENTATION_NONE;
 
-                /*
-                 * Turn off VBUS on detach.
-                 */
+                    host_state =
+                        HOST_TEST_STATE_UNATTACHED;
 
-                vbus_fet_apply(0U);
+                    ucpd_dump_state();
+                }
+
+                break;
+            }
+
+            if(ucpd_diag_read_vbus())
+            {
+                uart_write_str("[TYPEC-SRC] VBUS PRESENT, wait before host start\r\n");
+
+                host_start_wait_since_ms =
+                    now;
+
+                host_state =
+                    HOST_TEST_STATE_ATTACHED_WAIT_USB_START;
+            }
+
+            break;
+        }
+
+
+        case HOST_TEST_STATE_ATTACHED_WAIT_USB_START:
+        {
+            if(candidate_attached == 0U)
+            {
+                if((now - candidate_since_ms) >= TYPEC_DETACH_DEBOUNCE_MS)
+                {
+                    uart_write_str("[TYPEC-SRC] DETACH before USB host start\r\n");
+
+                    vbus_fet_apply(0U);
+
+                    source_orientation =
+                        TYPEC_ORIENTATION_NONE;
+
+                    host_state =
+                        HOST_TEST_STATE_UNATTACHED;
+
+                    ucpd_dump_state();
+                }
+
+                break;
+            }
+
+            if((now - host_start_wait_since_ms) >= USB_HOST_START_DELAY_MS)
+            {
+                usb_host_start_once();
+
+                host_state =
+                    HOST_TEST_STATE_USB_HOST_ACTIVE;
 
                 ucpd_dump_state();
             }
+
+            break;
+        }
+
+
+        case HOST_TEST_STATE_USB_HOST_ACTIVE:
+        {
+            if(candidate_attached == 0U)
+            {
+                if((now - candidate_since_ms) >= TYPEC_DETACH_DEBOUNCE_MS)
+                {
+                    uart_write_str("[TYPEC-SRC] DETACH while USB host active\r\n");
+
+                    /*
+                     * For this bring-up test:
+                     * - vypneme VBUS
+                     * - zustaneme bez explicitniho host deinitu
+                     *
+                     * Pozdeji doplnime korektni usb_manager_stop_host(),
+                     * pokud v projektu pridame takove API.
+                     */
+
+                    vbus_fet_apply(0U);
+
+                    source_orientation =
+                        TYPEC_ORIENTATION_NONE;
+
+                    host_state =
+                        HOST_TEST_STATE_UNATTACHED;
+
+                    ucpd_dump_state();
+                }
+            }
+
+            break;
+        }
+
+
+        default:
+        {
+            uart_write_str("[TYPEC-SRC] Invalid state, reset to unattached\r\n");
+
+            vbus_fet_apply(0U);
+
+            host_state =
+                HOST_TEST_STATE_UNATTACHED;
+
+            source_orientation =
+                TYPEC_ORIENTATION_NONE;
+
+            break;
         }
     }
 }
@@ -805,10 +957,10 @@ void ucpd_diag_task(void)
 
 
     /*
-     * Source attach/detach state machine.
+     * Host bring-up state machine.
      */
 
-    source_state_machine_task(now);
+    host_state_machine_task(now);
 
 
     /*

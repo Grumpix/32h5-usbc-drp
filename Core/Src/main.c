@@ -3,7 +3,6 @@
 #include "usb_manager.h"
 #include "drp_fsm.h"
 #include "ucpd_diag.h"
-#include "usb_mode_button.h"
 
 
 void SystemClock_Config(void);
@@ -42,46 +41,37 @@ int main(void)
     drp_init();
 
     /*
-     * UCPD sink/device init.
+     * HOST/SOURCE bring-up test:
+     *
+     * ucpd_diag_init() nastavi USB-C Source/Rp rezim.
+     * TinyUSB host se NESPOUSTI hned.
+     * Spusti se az po:
+     * - CC attach
+     * - VBUS FET ON
+     * - VBUS PRESENT
+     * - kratke prodleve
      */
     ucpd_diag_init();
-
-    /*
-     * PA0 button -> PC13 VBUS FET test.
-     *
-     * DULEZITE:
-     * usb_mode_button_pressed() se musi volat v main loopu,
-     * protoze uvnitr teto funkce probiha polling PA0 a toggle PC13.
-     */
-    usb_mode_button_init();
 
     usb_manager_init();
 
     /*
-     * DEFAULT USB STATE
+     * DULEZITE:
      *
-     * Pozor:
-     * usb_manager_start_device() muze pres usb_hw nastavit VBUS OFF.
-     * To je pro device rezim v poradku.
-     * Tlacitko pak PC13 prepina rucne.
+     * Pro tento HOST test uz NEstartujeme device jako default.
+     *
+     * NE:
+     * usb_manager_start_device();
+     *
+     * Host se spusti z ucpd_diag_task(), az bude validni Type-C source attach.
      */
-    usb_manager_start_device();
 
     while (1)
     {
-        /*
-         * Tohle uz NENI USB mode override.
-         *
-         * V testovaci verzi usb_mode_button.c:
-         * - cte PA0
-         * - loguje zmeny
-         * - prepina PC13
-         * - vzdy vraci false
-         */
-        (void)usb_mode_button_pressed();
-
         drp_task();
+
         ucpd_diag_task();
+
         usb_manager_task();
     }
 }
