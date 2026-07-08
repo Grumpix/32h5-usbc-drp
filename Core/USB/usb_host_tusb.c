@@ -1,11 +1,12 @@
 #include "usb_host_tusb.h"
 
+#include "main.h"
 #include "uart.h"
 #include "tusb.h"
+#include "ftdi_host.h"
 
 #include <stdbool.h>
 #include <stdint.h>
-#include <stddef.h>
 #include <string.h>
 
 
@@ -46,10 +47,6 @@ static uint8_t msc_lba0[512];
 #endif
 
 
-/* =========================
-   UART HELPERS
-========================= */
-
 static void uart_write_dec_u32(uint32_t value)
 {
     char buf[11];
@@ -73,8 +70,11 @@ static void uart_write_dec_u32(uint32_t value)
 
         i--;
 
-        c[0] = buf[i];
-        c[1] = '\0';
+        c[0] =
+            buf[i];
+
+        c[1] =
+            '\0';
 
         uart_write_str(c);
     }
@@ -95,14 +95,22 @@ static void uart_write_ascii_fixed(const uint8_t *data, uint32_t len)
 
         if((data[i] >= 32U) && (data[i] <= 126U))
         {
-            c[0] = (char)data[i];
+            c[0] =
+                (char)data[i];
+        }
+        else if((data[i] == '\r') || (data[i] == '\n') || (data[i] == '\t'))
+        {
+            c[0] =
+                (char)data[i];
         }
         else
         {
-            c[0] = '.';
+            c[0] =
+                '.';
         }
 
-        c[1] = '\0';
+        c[1] =
+            '\0';
 
         uart_write_str(c);
     }
@@ -126,6 +134,11 @@ static void print_vid_pid(uint16_t vid, uint16_t pid)
 
     uart_write_str(" PID=");
     uart_write_hex((uint32_t)pid);
+
+    if((vid == 0x0403U) && (pid == 0x6001U))
+    {
+        uart_write_str(" FT232R");
+    }
 }
 
 
@@ -137,10 +150,14 @@ static void print_vid_pid(uint16_t vid, uint16_t pid)
 
 static void msc_debug_reset(void)
 {
-    msc_state = MSC_DBG_IDLE;
+    msc_state =
+        MSC_DBG_IDLE;
 
-    msc_daddr = 0U;
-    msc_lun = 0U;
+    msc_daddr =
+        0U;
+
+    msc_lun =
+        0U;
 
     memset(&msc_inquiry_resp, 0, sizeof(msc_inquiry_resp));
     memset(&msc_capacity_resp, 0, sizeof(msc_capacity_resp));
@@ -241,9 +258,10 @@ static bool msc_start_capacity(void);
 static bool msc_start_read_lba0(void);
 
 
-static bool msc_complete_cb(uint8_t daddr, tuh_msc_complete_data_t const * cb_data)
+static bool msc_complete_cb(uint8_t daddr, tuh_msc_complete_data_t const *cb_data)
 {
-    bool ok = false;
+    bool ok =
+        false;
 
     uart_write_str("[TUH-MSC] COMPLETE daddr=");
     uart_write_dec_u32((uint32_t)daddr);
@@ -262,11 +280,12 @@ static bool msc_complete_cb(uint8_t daddr, tuh_msc_complete_data_t const * cb_da
     else
     {
         uart_write_str(" status=NULL");
-        ok = false;
+
+        ok =
+            false;
     }
 
     uart_write_str("\r\n");
-
 
     if(!ok)
     {
@@ -277,7 +296,6 @@ static bool msc_complete_cb(uint8_t daddr, tuh_msc_complete_data_t const * cb_da
 
         return true;
     }
-
 
     switch(msc_state)
     {
@@ -301,7 +319,6 @@ static bool msc_complete_cb(uint8_t daddr, tuh_msc_complete_data_t const * cb_da
             break;
         }
 
-
         case MSC_DBG_WAIT_CAPACITY:
         {
             msc_print_capacity();
@@ -322,7 +339,6 @@ static bool msc_complete_cb(uint8_t daddr, tuh_msc_complete_data_t const * cb_da
             break;
         }
 
-
         case MSC_DBG_WAIT_READ_LBA0:
         {
             msc_print_lba0_result();
@@ -334,7 +350,6 @@ static bool msc_complete_cb(uint8_t daddr, tuh_msc_complete_data_t const * cb_da
 
             break;
         }
-
 
         default:
         {
@@ -352,6 +367,8 @@ static bool msc_complete_cb(uint8_t daddr, tuh_msc_complete_data_t const * cb_da
 
 static bool msc_start_inquiry(void)
 {
+    bool submitted;
+
     uart_write_str("[TUH-MSC] START INQUIRY\r\n");
 
     memset(&msc_inquiry_resp, 0, sizeof(msc_inquiry_resp));
@@ -359,7 +376,7 @@ static bool msc_start_inquiry(void)
     msc_state =
         MSC_DBG_WAIT_INQUIRY;
 
-    bool submitted =
+    submitted =
         tuh_msc_inquiry(
             msc_daddr,
             msc_lun,
@@ -377,11 +394,13 @@ static bool msc_start_inquiry(void)
 
 static bool msc_start_capacity(void)
 {
+    bool submitted;
+
     uart_write_str("[TUH-MSC] START READ CAPACITY\r\n");
 
     memset(&msc_capacity_resp, 0, sizeof(msc_capacity_resp));
 
-    bool submitted =
+    submitted =
         tuh_msc_read_capacity(
             msc_daddr,
             msc_lun,
@@ -399,11 +418,13 @@ static bool msc_start_capacity(void)
 
 static bool msc_start_read_lba0(void)
 {
+    bool submitted;
+
     uart_write_str("[TUH-MSC] START READ10 LBA0\r\n");
 
     memset(msc_lba0, 0, sizeof(msc_lba0));
 
-    bool submitted =
+    submitted =
         tuh_msc_read10(
             msc_daddr,
             msc_lun,
@@ -455,10 +476,19 @@ static void msc_debug_start_now(uint8_t daddr)
 
 void usb_host_tusb_init(void)
 {
-    host_device_attached = 0U;
-    attach_flag = 0U;
-    detach_flag = 0U;
-    last_daddr = 0U;
+    host_device_attached =
+        0U;
+
+    attach_flag =
+        0U;
+
+    detach_flag =
+        0U;
+
+    last_daddr =
+        0U;
+
+    ftdi_host_app_init();
 
 #if CFG_TUH_MSC
     msc_debug_reset();
@@ -472,7 +502,8 @@ void usb_host_tusb_task_log(void)
 {
     if(attach_flag)
     {
-        attach_flag = 0U;
+        attach_flag =
+            0U;
 
         uart_write_str("[USB] ATTACH daddr=");
         uart_write_dec_u32((uint32_t)last_daddr);
@@ -481,7 +512,8 @@ void usb_host_tusb_task_log(void)
 
     if(detach_flag)
     {
-        detach_flag = 0U;
+        detach_flag =
+            0U;
 
         uart_write_str("[USB] DETACH daddr=");
         uart_write_dec_u32((uint32_t)last_daddr);
@@ -493,15 +525,26 @@ void usb_host_tusb_task_log(void)
 void usb_host_tusb_task(void)
 {
     tuh_task_ext(0, false);
+
+    ftdi_host_task();
 }
 
 
 void usb_host_tusb_deinit(void)
 {
-    host_device_attached = 0U;
-    attach_flag = 0U;
-    detach_flag = 0U;
-    last_daddr = 0U;
+    host_device_attached =
+        0U;
+
+    attach_flag =
+        0U;
+
+    detach_flag =
+        0U;
+
+    last_daddr =
+        0U;
+
+    ftdi_host_app_init();
 
 #if CFG_TUH_MSC
     msc_debug_reset();
@@ -513,7 +556,8 @@ void usb_host_tusb_deinit(void)
 
 bool usb_host_tusb_is_device_attached(void)
 {
-    return (host_device_attached != 0U);
+    return
+        (host_device_attached != 0U);
 }
 
 
@@ -523,29 +567,37 @@ bool usb_host_tusb_is_device_attached(void)
 
 void tuh_mount_cb(uint8_t daddr)
 {
-    host_device_attached = 1U;
-    attach_flag = 1U;
-    last_daddr = daddr;
+    host_device_attached =
+        1U;
+
+    attach_flag =
+        1U;
+
+    last_daddr =
+        daddr;
 
     uart_write_str("[TUH] MOUNT daddr=");
     uart_write_dec_u32((uint32_t)daddr);
-    uart_write_str("\r\n");
 
-#if CFG_TUH_MSC
-    /*
-     * Tady uz je TinyUSB common mount hotovy.
-     * Spustime MSC test hned odsud.
-     */
-    msc_debug_start_now(daddr);
-#endif
+    if(ftdi_host_is_mounted())
+    {
+        uart_write_str(" FTDI-HOST");
+    }
+
+    uart_write_str("\r\n");
 }
 
 
 void tuh_umount_cb(uint8_t daddr)
 {
-    host_device_attached = 0U;
-    detach_flag = 1U;
-    last_daddr = daddr;
+    host_device_attached =
+        0U;
+
+    detach_flag =
+        1U;
+
+    last_daddr =
+        daddr;
 
     uart_write_str("[TUH] UMOUNT daddr=");
     uart_write_dec_u32((uint32_t)daddr);
@@ -625,13 +677,13 @@ bool tuh_enum_descriptor_configuration_cb(
 
         uart_write_str(" max_power=");
         uart_write_dec_u32((uint32_t)desc_config->bMaxPower);
+
+        uart_write_str("\r\n");
     }
     else
     {
-        uart_write_str(" NULL");
+        uart_write_str(" NULL\r\n");
     }
-
-    uart_write_str("\r\n");
 
     return true;
 }
@@ -648,6 +700,8 @@ void tuh_msc_mount_cb(uint8_t dev_addr)
     uart_write_str("[TUH-MSC] MOUNT daddr=");
     uart_write_dec_u32((uint32_t)dev_addr);
     uart_write_str("\r\n");
+
+    msc_debug_start_now(dev_addr);
 }
 
 
@@ -655,71 +709,6 @@ void tuh_msc_umount_cb(uint8_t dev_addr)
 {
     uart_write_str("[TUH-MSC] UMOUNT daddr=");
     uart_write_dec_u32((uint32_t)dev_addr);
-    uart_write_str("\r\n");
-}
-
-#endif
-
-
-/* =========================
-   HID CALLBACKS
-========================= */
-
-#if CFG_TUH_HID
-
-void tuh_hid_mount_cb(
-    uint8_t daddr,
-    uint8_t instance,
-    uint8_t const *desc_report,
-    uint16_t desc_len)
-{
-    (void)desc_report;
-
-    uart_write_str("[TUH-HID] MOUNT daddr=");
-    uart_write_dec_u32((uint32_t)daddr);
-
-    uart_write_str(" inst=");
-    uart_write_dec_u32((uint32_t)instance);
-
-    uart_write_str(" report_len=");
-    uart_write_dec_u32((uint32_t)desc_len);
-
-    uart_write_str(" proto=");
-    uart_write_dec_u32((uint32_t)tuh_hid_interface_protocol(daddr, instance));
-
-    uart_write_str("\r\n");
-}
-
-
-void tuh_hid_umount_cb(uint8_t daddr, uint8_t instance)
-{
-    uart_write_str("[TUH-HID] UMOUNT daddr=");
-    uart_write_dec_u32((uint32_t)daddr);
-
-    uart_write_str(" inst=");
-    uart_write_dec_u32((uint32_t)instance);
-
-    uart_write_str("\r\n");
-}
-
-
-void tuh_hid_report_received_cb(
-    uint8_t daddr,
-    uint8_t instance,
-    uint8_t const *report,
-    uint16_t len)
-{
-    (void)report;
-
-    uart_write_str("[TUH-HID] REPORT daddr=");
-    uart_write_dec_u32((uint32_t)daddr);
-
-    uart_write_str(" inst=");
-    uart_write_dec_u32((uint32_t)instance);
-
-    uart_write_str(" len=");
-    uart_write_dec_u32((uint32_t)len);
-
     uart_write_str("\r\n");
 }
 

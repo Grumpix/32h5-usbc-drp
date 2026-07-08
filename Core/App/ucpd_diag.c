@@ -82,6 +82,26 @@
 #define PERIODIC_DUMP_MS              2000U
 
 
+/*
+ * Periodicky vypis:
+ *
+ * [UCPD] STATE=...
+ *
+ * 0 = vypnuto
+ * 1 = zapnuto
+ */
+#define UCPD_PERIODIC_DUMP_ENABLE     0U
+
+
+/*
+ * Globalni vypinac pro vsechny [UCPD] STATE=... dumpy.
+ *
+ * 0 = zadne dlouhe register/state dumpy
+ * 1 = dumpy zapnute
+ */
+#define UCPD_STATE_DUMP_ENABLE        0U
+
+
 #define UCPD_DIAG_EVENT_CC1           (1UL << 0)
 #define UCPD_DIAG_EVENT_CC2           (1UL << 1)
 
@@ -376,6 +396,8 @@ static void decode_pb13_pb14_pb8(void)
 
 static void ucpd_dump_state(void)
 {
+#if UCPD_STATE_DUMP_ENABLE
+
     uart_write_str("[UCPD] STATE=");
     uart_write_hex((uint32_t)host_state);
 
@@ -419,6 +441,15 @@ static void ucpd_dump_state(void)
     uart_write_hex(PWR->UCPDR);
 
     uart_write_str("\r\n");
+
+#else
+
+    /*
+     * State dump vypnuty.
+     * Funkci nechavame volatelnou, aby nebylo nutne mazat vsechny debug cally.
+     */
+
+#endif
 }
 
 
@@ -965,8 +996,14 @@ void ucpd_diag_task(void)
 
     /*
      * Periodic state dump.
+     *
+     * Vypnuto pres UCPD_PERIODIC_DUMP_ENABLE,
+     * aby UART nespamoval:
+     *
+     * [UCPD] STATE=...
      */
 
+#if UCPD_PERIODIC_DUMP_ENABLE
     if((now - periodic_dump_ms) > PERIODIC_DUMP_MS)
     {
         periodic_dump_ms =
@@ -974,6 +1011,9 @@ void ucpd_diag_task(void)
 
         ucpd_dump_state();
     }
+#else
+    (void)periodic_dump_ms;
+#endif
 
 
     /*

@@ -18,25 +18,6 @@ add_compile_definitions(
     STM32H533xx
     USE_HAL_DRIVER
     USE_FULL_LL_DRIVER
-
-    CFG_TUSB_MCU=OPT_MCU_STM32H5
-    CFG_TUSB_OS=OPT_OS_NONE
-    CFG_TUSB_INIT_MANUAL=1
-
-    CFG_TUD_ENABLED=1
-    CFG_TUD_CDC=1
-    CFG_TUD_CDC_COUNT=1
-    CFG_TUD_NET=0
-    CFG_TUD_RNDIS=0
-    CFG_TUD_ECM_RNDIS=0
-
-    CFG_TUH_ENABLED=1
-    CFG_TUH_MSC=1
-    CFG_TUH_HID=0
-    CFG_TUH_HUB=0
-    CFG_TUH_DEVICE_MAX=4
-    CFG_TUH_MSC_MAXLUN=1
-    CFG_TUH_ENUMERATION_BUFSIZE=256
 )
 
 
@@ -50,13 +31,14 @@ file(GLOB BOARD_SOURCES CONFIGURE_DEPENDS Core/Board/*.c)
 
 
 set(APP_SOURCES
+
     ${CORE_SOURCES}
     ${APP_LAYER_SOURCES}
     ${BOARD_SOURCES}
 
     Core/USB/usb_device_tusb.c
     Core/USB/usb_host_tusb.c
-
+    Core/USB/ftdi_host.c
     Core/Startup/startup_stm32h533retx.s
 )
 
@@ -73,18 +55,13 @@ set(TINYUSB_SOURCES
     ${TINYUSB_SRC}/device/usbd.c
     ${TINYUSB_SRC}/host/usbh.c
 
-    # Device classes
     ${TINYUSB_SRC}/class/cdc/cdc_device.c
-
-    # Host classes
     ${TINYUSB_SRC}/class/msc/msc_host.c
 
-    # STM32 FSDEV device + host backend
     ${TINYUSB_SRC}/portable/st/stm32_fsdev/fsdev_common.c
     ${TINYUSB_SRC}/portable/st/stm32_fsdev/dcd_stm32_fsdev.c
     ${TINYUSB_SRC}/portable/st/stm32_fsdev/hcd_stm32_fsdev.c
 )
-
 
 
 set(HAL_SOURCES
@@ -110,13 +87,8 @@ set(HAL_SOURCES
     Drivers/STM32H5xx_HAL_Driver/Src/stm32h5xx_hal_rcc.c
     Drivers/STM32H5xx_HAL_Driver/Src/stm32h5xx_hal_rcc_ex.c
 
-    # =========================
-    # UCPD LL DRIVER
-    # =========================
-
     Drivers/STM32H5xx_HAL_Driver/Src/stm32h5xx_ll_ucpd.c
 )
-
 
 
 add_executable(${PROJECT_NAME}.elf
@@ -126,7 +98,6 @@ add_executable(${PROJECT_NAME}.elf
     ${HAL_SOURCES}
 
 )
-
 
 
 # =========================
@@ -151,7 +122,6 @@ target_include_directories(${PROJECT_NAME}.elf PRIVATE
 )
 
 
-
 # =========================
 # FLAGS
 # =========================
@@ -174,7 +144,6 @@ target_compile_options(${PROJECT_NAME}.elf PRIVATE
     -g3
 
 )
-
 
 
 target_link_options(${PROJECT_NAME}.elf PRIVATE

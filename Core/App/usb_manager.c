@@ -1,281 +1,235 @@
 #include "usb_manager.h"
+
 #include "main.h"
-#include "tusb.h"
 #include "uart.h"
-#include "usb_host_tusb.h"
-#include "usb_hw.h"
-#include "usb_time.h"
+#include "tusb.h"
+
 #include <stdbool.h>
+#include <stdint.h>
 
-/* =========================
-   STATE
-   ========================= */
 
-static volatile usb_mode_t current_mode = USB_MODE_NONE;
-static volatile uint8_t running = 0;
-static volatile uint8_t host_ready = 0;
-static volatile uint8_t error_state = 0;
-static uint32_t host_init_started_ms = 0;
+/*
+ * Lokální prototypy.
+ *
+ * Device init u tebe existuje, ale podle linkeru neexistuje:
+ * - usb_device_tusb_task()
+ * - usb_device_tusb_deinit()
+ *
+ * Proto je tady zatím nepoužíváme.
+ */
 
-/* LED */
-typedef enum
-{
-    USB_LED_OFF = 0,
-    USB_LED_DEVICE_SLOW,
-    USB_LED_HOST_INIT_FAST,
-    USB_LED_HOST_READY,
-    USB_LED_ERROR_DOUBLE
-} usb_led_pattern_t;
+void usb_device_tusb_init(void);
 
-static usb_led_pattern_t led_pattern = USB_LED_OFF;
+void usb_host_tusb_init(void);
+void usb_host_tusb_task(void);
+void usb_host_tusb_task_log(void);
+void usb_host_tusb_deinit(void);
 
-/* =========================
-   LOG
-   ========================= */
 
-static void usb_manager_log_mode(usb_mode_t mode)
-{
-    if (mode == USB_MODE_HOST)
-        uart_write_str("[USB] HOST mode\r\n");
-    else if (mode == USB_MODE_DEVICE)
-        uart_write_str("[USB] DEVICE mode\r\n");
-}
+static usb_mode_t usb_manager_mode =
+    USB_MODE_NONE;
 
-/* =========================
-   LED
-   ========================= */
-
-static void usb_manager_update_led(void)
-{
-    uint32_t tick = HAL_GetTick();
-
-    switch (led_pattern)
-    {
-        case USB_LED_OFF:
-            HAL_GPIO_WritePin(LED_GPIO_Port, LED_Pin, GPIO_PIN_RESET);
-            break;
-
-        case USB_LED_DEVICE_SLOW:
-            HAL_GPIO_WritePin(LED_GPIO_Port, LED_Pin,
-                              ((tick / 500U) & 1U) ? GPIO_PIN_SET : GPIO_PIN_RESET);
-            break;
-
-        case USB_LED_HOST_INIT_FAST:
-            HAL_GPIO_WritePin(LED_GPIO_Port, LED_Pin,
-                              ((tick / 100U) & 1U) ? GPIO_PIN_SET : GPIO_PIN_RESET);
-            break;
-
-        case USB_LED_HOST_READY:
-            HAL_GPIO_WritePin(LED_GPIO_Port, LED_Pin, GPIO_PIN_SET);
-            break;
-
-        case USB_LED_ERROR_DOUBLE:
-        {
-            uint32_t phase = tick % 1000U;
-            GPIO_PinState level = GPIO_PIN_RESET;
-
-            if ((phase < 80U) || ((phase >= 180U) && (phase < 260U)))
-                level = GPIO_PIN_SET;
-
-            HAL_GPIO_WritePin(LED_GPIO_Port, LED_Pin, level);
-            break;
-        }
-    }
-}
-
-/* =========================
-   ERROR
-   ========================= */
-
-static void usb_manager_set_error(void)
-{
-    running = 0;
-    host_ready = 0;
-    error_state = 1;
-    current_mode = USB_MODE_NONE;
-    led_pattern = USB_LED_ERROR_DOUBLE;
-
-    uart_write_str("[USB] ERROR\r\n");
-}
-
-/* =========================
-   INTERNAL START
-   ========================= */
-
-static bool usb_manager_start_mode(usb_mode_t mode)
-{
-    tusb_rhport_init_t rh_init =
-    {
-        .role  = (mode == USB_MODE_HOST) ? TUSB_ROLE_HOST : TUSB_ROLE_DEVICE,
-        .speed = TUSB_SPEED_FULL
-    };
-
-    error_state = 0;
-
-    /* =====================================================
-       DEVICE MODE (PRIMARY FIX AREA)
-       ===================================================== */
-    if (mode == USB_MODE_DEVICE)
-    {
-        usb_hw_enable_device();
-
-        /* IMPORTANT: settle time before stack start */
-        HAL_Delay(50);
-
-        if (!tusb_rhport_init(0, &rh_init))
-        {
-            usb_manager_set_error();
-            return false;
-        }
-
-        tud_connect();
-
-        current_mode = USB_MODE_DEVICE;
-        running = 1;
-        host_ready = 0;
-        led_pattern = USB_LED_DEVICE_SLOW;
-
-        usb_manager_log_mode(current_mode);
-        return true;
-    }
-
-    /* =====================================================
-       HOST MODE (ONLY EXPLICIT)
-       ===================================================== */
-    usb_hw_enable_host();
-    usb_host_tusb_init();
-
-    tusb_init();
-
-    if (!tusb_rhport_init(0, &rh_init))
-    {
-        usb_host_tusb_deinit();
-        usb_manager_set_error();
-        return false;
-    }
-
-    current_mode = USB_MODE_HOST;
-    running = 1;
-    host_ready = 0;
-    host_init_started_ms = HAL_GetTick();
-    led_pattern = USB_LED_HOST_INIT_FAST;
-
-    usb_manager_log_mode(current_mode);
-    return true;
-}
-
-/* =========================
-   PUBLIC API
-   ========================= */
 
 void usb_manager_init(void)
 {
-    current_mode = USB_MODE_NONE;
-    running = 0;
-    host_ready = 0;
-    error_state = 0;
-    led_pattern = USB_LED_OFF;
+    usb_manager_mode =
+        USB_MODE_NONE;
+
+    uart_write_str("[USB] manager init\r\n");
 }
 
-/* STOP (IMPORTANT: NO HARD RESET EVERY TIME) */
-void usb_manager_stop(void)
-{
-    if (running)
-    {
-        if (current_mode == USB_MODE_DEVICE)
-            tud_disconnect();
 
-        if (current_mode == USB_MODE_HOST)
-            usb_host_tusb_deinit();
-
-        tusb_deinit(0);
-
-        usb_hw_deinit();
-    }
-
-    running = 0;
-    host_ready = 0;
-    error_state = 0;
-    current_mode = USB_MODE_NONE;
-    led_pattern = USB_LED_OFF;
-}
-
-/* SWITCH (BUT NOT VBUS DRIVEN ANYMORE) */
-bool usb_manager_switch_mode(usb_mode_t mode)
-{
-    if (mode == USB_MODE_NONE)
-    {
-        usb_manager_stop();
-        return true;
-    }
-
-    if (running && current_mode == mode && !error_state)
-        return true;
-
-    usb_manager_stop();
-    HAL_Delay(50);
-
-    return usb_manager_start_mode(mode);
-}
-
-/* FORCE MODES */
 bool usb_manager_start_device(void)
 {
-    return usb_manager_switch_mode(USB_MODE_DEVICE);
+    uart_write_str("[USB-DEVICE] START\r\n");
+
+    if(usb_manager_mode == USB_MODE_DEVICE)
+    {
+        uart_write_str("[USB-DEVICE] already active\r\n");
+        return true;
+    }
+
+    if(usb_manager_mode == USB_MODE_HOST)
+    {
+        uart_write_str("[USB-DEVICE] stopping host first\r\n");
+
+        usb_host_tusb_deinit();
+
+        usb_manager_mode =
+            USB_MODE_NONE;
+    }
+
+    uart_write_str("[USB-DEVICE] BEFORE usb_device_tusb_init\r\n");
+
+    usb_device_tusb_init();
+
+    uart_write_str("[USB-DEVICE] AFTER usb_device_tusb_init\r\n");
+
+    /*
+     * Mode nastavíme před tud_init(), aby USB interrupt během initu
+     * šel správně do device handleru.
+     */
+    usb_manager_mode =
+        USB_MODE_DEVICE;
+
+    uart_write_str("[USB-DEVICE] BEFORE tud_init\r\n");
+
+    tud_init(0);
+
+    uart_write_str("[USB-DEVICE] AFTER tud_init\r\n");
+
+    uart_write_str("[USB] DEVICE mode\r\n");
+    uart_write_str("[USB-DEVICE] START DONE\r\n");
+
+    return true;
 }
+
 
 bool usb_manager_start_host(void)
 {
-    return usb_manager_switch_mode(USB_MODE_HOST);
+    uart_write_str("[USB-HOST] START\r\n");
+
+    if(usb_manager_mode == USB_MODE_HOST)
+    {
+        uart_write_str("[USB-HOST] already active\r\n");
+        return true;
+    }
+
+    if(usb_manager_mode == USB_MODE_DEVICE)
+    {
+        /*
+         * Pro aktuální host bring-up device deinit nepoužíváme,
+         * protože v projektu není symbol usb_device_tusb_deinit().
+         */
+        uart_write_str("[USB-HOST] leaving DEVICE state without device deinit\r\n");
+
+        usb_manager_mode =
+            USB_MODE_NONE;
+    }
+
+    uart_write_str("[USB-HOST] BEFORE usb_host_tusb_init\r\n");
+
+    usb_host_tusb_init();
+
+    uart_write_str("[USB-HOST] AFTER usb_host_tusb_init\r\n");
+
+    /*
+     * Důležité:
+     * Mode nastavíme před tuh_init(), aby USB_DRD_FS_IRQHandler()
+     * už během host initu směroval interrupt do tuh_int_handler(0).
+     */
+    usb_manager_mode =
+        USB_MODE_HOST;
+
+    uart_write_str("[USB-HOST] BEFORE tuh_init\r\n");
+
+    tuh_init(0);
+
+    uart_write_str("[USB-HOST] AFTER tuh_init\r\n");
+
+    uart_write_str("[USB] HOST mode\r\n");
+    uart_write_str("[USB-HOST] START DONE\r\n");
+
+    return true;
 }
 
-bool usb_manager_toggle_mode(void)
+
+void usb_manager_stop(void)
 {
-    usb_mode_t next =
-        (current_mode == USB_MODE_HOST) ? USB_MODE_DEVICE : USB_MODE_HOST;
+    uart_write_str("[USB] STOP\r\n");
 
-    return usb_manager_switch_mode(next);
+    if(usb_manager_mode == USB_MODE_HOST)
+    {
+        uart_write_str("[USB] stopping host\r\n");
+
+        usb_host_tusb_deinit();
+    }
+    else if(usb_manager_mode == USB_MODE_DEVICE)
+    {
+        /*
+         * Device deinit zatím nepoužíváme, protože v projektu není.
+         */
+        uart_write_str("[USB] DEVICE stop skipped - no device deinit\r\n");
+    }
+    else
+    {
+        uart_write_str("[USB] already stopped\r\n");
+    }
+
+    usb_manager_mode =
+        USB_MODE_NONE;
+
+    uart_write_str("[USB] STOP DONE\r\n");
 }
 
-/* =========================
-   TASK
-   ========================= */
 
 void usb_manager_task(void)
 {
-    if (running)
+    if(usb_manager_mode == USB_MODE_HOST)
     {
-        if (current_mode == USB_MODE_DEVICE)
-        {
-            tud_task_ext(0, false);
-        }
-        else if (current_mode == USB_MODE_HOST)
-        {
-            tuh_task_ext(0, false);
-
-            if (!host_ready &&
-                tuh_rhport_is_active(0) &&
-                (HAL_GetTick() - host_init_started_ms > 200))
-            {
-                host_ready = 1;
-                led_pattern = USB_LED_HOST_READY;
-            }
-        }
+        usb_host_tusb_task();
+        usb_host_tusb_task_log();
     }
-
-    usb_manager_update_led();
+    else if(usb_manager_mode == USB_MODE_DEVICE)
+    {
+        /*
+         * Device task zatím nepoužíváme, protože v projektu není symbol
+         * usb_device_tusb_task().
+         *
+         * Pokud budeme znovu aktivně testovat device CDC do PC,
+         * doplníme sem přímo tud_task_ext(0, false), nebo vytvoříme
+         * usb_device_tusb_task().
+         */
+    }
 }
 
-/* =========================
-   GETTERS
-   ========================= */
+
+bool usb_manager_toggle_mode(void)
+{
+    bool ok;
+
+    if(usb_manager_mode == USB_MODE_HOST)
+    {
+        uart_write_str("[USB] toggle HOST -> DEVICE\r\n");
+
+        usb_manager_stop();
+
+        ok =
+            usb_manager_start_device();
+    }
+    else
+    {
+        uart_write_str("[USB] toggle -> HOST\r\n");
+
+        usb_manager_stop();
+
+        ok =
+            usb_manager_start_host();
+    }
+
+    return ok;
+}
+
+
+bool usb_manager_is_host_active(void)
+{
+    return (usb_manager_mode == USB_MODE_HOST);
+}
+
+
+bool usb_manager_is_device_active(void)
+{
+    return (usb_manager_mode == USB_MODE_DEVICE);
+}
+
+
+bool usb_manager_is_active(void)
+{
+    return (usb_manager_mode != USB_MODE_NONE);
+}
+
 
 usb_mode_t usb_manager_get_mode(void)
 {
-    return current_mode;
-}
-
-bool usb_manager_is_host_ready(void)
-{
-    return host_ready;
+    return usb_manager_mode;
 }
