@@ -34,7 +34,7 @@ int main(void)
     HAL_Delay(5);
 
     drp_init();
-   //cpd_diag_init();
+    ucpd_diag_init();
     usb_mode_button_init();
 
     usb_manager_init();
