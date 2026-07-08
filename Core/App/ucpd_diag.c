@@ -7,47 +7,81 @@
 #include "stm32h5xx_ll_bus.h"
 #include "stm32h5xx_ll_gpio.h"
 
-
-/*
- * UCPD_CR_TEST_MODE:
- *
- * 0 = CCENABLE only
- * 1 = ANASUBMODE_0 + CCENABLE
- * 2 = ANASUBMODE_1 + CCENABLE
- * 3 = ANASUBMODE_0 + ANASUBMODE_1 + CCENABLE
- *
- * 4 = ANAMODE + CCENABLE
- * 5 = ANAMODE + ANASUBMODE_0 + CCENABLE
- * 6 = ANAMODE + ANASUBMODE_1 + CCENABLE
- * 7 = ANAMODE + ANASUBMODE_0 + ANASUBMODE_1 + CCENABLE
- *
- * Pro sink/Rd hledej rezim, kde:
- * - C-C kabel pusti VBUS v obou orientacich
- * - aktivni CC neni 5V/open
- * - aktivni CC neni tvrde 0V
- */
-#define UCPD_CR_TEST_MODE  4
+#include <stdint.h>
 
 
 /*
- * 1 = vypnout dead-battery Rd pres PWR->UCPDR.
- * To je spravne pro test aktivniho rizeni Rp/Rd pres UCPD.
+ * SOURCE / HOST / Rp TEST - AUTO VBUS
  *
- * 0 = nechat dead-battery Rd aktivni.
- * Pouzij jen pro srovnavaci test.
+ * Nalezeny funkcni kandidat:
+ *
+ * CR = 0x00000C80
+ *    = UCPD_CR_ANASUBMODE_0
+ *    | UCPD_CR_CCENABLE_0
+ *    | UCPD_CR_CCENABLE_1
+ *
+ * Chovani:
+ * - STM32 vystavi Rp jako source/host
+ * - ceka na Rd od pripojeneho sink/device zarizeni
+ * - kdyz detekuje attach na CC1/CC2, zapne VBUS pres PB8 P-MOS gate
+ * - kdyz detekuje detach, vypne VBUS
+ *
+ * TinyUSB host zatim NEspoustime.
  */
-#define UCPD_DISABLE_DEAD_BATTERY  1
 
 
 /*
- * 1 = prepsat CFG3 trim na 8/8/8/8
- * 0 = nechat factory/reset CFG3
+ * VBUS P-MOS gate control.
+ *
+ * Zapojeni:
+ * Source P-MOS = +5V
+ * Drain P-MOS  = USB-C VBUS
+ * Gate P-MOS   = PB8 + 100k pull-up na Source/+5V
+ *
+ * OFF:
+ *   PB8 = Hi-Z/input
+ *   gate vytazena na +5V
+ *
+ * ON:
+ *   PB8 = output LOW
+ *   gate stazena na GND
  */
-#define UCPD_OVERRIDE_CFG3_TRIM  0
+
+#define VBUS_FET_PORT                 GPIOB
+#define VBUS_FET_PIN                  GPIO_PIN_8
+
+#define VBUS_FET_LL_PORT              GPIOB
+#define VBUS_FET_LL_PIN               LL_GPIO_PIN_8
 
 
-#define UCPD_DIAG_EVENT_CC1  (1UL << 0)
-#define UCPD_DIAG_EVENT_CC2  (1UL << 1)
+/*
+ * CC pins.
+ */
+
+#define UCPD_CC_PORT                  GPIOB
+#define UCPD_CC1_PIN                  LL_GPIO_PIN_13
+#define UCPD_CC2_PIN                  LL_GPIO_PIN_14
+
+
+/*
+ * Debounce / timing.
+ */
+
+#define TYPEC_ATTACH_DEBOUNCE_MS      80U
+#define TYPEC_DETACH_DEBOUNCE_MS      120U
+#define PERIODIC_DUMP_MS              2000U
+
+
+#define UCPD_DIAG_EVENT_CC1           (1UL << 0)
+#define UCPD_DIAG_EVENT_CC2           (1UL << 1)
+
+
+typedef enum
+{
+    TYPEC_ORIENTATION_NONE = 0,
+    TYPEC_ORIENTATION_CC1,
+    TYPEC_ORIENTATION_CC2
+} typec_orientation_t;
 
 
 static volatile uint32_t ucpd_diag_pending_events = 0U;
@@ -55,14 +89,16 @@ static volatile uint32_t ucpd_diag_pending_events = 0U;
 static uint8_t last_vbus = 0U;
 static uint32_t vbus_last_change_ms = 0U;
 
-static uint32_t gpio_last_check_ms = 0U;
+static uint32_t periodic_dump_ms = 0U;
 
-static uint32_t last_gpiob_moder = 0U;
-static uint32_t last_gpiob_otyper = 0U;
-static uint32_t last_gpiob_ospeedr = 0U;
-static uint32_t last_gpiob_pupdr = 0U;
-static uint32_t last_gpiob_afrl = 0U;
-static uint32_t last_gpiob_afrh = 0U;
+static uint8_t source_attached = 0U;
+static typec_orientation_t source_orientation = TYPEC_ORIENTATION_NONE;
+
+static uint8_t candidate_attached = 0U;
+static typec_orientation_t candidate_orientation = TYPEC_ORIENTATION_NONE;
+static uint32_t candidate_since_ms = 0U;
+
+static uint8_t vbus_fet_enabled = 0U;
 
 
 static uint8_t ucpd_diag_read_vbus(void)
@@ -71,6 +107,111 @@ static uint8_t ucpd_diag_read_vbus(void)
         (HAL_GPIO_ReadPin(GPIOC, GPIO_PIN_4) == GPIO_PIN_SET)
         ? 1U
         : 0U;
+}
+
+
+static uint32_t ucpd_get_cc1_vstate(void)
+{
+    return
+        (UCPD1->SR & UCPD_SR_TYPEC_VSTATE_CC1) >> UCPD_SR_TYPEC_VSTATE_CC1_Pos;
+}
+
+
+static uint32_t ucpd_get_cc2_vstate(void)
+{
+    return
+        (UCPD1->SR & UCPD_SR_TYPEC_VSTATE_CC2) >> UCPD_SR_TYPEC_VSTATE_CC2_Pos;
+}
+
+
+static void vbus_fet_off_hiz(void)
+{
+    /*
+     * OFF:
+     * PB8 Hi-Z/input bez pullu.
+     * Externi gate-source pull-up vytahne gate na +5V.
+     */
+
+    LL_GPIO_SetPinPull(
+        VBUS_FET_LL_PORT,
+        VBUS_FET_LL_PIN,
+        LL_GPIO_PULL_NO);
+
+    LL_GPIO_SetPinMode(
+        VBUS_FET_LL_PORT,
+        VBUS_FET_LL_PIN,
+        LL_GPIO_MODE_INPUT);
+
+    /*
+     * Priprav ODR=0 pro budouci prepnuti do output LOW.
+     */
+
+    HAL_GPIO_WritePin(
+        VBUS_FET_PORT,
+        VBUS_FET_PIN,
+        GPIO_PIN_RESET);
+}
+
+
+static void vbus_fet_on_drive_low(void)
+{
+    /*
+     * ON:
+     * PB8 output LOW.
+     */
+
+    HAL_GPIO_WritePin(
+        VBUS_FET_PORT,
+        VBUS_FET_PIN,
+        GPIO_PIN_RESET);
+
+    LL_GPIO_SetPinPull(
+        VBUS_FET_LL_PORT,
+        VBUS_FET_LL_PIN,
+        LL_GPIO_PULL_NO);
+
+    LL_GPIO_SetPinOutputType(
+        VBUS_FET_LL_PORT,
+        VBUS_FET_LL_PIN,
+        LL_GPIO_OUTPUT_PUSHPULL);
+
+    LL_GPIO_SetPinSpeed(
+        VBUS_FET_LL_PORT,
+        VBUS_FET_LL_PIN,
+        LL_GPIO_SPEED_FREQ_LOW);
+
+    LL_GPIO_SetPinMode(
+        VBUS_FET_LL_PORT,
+        VBUS_FET_LL_PIN,
+        LL_GPIO_MODE_OUTPUT);
+}
+
+
+static void vbus_fet_apply(uint8_t enable)
+{
+    enable =
+        enable ? 1U : 0U;
+
+    if(enable == vbus_fet_enabled)
+    {
+        return;
+    }
+
+    vbus_fet_enabled =
+        enable;
+
+    if(vbus_fet_enabled)
+    {
+        vbus_fet_on_drive_low();
+
+        uart_write_str("[VBUS-FET] ON: PB8 output LOW\r\n");
+    }
+    else
+    {
+        vbus_fet_off_hiz();
+
+        uart_write_str("[VBUS-FET] OFF: PB8 Hi-Z\r\n");
+    }
 }
 
 
@@ -104,49 +245,7 @@ static void dump_gpiob(void)
 }
 
 
-static void remember_gpiob_state(void)
-{
-    last_gpiob_moder =
-        GPIOB->MODER;
-
-    last_gpiob_otyper =
-        GPIOB->OTYPER;
-
-    last_gpiob_ospeedr =
-        GPIOB->OSPEEDR;
-
-    last_gpiob_pupdr =
-        GPIOB->PUPDR;
-
-    last_gpiob_afrl =
-        GPIOB->AFR[0];
-
-    last_gpiob_afrh =
-        GPIOB->AFR[1];
-}
-
-
-static void check_gpiob_changed(void)
-{
-    if(
-        (GPIOB->MODER   != last_gpiob_moder)   ||
-        (GPIOB->OTYPER  != last_gpiob_otyper)  ||
-        (GPIOB->OSPEEDR != last_gpiob_ospeedr) ||
-        (GPIOB->PUPDR   != last_gpiob_pupdr)   ||
-        (GPIOB->AFR[0]  != last_gpiob_afrl)    ||
-        (GPIOB->AFR[1]  != last_gpiob_afrh)
-    )
-    {
-        uart_write_str("[GPIOB] CHANGED\r\n");
-
-        dump_gpiob();
-
-        remember_gpiob_state();
-    }
-}
-
-
-static void decode_pb13_pb14(void)
+static void decode_pb13_pb14_pb8(void)
 {
     uint32_t moder =
         GPIOB->MODER;
@@ -157,11 +256,17 @@ static void decode_pb13_pb14(void)
     uint32_t afrh =
         GPIOB->AFR[1];
 
+    uint32_t pb8_mode =
+        (moder >> (8U * 2U)) & 0x3U;
+
     uint32_t pb13_mode =
         (moder >> (13U * 2U)) & 0x3U;
 
     uint32_t pb14_mode =
         (moder >> (14U * 2U)) & 0x3U;
+
+    uint32_t pb8_pull =
+        (pupdr >> (8U * 2U)) & 0x3U;
 
     uint32_t pb13_pull =
         (pupdr >> (13U * 2U)) & 0x3U;
@@ -174,6 +279,22 @@ static void decode_pb13_pb14(void)
 
     uint32_t pb14_af =
         (afrh >> ((14U - 8U) * 4U)) & 0xFU;
+
+
+    uart_write_str("[PB8] MODE=");
+    uart_write_hex(pb8_mode);
+
+    uart_write_str(" PULL=");
+    uart_write_hex(pb8_pull);
+
+    uart_write_str(" IDR=");
+    uart_write_hex((GPIOB->IDR & GPIO_PIN_8) ? 1U : 0U);
+
+    uart_write_str(" ODR=");
+    uart_write_hex((GPIOB->ODR & GPIO_PIN_8) ? 1U : 0U);
+
+    uart_write_str("\r\n");
+
 
     uart_write_str("[PB13] MODE=");
     uart_write_hex(pb13_mode);
@@ -204,12 +325,6 @@ static void decode_pb13_pb14(void)
 
     uart_write_str("\r\n");
 
-
-    /*
-     * For UCPD CC analog front-end:
-     * MODE = 3 -> analog
-     * PULL = 0 -> no GPIO pull
-     */
 
     if(pb13_mode != 3U)
     {
@@ -256,6 +371,18 @@ static void ucpd_dump_state(void)
     uart_write_str(" CC2=");
     uart_write_hex(LL_UCPD_GetTypeCVstateCC2(UCPD1));
 
+    uart_write_str(" CC1_V=");
+    uart_write_hex(ucpd_get_cc1_vstate());
+
+    uart_write_str(" CC2_V=");
+    uart_write_hex(ucpd_get_cc2_vstate());
+
+    uart_write_str(" VBUS=");
+    uart_write_hex(ucpd_diag_read_vbus());
+
+    uart_write_str(" FET=");
+    uart_write_hex(vbus_fet_enabled);
+
     uart_write_str(" PWR_UCPDR=");
     uart_write_hex(PWR->UCPDR);
 
@@ -263,9 +390,8 @@ static void ucpd_dump_state(void)
 }
 
 
-static void ucpd_disable_dead_battery_if_needed(void)
+static void ucpd_disable_dead_battery(void)
 {
-#if UCPD_DISABLE_DEAD_BATTERY
     uart_write_str("[UCPD] Disable dead-battery Rd\r\n");
 
     PWR->UCPDR |=
@@ -274,107 +400,10 @@ static void ucpd_disable_dead_battery_if_needed(void)
     uart_write_str("[PWR] UCPDR=");
     uart_write_hex(PWR->UCPDR);
     uart_write_str("\r\n");
-#else
-    uart_write_str("[UCPD] Dead-battery Rd left enabled\r\n");
-
-    uart_write_str("[PWR] UCPDR=");
-    uart_write_hex(PWR->UCPDR);
-    uart_write_str("\r\n");
-#endif
 }
 
 
-static void ucpd_print_test_mode(uint32_t cr)
-{
-    uart_write_str("[UCPD] CR TEST MODE ");
-    uart_write_hex(UCPD_CR_TEST_MODE);
-    uart_write_str(" CR=");
-    uart_write_hex(cr);
-    uart_write_str(" : ");
-
-#if UCPD_CR_TEST_MODE == 0
-    uart_write_str("CCENABLE only\r\n");
-#elif UCPD_CR_TEST_MODE == 1
-    uart_write_str("ANASUBMODE_0 + CCENABLE\r\n");
-#elif UCPD_CR_TEST_MODE == 2
-    uart_write_str("ANASUBMODE_1 + CCENABLE\r\n");
-#elif UCPD_CR_TEST_MODE == 3
-    uart_write_str("ANASUBMODE_0 + ANASUBMODE_1 + CCENABLE\r\n");
-#elif UCPD_CR_TEST_MODE == 4
-    uart_write_str("ANAMODE + CCENABLE\r\n");
-#elif UCPD_CR_TEST_MODE == 5
-    uart_write_str("ANAMODE + ANASUBMODE_0 + CCENABLE\r\n");
-#elif UCPD_CR_TEST_MODE == 6
-    uart_write_str("ANAMODE + ANASUBMODE_1 + CCENABLE\r\n");
-#elif UCPD_CR_TEST_MODE == 7
-    uart_write_str("ANAMODE + ANASUBMODE_0 + ANASUBMODE_1 + CCENABLE\r\n");
-#else
-    uart_write_str("UNKNOWN\r\n");
-#endif
-}
-
-
-static uint32_t ucpd_make_test_cr(void)
-{
-    uint32_t cr =
-          UCPD_CR_CCENABLE_0
-        | UCPD_CR_CCENABLE_1;
-
-#if UCPD_CR_TEST_MODE == 0
-
-    /*
-     * CCENABLE only.
-     */
-
-#elif UCPD_CR_TEST_MODE == 1
-
-    cr |=
-        UCPD_CR_ANASUBMODE_0;
-
-#elif UCPD_CR_TEST_MODE == 2
-
-    cr |=
-        UCPD_CR_ANASUBMODE_1;
-
-#elif UCPD_CR_TEST_MODE == 3
-
-    cr |=
-          UCPD_CR_ANASUBMODE_0
-        | UCPD_CR_ANASUBMODE_1;
-
-#elif UCPD_CR_TEST_MODE == 4
-
-    cr |=
-        UCPD_CR_ANAMODE;
-
-#elif UCPD_CR_TEST_MODE == 5
-
-    cr |=
-          UCPD_CR_ANAMODE
-        | UCPD_CR_ANASUBMODE_0;
-
-#elif UCPD_CR_TEST_MODE == 6
-
-    cr |=
-          UCPD_CR_ANAMODE
-        | UCPD_CR_ANASUBMODE_1;
-
-#elif UCPD_CR_TEST_MODE == 7
-
-    cr |=
-          UCPD_CR_ANAMODE
-        | UCPD_CR_ANASUBMODE_0
-        | UCPD_CR_ANASUBMODE_1;
-
-#else
-#error "Invalid UCPD_CR_TEST_MODE"
-#endif
-
-    return cr;
-}
-
-
-static void ucpd_hw_init(void)
+static void ucpd_hw_init_source_mode(void)
 {
     uint32_t cr;
 
@@ -398,13 +427,9 @@ static void ucpd_hw_init(void)
         UCPD_CFG2_FORCECLK;
 
 
-#if UCPD_OVERRIDE_CFG3_TRIM
-    UCPD1->CFG3 =
-          (8U << UCPD_CFG3_TRIM_CC1_RD_Pos)
-        | (8U << UCPD_CFG3_TRIM_CC2_RD_Pos)
-        | (8U << UCPD_CFG3_TRIM_CC1_RP_Pos)
-        | (8U << UCPD_CFG3_TRIM_CC2_RP_Pos);
-#endif
+    /*
+     * Keep factory/reset CFG3 trim.
+     */
 
 
     /*
@@ -423,37 +448,74 @@ static void ucpd_hw_init(void)
 
 
     /*
-     * Configure tested analog mode.
+     * SOURCE/Rp mode candidate found:
      *
-     * Zamerne zatim NE:
-     * - PHYRXEN
-     * - RDCH
-     * - LL_UCPD_RxEnable()
+     * CR = 0x00000C80
      */
 
     cr =
-        ucpd_make_test_cr();
+          UCPD_CR_ANASUBMODE_0
+        | UCPD_CR_CCENABLE_0
+        | UCPD_CR_CCENABLE_1;
 
     UCPD1->CR =
         cr;
 
-    /*
-     * Small settle delay before reading CC status.
-     */
 
     for(volatile uint32_t i = 0; i < 1000U; i++)
     {
         __NOP();
     }
 
-    ucpd_print_test_mode(cr);
+
+    uart_write_str("[UCPD] SOURCE/RP MODE CR=");
+    uart_write_hex(cr);
+    uart_write_str(" : ANASUBMODE_0 + CCENABLE\r\n");
+
     ucpd_dump_state();
+}
+
+
+static typec_orientation_t source_detect_orientation_from_sr(void)
+{
+    uint32_t cc1 =
+        ucpd_get_cc1_vstate();
+
+    uint32_t cc2 =
+        ucpd_get_cc2_vstate();
+
+
+    /*
+     * From observed source/Rp test:
+     *
+     * unattached/open looked like vstate 2
+     * attached sink/Rd looked like vstate 1
+     *
+     * So for now:
+     * vstate == 1 => attached sink detected.
+     */
+
+    if((cc1 == 1U) && (cc2 != 1U))
+    {
+        return TYPEC_ORIENTATION_CC1;
+    }
+
+    if((cc2 == 1U) && (cc1 != 1U))
+    {
+        return TYPEC_ORIENTATION_CC2;
+    }
+
+    /*
+     * If both or none are 1, treat as no valid stable attach.
+     */
+
+    return TYPEC_ORIENTATION_NONE;
 }
 
 
 uint8_t ucpd_diag_is_source(void)
 {
-    return 0U;
+    return source_attached ? 1U : 0U;
 }
 
 
@@ -468,12 +530,15 @@ void ucpd_diag_init(void)
 
     HAL_PWREx_EnableVddUSB();
 
+    ucpd_disable_dead_battery();
+
 
     /*
-     * Dead-battery setting must be done before active UCPD CC control test.
+     * Default source VBUS OFF.
      */
 
-    ucpd_disable_dead_battery_if_needed();
+    vbus_fet_enabled = 0U;
+    vbus_fet_off_hiz();
 
 
     LL_APB1_GRP2_EnableClock(
@@ -517,24 +582,24 @@ void ucpd_diag_init(void)
      */
 
     LL_GPIO_SetPinMode(
-        GPIOB,
-        LL_GPIO_PIN_13,
+        UCPD_CC_PORT,
+        UCPD_CC1_PIN,
         LL_GPIO_MODE_ANALOG);
 
     LL_GPIO_SetPinMode(
-        GPIOB,
-        LL_GPIO_PIN_14,
+        UCPD_CC_PORT,
+        UCPD_CC2_PIN,
         LL_GPIO_MODE_ANALOG);
 
 
     LL_GPIO_SetPinPull(
-        GPIOB,
-        LL_GPIO_PIN_13,
+        UCPD_CC_PORT,
+        UCPD_CC1_PIN,
         LL_GPIO_PULL_NO);
 
     LL_GPIO_SetPinPull(
-        GPIOB,
-        LL_GPIO_PIN_14,
+        UCPD_CC_PORT,
+        UCPD_CC2_PIN,
         LL_GPIO_PULL_NO);
 
 
@@ -556,30 +621,24 @@ void ucpd_diag_init(void)
 
     uart_write_str("[GPIOB] AFTER PIN CONFIG\r\n");
     dump_gpiob();
-    decode_pb13_pb14();
+    decode_pb13_pb14_pb8();
 
 
-    ucpd_hw_init();
+    ucpd_hw_init_source_mode();
 
 
-    uart_write_str("[GPIOB] AFTER UCPD INIT\r\n");
+    uart_write_str("[GPIOB] AFTER UCPD SOURCE INIT\r\n");
     dump_gpiob();
-    decode_pb13_pb14();
+    decode_pb13_pb14_pb8();
 
 
     /*
      * Type-C event detector only.
-     * PD RX stays disabled for this analog test.
+     * PD RX stays disabled for this source/Rp attach test.
      */
 
     LL_UCPD_TypeCDetectionCC1Enable(UCPD1);
     LL_UCPD_TypeCDetectionCC2Enable(UCPD1);
-
-    /*
-     * Intentionally disabled:
-     *
-     * LL_UCPD_RxEnable(UCPD1);
-     */
 
 
     LL_UCPD_ClearFlag_TypeCEventCC1(UCPD1);
@@ -603,13 +662,20 @@ void ucpd_diag_init(void)
     vbus_last_change_ms =
         HAL_GetTick();
 
-    gpio_last_check_ms =
+    periodic_dump_ms =
         HAL_GetTick();
 
-    remember_gpiob_state();
+    candidate_attached = 0U;
+    candidate_orientation = TYPEC_ORIENTATION_NONE;
+    candidate_since_ms = HAL_GetTick();
+
+    source_attached = 0U;
+    source_orientation = TYPEC_ORIENTATION_NONE;
 
 
-    uart_write_str("===== UCPD READY ANALOG MODE TEST =====\r\n");
+    uart_write_str("===== UCPD READY SOURCE/RP AUTO-VBUS TEST =====\r\n");
+    uart_write_str("[TEST] Connect USB-C sink/device. VBUS will turn on automatically after CC attach.\r\n");
+
     ucpd_dump_state();
 }
 
@@ -634,6 +700,101 @@ void ucpd_diag_irq(void)
 }
 
 
+static void source_state_machine_task(uint32_t now)
+{
+    typec_orientation_t detected =
+        source_detect_orientation_from_sr();
+
+    uint8_t detected_attached =
+        (detected != TYPEC_ORIENTATION_NONE) ? 1U : 0U;
+
+
+    /*
+     * Debounce candidate change.
+     */
+
+    if(
+        (detected_attached != candidate_attached) ||
+        (detected != candidate_orientation)
+    )
+    {
+        candidate_attached =
+            detected_attached;
+
+        candidate_orientation =
+            detected;
+
+        candidate_since_ms =
+            now;
+    }
+
+
+    if(source_attached == 0U)
+    {
+        if(candidate_attached)
+        {
+            if((now - candidate_since_ms) >= TYPEC_ATTACH_DEBOUNCE_MS)
+            {
+                source_attached =
+                    1U;
+
+                source_orientation =
+                    candidate_orientation;
+
+                if(source_orientation == TYPEC_ORIENTATION_CC1)
+                {
+                    uart_write_str("[TYPEC-SRC] SINK ATTACHED on CC1\r\n");
+                }
+                else if(source_orientation == TYPEC_ORIENTATION_CC2)
+                {
+                    uart_write_str("[TYPEC-SRC] SINK ATTACHED on CC2\r\n");
+                }
+                else
+                {
+                    uart_write_str("[TYPEC-SRC] SINK ATTACHED unknown orientation\r\n");
+                }
+
+                ucpd_dump_state();
+
+                /*
+                 * Source is allowed to provide VBUS after valid attach.
+                 */
+
+                vbus_fet_apply(1U);
+            }
+        }
+    }
+    else
+    {
+        /*
+         * Attached state: detach when no valid CC is stable.
+         */
+
+        if(candidate_attached == 0U)
+        {
+            if((now - candidate_since_ms) >= TYPEC_DETACH_DEBOUNCE_MS)
+            {
+                uart_write_str("[TYPEC-SRC] DETACH\r\n");
+
+                source_attached =
+                    0U;
+
+                source_orientation =
+                    TYPEC_ORIENTATION_NONE;
+
+                /*
+                 * Turn off VBUS on detach.
+                 */
+
+                vbus_fet_apply(0U);
+
+                ucpd_dump_state();
+            }
+        }
+    }
+}
+
+
 void ucpd_diag_task(void)
 {
     uint32_t now =
@@ -643,14 +804,29 @@ void ucpd_diag_task(void)
         ucpd_diag_read_vbus();
 
 
-    if((now - gpio_last_check_ms) > 1000U)
+    /*
+     * Source attach/detach state machine.
+     */
+
+    source_state_machine_task(now);
+
+
+    /*
+     * Periodic state dump.
+     */
+
+    if((now - periodic_dump_ms) > PERIODIC_DUMP_MS)
     {
-        gpio_last_check_ms =
+        periodic_dump_ms =
             now;
 
-        check_gpiob_changed();
+        ucpd_dump_state();
     }
 
+
+    /*
+     * VBUS monitor.
+     */
 
     if(vbus != last_vbus)
     {
@@ -668,13 +844,13 @@ void ucpd_diag_task(void)
                 "[VBUS] LOST\r\n");
 
             ucpd_dump_state();
-
-            uart_write_str("[GPIOB] ON VBUS CHANGE\r\n");
-            dump_gpiob();
-            decode_pb13_pb14();
         }
     }
 
+
+    /*
+     * CC event logging.
+     */
 
     if(ucpd_diag_pending_events)
     {
@@ -701,9 +877,5 @@ void ucpd_diag_task(void)
         }
 
         ucpd_dump_state();
-
-        uart_write_str("[GPIOB] ON CC EVENT\r\n");
-        dump_gpiob();
-        decode_pb13_pb14();
     }
 }
