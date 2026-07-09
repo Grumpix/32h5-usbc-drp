@@ -13,7 +13,7 @@ typedef void (*ftdi_host_rx_callback_t)(
 
 void ftdi_host_app_init(void);
 void ftdi_host_task(void);
-
+void ftdi_host_on_umount(uint8_t daddr);
 bool ftdi_host_is_mounted(void);
 bool ftdi_host_is_ready(void);
 

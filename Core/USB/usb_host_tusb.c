@@ -235,7 +235,6 @@ static void msc_print_lba0_result(void)
     uart_write_str("\r\n");
 
     uart_write_str("[TUH-MSC] MBR signature=");
-
     uart_write_hex8(msc_lba0[510]);
     uart_write_str(" ");
     uart_write_hex8(msc_lba0[511]);
@@ -602,6 +601,18 @@ void tuh_umount_cb(uint8_t daddr)
     uart_write_str("[TUH] UMOUNT daddr=");
     uart_write_dec_u32((uint32_t)daddr);
     uart_write_str("\r\n");
+
+    /*
+     * FTDI HOTPLUG FIX:
+     *
+     * Pri fyzickem odpojeni zarizeni z host portu explicitne resetujeme
+     * runtime stav FTDI app driveru.
+     *
+     * ftdi_host_app_init() vola ftdi_host_reset_state(), ale callback
+     * ftdi_rx_callback nezahazuje.
+     */
+    uart_write_str("[FTDI-HOST] UMOUNT -> app state reset\r\n");
+    ftdi_host_app_init();
 
 #if CFG_TUH_MSC
     if(msc_daddr == daddr)

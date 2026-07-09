@@ -1050,6 +1050,34 @@ static bool ftdi_host_xfer_cb(
 }
 
 
+void ftdi_host_on_umount(uint8_t daddr)
+{
+    /*
+     * Hotplug safety:
+     *
+     * TinyUSB by mel zavolat class .close(), ale pri vlastnim app class driveru
+     * nechceme spolehat jen na to.
+     *
+     * Pri fyzickem UMOUNT explicitne zahodime FTDI runtime state, pokud:
+     * - FTDI bylo aktivni/mounted
+     * - nebo adresa odpovida poslednimu FTDI daddr
+     *
+     * Callback ftdi_rx_callback zustava zachovany, proto volame jen reset_state().
+     */
+    if(
+        (ftdi_dev.active != 0U) ||
+        (ftdi_dev.mounted != 0U) ||
+        (ftdi_dev.daddr == daddr)
+    )
+    {
+        uart_write_str("[FTDI-HOST] UMOUNT reset state daddr=");
+        uart_write_dec_u32((uint32_t)daddr);
+        uart_write_str("\r\n");
+
+        ftdi_host_reset_state();
+    }
+}
+
 static void ftdi_host_close(uint8_t dev_addr)
 {
     if((ftdi_dev.active != 0U) && (ftdi_dev.daddr == dev_addr))
