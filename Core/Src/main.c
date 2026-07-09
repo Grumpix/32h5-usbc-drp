@@ -1,8 +1,10 @@
 #include "main.h"
+
 #include "uart.h"
 #include "usb_manager.h"
 #include "drp_fsm.h"
 #include "ucpd_diag.h"
+#include "usb_mode_button.h"
 
 
 void SystemClock_Config(void);
@@ -40,35 +42,20 @@ int main(void)
 
     drp_init();
 
-    /*
-     * HOST/SOURCE bring-up test:
-     *
-     * ucpd_diag_init() nastavi USB-C Source/Rp rezim.
-     * TinyUSB host se NESPOUSTI hned.
-     * Spusti se az po:
-     * - CC attach
-     * - VBUS FET ON
-     * - VBUS PRESENT
-     * - kratke prodleve
-     */
-    ucpd_diag_init();
-
     usb_manager_init();
 
-    /*
-     * DULEZITE:
-     *
-     * Pro tento HOST test uz NEstartujeme device jako default.
-     *
-     * NE:
-     * usb_manager_start_device();
-     *
-     * Host se spusti z ucpd_diag_task(), az bude validni Type-C source attach.
-     */
+    ucpd_diag_init();
 
-    while (1)
+    usb_mode_button_init();
+
+    while(1)
     {
         drp_task();
+
+        if(usb_mode_button_pressed())
+        {
+            ucpd_diag_toggle_role();
+        }
 
         ucpd_diag_task();
 

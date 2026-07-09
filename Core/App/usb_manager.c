@@ -24,7 +24,8 @@ void usb_host_tusb_init(void);
 void usb_host_tusb_task(void);
 void usb_host_tusb_task_log(void);
 void usb_host_tusb_deinit(void);
-
+void usb_device_tusb_task(void);
+void usb_device_tusb_deinit(void);
 
 static usb_mode_t usb_manager_mode =
     USB_MODE_NONE;
@@ -172,14 +173,7 @@ void usb_manager_task(void)
     }
     else if(usb_manager_mode == USB_MODE_DEVICE)
     {
-        /*
-         * Device task zatím nepoužíváme, protože v projektu není symbol
-         * usb_device_tusb_task().
-         *
-         * Pokud budeme znovu aktivně testovat device CDC do PC,
-         * doplníme sem přímo tud_task_ext(0, false), nebo vytvoříme
-         * usb_device_tusb_task().
-         */
+        usb_device_tusb_task();
     }
 }
 

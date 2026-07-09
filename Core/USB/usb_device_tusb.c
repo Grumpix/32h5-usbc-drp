@@ -177,3 +177,36 @@ void tud_cdc_rx_cb(uint8_t itf)
 
     tud_cdc_write_flush();
 }
+/* =========================
+   APP WRAPPERS
+========================= */
+
+void usb_device_tusb_init(void)
+{
+    /*
+     * TinyUSB device stack se inicializuje v usb_manager.c volanim tud_init(0).
+     *
+     * Tady zatim jen logujeme, aby usb_manager mel stabilni device init hook.
+     */
+    uart_write_str("[USB-DEVICE] app init\r\n");
+}
+
+
+void usb_device_tusb_task(void)
+{
+    /*
+     * V aktualnim projektu device task zatim nevolame z usb_manager_task(),
+     * ale funkce existuje pro budouci pouziti.
+     */
+    tud_task_ext(0, false);
+}
+
+
+void usb_device_tusb_deinit(void)
+{
+    /*
+     * TinyUSB zatim nema v projektu pouzity stabilni tud_deinit().
+     * Pri prepinani roli zatim device fyzicky neodpojujeme/deinitujeme.
+     */
+    uart_write_str("[USB-DEVICE] app deinit skipped\r\n");
+}
