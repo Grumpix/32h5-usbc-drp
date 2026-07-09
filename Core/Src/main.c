@@ -5,6 +5,7 @@
 #include "drp_fsm.h"
 #include "ucpd_diag.h"
 #include "usb_role_policy.h"
+#include "app_usb_status_reporter.h"
 
 
 void SystemClock_Config(void);
@@ -48,6 +49,8 @@ int main(void)
 
     usb_role_policy_init();
 
+    app_usb_status_reporter_init();
+
     while(1)
     {
         drp_task();
@@ -57,5 +60,7 @@ int main(void)
         ucpd_diag_task();
 
         usb_manager_task();
+
+        app_usb_status_reporter_task();
     }
 }
