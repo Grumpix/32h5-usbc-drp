@@ -27,9 +27,6 @@
 #define USB_HOST_LOG_FTDI_UMOUNT      1U
 
 
-
-
-
 static void usb_host_log(uint8_t enabled, const char *s)
 {
     if(enabled)
@@ -44,6 +41,8 @@ static void usb_host_log(uint8_t enabled, const char *s)
 ========================= */
 
 static volatile uint8_t host_device_attached = 0U;
+static volatile uint8_t host_msc_mounted = 0U;
+
 static volatile uint8_t attach_flag = 0U;
 static volatile uint8_t detach_flag = 0U;
 static volatile uint8_t last_daddr = 0U;
@@ -572,6 +571,9 @@ void usb_host_tusb_init(void)
     host_device_attached =
         0U;
 
+    host_msc_mounted =
+        0U;
+
     attach_flag =
         0U;
 
@@ -636,6 +638,9 @@ void usb_host_tusb_deinit(void)
     host_device_attached =
         0U;
 
+    host_msc_mounted =
+        0U;
+
     attach_flag =
         0U;
 
@@ -661,6 +666,13 @@ bool usb_host_tusb_is_device_attached(void)
 {
     return
         (host_device_attached != 0U);
+}
+
+
+bool usb_host_tusb_is_msc_mounted(void)
+{
+    return
+        (host_msc_mounted != 0U);
 }
 
 
@@ -727,6 +739,9 @@ void tuh_umount_cb(uint8_t daddr)
 #if CFG_TUH_MSC
     if(msc_daddr == daddr)
     {
+        host_msc_mounted =
+            0U;
+
         msc_debug_reset();
     }
 #endif
@@ -828,6 +843,9 @@ bool tuh_enum_descriptor_configuration_cb(
 
 void tuh_msc_mount_cb(uint8_t dev_addr)
 {
+    host_msc_mounted =
+        1U;
+
     if(USB_HOST_LOG_MSC)
     {
         uart_write_str("[TUH-MSC] MOUNT daddr=");
@@ -841,6 +859,9 @@ void tuh_msc_mount_cb(uint8_t dev_addr)
 
 void tuh_msc_umount_cb(uint8_t dev_addr)
 {
+    host_msc_mounted =
+        0U;
+
     if(USB_HOST_LOG_MSC)
     {
         uart_write_str("[TUH-MSC] UMOUNT daddr=");

@@ -1,5 +1,5 @@
+#include "usb_device_tusb.h"
 #include <string.h>
-
 #include "tusb.h"
 #include "uart.h"
 
@@ -209,4 +209,16 @@ void usb_device_tusb_deinit(void)
      * Pri prepinani roli zatim device fyzicky neodpojujeme/deinitujeme.
      */
     uart_write_str("[USB-DEVICE] app deinit skipped\r\n");
+}
+bool usb_device_tusb_is_mounted(void)
+{
+    return
+        tud_mounted();
+}
+
+
+bool usb_device_tusb_is_cdc_connected(void)
+{
+    return
+        tud_mounted() && tud_cdc_connected();
 }
