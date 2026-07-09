@@ -44,6 +44,23 @@ static scsi_read_capacity10_resp_t msc_capacity_resp;
 CFG_TUSB_MEM_ALIGN
 static uint8_t msc_lba0[512];
 
+
+static void msc_debug_reset(void)
+{
+    msc_state =
+        MSC_DBG_IDLE;
+
+    msc_daddr =
+        0U;
+
+    msc_lun =
+        0U;
+
+    memset(&msc_inquiry_resp, 0, sizeof(msc_inquiry_resp));
+    memset(&msc_capacity_resp, 0, sizeof(msc_capacity_resp));
+    memset(msc_lba0, 0, sizeof(msc_lba0));
+}
+
 #endif
 
 
@@ -60,8 +77,11 @@ static void uart_write_dec_u32(uint32_t value)
 
     while((value > 0U) && (i < sizeof(buf)))
     {
-        buf[i++] = (char)('0' + (value % 10U));
-        value /= 10U;
+        buf[i++] =
+            (char)('0' + (value % 10U));
+
+        value /=
+            10U;
     }
 
     while(i > 0U)
@@ -147,23 +167,6 @@ static void print_vid_pid(uint16_t vid, uint16_t pid)
 ========================= */
 
 #if CFG_TUH_MSC
-
-static void msc_debug_reset(void)
-{
-    msc_state =
-        MSC_DBG_IDLE;
-
-    msc_daddr =
-        0U;
-
-    msc_lun =
-        0U;
-
-    memset(&msc_inquiry_resp, 0, sizeof(msc_inquiry_resp));
-    memset(&msc_capacity_resp, 0, sizeof(msc_capacity_resp));
-    memset(msc_lba0, 0, sizeof(msc_lba0));
-}
-
 
 static void msc_print_inquiry(void)
 {
@@ -603,13 +606,10 @@ void tuh_umount_cb(uint8_t daddr)
     uart_write_str("\r\n");
 
     /*
-     * FTDI HOTPLUG FIX:
+     * FTDI HOTPLUG SAFE RESET:
      *
-     * Pri fyzickem odpojeni zarizeni z host portu explicitne resetujeme
-     * runtime stav FTDI app driveru.
-     *
-     * ftdi_host_app_init() vola ftdi_host_reset_state(), ale callback
-     * ftdi_rx_callback nezahazuje.
+     * Resetujeme pouze FTDI app runtime state.
+     * NEResetujeme USB DRD peripheral a NERestartujeme TinyUSB host stack.
      */
     uart_write_str("[FTDI-HOST] UMOUNT -> app state reset\r\n");
     ftdi_host_app_init();

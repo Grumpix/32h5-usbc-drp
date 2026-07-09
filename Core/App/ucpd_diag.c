@@ -1103,14 +1103,17 @@ static void role_state_machine_task(uint32_t now)
                     if(current_role == TYPEC_ROLE_HOST_SOURCE)
                     {
                         /*
-                         * HOST/SOURCE is power role.
+                         * HOST/SOURCE detach:
                          *
-                         * On detach:
-                         * - turn VBUS FET off
-                         * - stop host stack
-                         * - return to unattached
+                         * Fyzicky odpojene USB-C sink zarizeni.
+                         *
+                         * Bezpecne:
+                         * - vypnout VBUS FET
+                         * - zastavit TinyUSB host stack
+                         * - vratit state machine do UNATTACHED
+                         * - znovu re-armnout UCPD Source/Rp mode
                          */
-                        uart_write_str("[TYPEC-SRC] detach -> VBUS OFF + HOST STOP\r\n");
+                        uart_write_str("[TYPEC-SRC] detach -> VBUS OFF + HOST STOP + SOURCE REARM\r\n");
 
                         vbus_fet_apply(0U);
 
@@ -1118,28 +1121,65 @@ static void role_state_machine_task(uint32_t now)
 
                         usb_started =
                             0U;
+
+                        active_orientation =
+                            TYPEC_ORIENTATION_NONE;
+
+                        candidate_attached =
+                            0U;
+
+                        candidate_orientation =
+                            TYPEC_ORIENTATION_NONE;
+
+                        candidate_since_ms =
+                            now;
+
+                        usb_start_wait_since_ms =
+                            0U;
+
+                        role_state =
+                            ROLE_STATE_UNATTACHED;
+
+                        /*
+                         * Re-arm UCPD Source/Rp detection after detach.
+                         */
+                        ucpd_hw_set_source_mode();
+
+                        LL_UCPD_ClearFlag_TypeCEventCC1(UCPD1);
+                        LL_UCPD_ClearFlag_TypeCEventCC2(UCPD1);
+
+                        ucpd_diag_pending_events =
+                            0U;
+
+                        last_vbus =
+                            ucpd_diag_read_vbus();
+
+                        vbus_last_change_ms =
+                            now;
+
+                        ucpd_dump_state();
                     }
                     else
                     {
                         /*
                          * DEVICE/SINK:
                          *
-                         * Device never enables VBUS.
-                         * Keep TinyUSB device stack active for CDC replug.
+                         * Device nikdy nezapina VBUS.
+                         * TinyUSB device stack nechavame bezet kvuli CDC replug.
                          */
                         uart_write_str("[TYPEC-SNK] detach -> keep DEVICE stack active\r\n");
 
                         usb_started =
                             1U;
+
+                        active_orientation =
+                            TYPEC_ORIENTATION_NONE;
+
+                        role_state =
+                            ROLE_STATE_UNATTACHED;
+
+                        ucpd_dump_state();
                     }
-
-                    active_orientation =
-                        TYPEC_ORIENTATION_NONE;
-
-                    role_state =
-                        ROLE_STATE_UNATTACHED;
-
-                    ucpd_dump_state();
                 }
             }
 
