@@ -35,13 +35,13 @@
 ========================= */
 
 #define UCPD_LOG_BOOT                 1U
-#define UCPD_LOG_GPIO                 1U
+#define UCPD_LOG_GPIO                 0U
 #define UCPD_LOG_ROLE                 1U
 #define UCPD_LOG_ATTACH               1U
 #define UCPD_LOG_VBUS                 1U
 #define UCPD_LOG_FET                  1U
-#define UCPD_LOG_EVENTS               1U
-#define UCPD_LOG_HW                   1U
+#define UCPD_LOG_EVENTS               0U
+#define UCPD_LOG_HW                   0U
 
 
 static void ucpd_log(uint8_t enabled, const char *s)

@@ -31,15 +31,16 @@
 
 
 /*
- * BEZPECNY DEFAULT:
+ * DEFAULT MODE:
  *
- * Manual mode = zadna zmena chovani proti known-good stavu.
- *
- * Pro observe test:
- *   USB_ROLE_POLICY_MODE_AUTO_DRP_OBSERVE
- *
- * Pro prvni realny AUTO-DRP scan:
+ * Production/default:
  *   USB_ROLE_POLICY_MODE_AUTO_DRP
+ *
+ * Safe fallback/manual debug:
+ *   USB_ROLE_POLICY_MODE_MANUAL
+ *
+ * Passive diagnostics:
+ *   USB_ROLE_POLICY_MODE_AUTO_DRP_OBSERVE
  */
 #define USB_ROLE_POLICY_MODE                    USB_ROLE_POLICY_MODE_AUTO_DRP
 
@@ -51,8 +52,9 @@
 #define USB_ROLE_POLICY_LOG_BOOT                1U
 #define USB_ROLE_POLICY_LOG_MANUAL              1U
 #define USB_ROLE_POLICY_LOG_AUTO                1U
-#define USB_ROLE_POLICY_LOG_OBSERVE             1U
+#define USB_ROLE_POLICY_LOG_OBSERVE             0U
 #define USB_ROLE_POLICY_LOG_SCAN                1U
+#define USB_ROLE_POLICY_LOG_SCAN_STATE          0U
 
 
 /* =========================
@@ -170,7 +172,7 @@ static void policy_log_observe_state(uint32_t now)
 
 static void policy_log_scan_state(uint32_t now)
 {
-    if(USB_ROLE_POLICY_LOG_SCAN == 0U)
+    if((USB_ROLE_POLICY_LOG_SCAN == 0U) || (USB_ROLE_POLICY_LOG_SCAN_STATE == 0U))
     {
         (void)now;
         return;
