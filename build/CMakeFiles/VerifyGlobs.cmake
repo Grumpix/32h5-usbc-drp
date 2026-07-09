@@ -10,6 +10,7 @@ set(OLD_GLOB
   "C:/Users/novak/Desktop/30626/h533-300626/Core/App/usb_debug.c"
   "C:/Users/novak/Desktop/30626/h533-300626/Core/App/usb_manager.c"
   "C:/Users/novak/Desktop/30626/h533-300626/Core/App/usb_mode_button.c"
+  "C:/Users/novak/Desktop/30626/h533-300626/Core/App/usb_role_policy.c"
   "C:/Users/novak/Desktop/30626/h533-300626/Core/App/usb_time.c"
   )
 if(NOT "${NEW_GLOB}" STREQUAL "${OLD_GLOB}")
