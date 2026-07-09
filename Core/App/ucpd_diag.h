@@ -12,6 +12,16 @@ void ucpd_diag_irq(void);
 
 uint8_t ucpd_diag_is_source(void);
 
+/*
+ * Read-only state getters for role policy.
+ *
+ * Tyhle funkce nic nemení. Jen vraci stav z ucpd_diag.c.
+ */
+uint8_t ucpd_diag_is_attached(void);
+uint8_t ucpd_diag_usb_started(void);
+uint8_t ucpd_diag_vbus_present(void);
+uint8_t ucpd_diag_is_unattached(void);
+
 void ucpd_diag_request_device_role(void);
 void ucpd_diag_request_host_role(void);
 void ucpd_diag_toggle_role(void);

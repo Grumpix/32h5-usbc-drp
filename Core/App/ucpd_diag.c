@@ -831,6 +831,32 @@ uint8_t ucpd_diag_is_source(void)
         (current_role == TYPEC_ROLE_HOST_SOURCE) ? 1U : 0U;
 }
 
+uint8_t ucpd_diag_is_attached(void)
+{
+    return
+        (active_orientation != TYPEC_ORIENTATION_NONE) ? 1U : 0U;
+}
+
+
+uint8_t ucpd_diag_usb_started(void)
+{
+    return
+        usb_started ? 1U : 0U;
+}
+
+
+uint8_t ucpd_diag_vbus_present(void)
+{
+    return
+        ucpd_diag_read_vbus();
+}
+
+
+uint8_t ucpd_diag_is_unattached(void)
+{
+    return
+        (role_state == ROLE_STATE_UNATTACHED) ? 1U : 0U;
+}
 
 void ucpd_diag_request_device_role(void)
 {
