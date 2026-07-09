@@ -7,6 +7,10 @@
 #include <string.h>
 
 
+#define APP_CLI_FW_NAME       "stm32h533-usbc-drp"
+#define APP_CLI_VERSION       "0.1-auto-drp-cli"
+
+
 static void out_append(
     char *out,
     uint32_t out_size,
@@ -169,10 +173,12 @@ static void cli_cmd_help(
     out_append(out, out_size, &pos, "\r\n");
 
     out_append(out, out_size, &pos, "Commands:\r\n");
-    out_append(out, out_size, &pos, "  help   - show commands\r\n");
-    out_append(out, out_size, &pos, "  ping   - connectivity test\r\n");
-    out_append(out, out_size, &pos, "  role   - current USB-C role\r\n");
-    out_append(out, out_size, &pos, "  status - full USB status\r\n");
+    out_append(out, out_size, &pos, "  help, ?  - show commands\r\n");
+    out_append(out, out_size, &pos, "  ping     - connectivity test\r\n");
+    out_append(out, out_size, &pos, "  version  - firmware/build info\r\n");
+    out_append(out, out_size, &pos, "  role     - current USB-C role\r\n");
+    out_append(out, out_size, &pos, "  status   - full USB status\r\n");
+    out_append(out, out_size, &pos, "  usb      - alias for status\r\n");
 }
 
 
@@ -186,6 +192,29 @@ static void cli_cmd_ping(
 
     out_append(out, out_size, &pos, "pong from ");
     out_append_port(out, out_size, &pos, port);
+    out_append(out, out_size, &pos, "\r\n");
+}
+
+
+static void cli_cmd_version(
+    char *out,
+    uint32_t out_size)
+{
+    uint32_t pos =
+        0U;
+
+    out_append(out, out_size, &pos, "fw=");
+    out_append(out, out_size, &pos, APP_CLI_FW_NAME);
+
+    out_append(out, out_size, &pos, " version=");
+    out_append(out, out_size, &pos, APP_CLI_VERSION);
+
+    out_append(out, out_size, &pos, " build=");
+    out_append(out, out_size, &pos, __DATE__);
+
+    out_append(out, out_size, &pos, " ");
+    out_append(out, out_size, &pos, __TIME__);
+
     out_append(out, out_size, &pos, "\r\n");
 }
 
@@ -291,11 +320,15 @@ void app_cli_execute_line(
     {
         cli_cmd_ping(port, out, out_size);
     }
+    else if(str_eq(cmd, "version") || str_eq(cmd, "ver"))
+    {
+        cli_cmd_version(out, out_size);
+    }
     else if(str_eq(cmd, "role"))
     {
         cli_cmd_role(out, out_size);
     }
-    else if(str_eq(cmd, "status"))
+    else if(str_eq(cmd, "status") || str_eq(cmd, "usb"))
     {
         cli_cmd_status(out, out_size);
     }
