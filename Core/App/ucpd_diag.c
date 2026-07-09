@@ -34,11 +34,7 @@
    LOG CONFIG
 ========================= */
 
-/*
- * Known-good funkcni logika zustava stejna.
- * Tady jen ridime mnozstvi logu.
- */
-#define UCPD_LOG_BOOT                 1U // 0U = vypnuto
+#define UCPD_LOG_BOOT                 1U
 #define UCPD_LOG_GPIO                 1U
 #define UCPD_LOG_ROLE                 1U
 #define UCPD_LOG_ATTACH               1U
@@ -95,12 +91,11 @@ static void ucpd_log_hex(uint8_t enabled, const char *prefix, uint32_t value)
 #define TYPEC_DETACH_DEBOUNCE_MS      120U
 
 #define USB_ROLE_START_DELAY_MS       200U
+#define TYPEC_DEVICE_REPLUG_GRACE_MS  1500U
 #define PERIODIC_DUMP_MS              2000U
-
 
 #define UCPD_PERIODIC_DUMP_ENABLE     0U
 #define UCPD_STATE_DUMP_ENABLE        0U
-
 
 #define UCPD_DIAG_EVENT_CC1           (1UL << 0)
 #define UCPD_DIAG_EVENT_CC2           (1UL << 1)
@@ -156,6 +151,18 @@ static uint32_t periodic_dump_ms = 0U;
 
 static uint8_t vbus_fet_enabled = 0U;
 static uint8_t usb_started = 0U;
+
+/*
+ * 0 = manual/observe behavior:
+ *     DEVICE detach keeps TinyUSB device stack active for CDC replug.
+ *
+ * 1 = AUTO-DRP scan behavior:
+ *     DEVICE detach stops TinyUSB device stack so policy scan can resume.
+ */
+static uint8_t auto_scan_mode = 0U;
+
+static uint8_t device_replug_grace_active = 0U;
+static uint32_t device_replug_grace_since_ms = 0U;
 
 
 /* =========================
@@ -675,10 +682,6 @@ static void apply_role(typec_role_t role)
         }
     }
 
-    /*
-     * Real role change:
-     * usb_manager_stop() is correct here.
-     */
     usb_manager_stop();
 
     current_role =
@@ -720,12 +723,6 @@ static typec_orientation_t detect_orientation_source_mode(void)
     uint32_t cc2 =
         ucpd_get_cc2_vstate();
 
-    /*
-     * Source/Rp mode observed:
-     * open -> 2
-     * Rd attached -> 1
-     */
-
     if((cc1 == 1U) && (cc2 != 1U))
     {
         return TYPEC_ORIENTATION_CC1;
@@ -747,12 +744,6 @@ static typec_orientation_t detect_orientation_sink_mode(void)
 
     uint32_t cc2 =
         ucpd_get_cc2_vstate();
-
-    /*
-     * Sink/Rd mode:
-     * open -> 0
-     * Rp attached -> 1/2/3
-     */
 
     if((cc1 != 0U) && (cc2 == 0U))
     {
@@ -831,6 +822,7 @@ uint8_t ucpd_diag_is_source(void)
         (current_role == TYPEC_ROLE_HOST_SOURCE) ? 1U : 0U;
 }
 
+
 uint8_t ucpd_diag_is_attached(void)
 {
     return
@@ -858,6 +850,107 @@ uint8_t ucpd_diag_is_unattached(void)
         (role_state == ROLE_STATE_UNATTACHED) ? 1U : 0U;
 }
 
+
+void ucpd_diag_set_auto_scan_mode(uint8_t enable)
+{
+    auto_scan_mode =
+        enable ? 1U : 0U;
+
+    if(auto_scan_mode)
+    {
+        ucpd_log(
+            UCPD_LOG_ROLE,
+            "[TYPEC] AUTO-SCAN mode enabled inside ucpd_diag\r\n");
+    }
+    else
+    {
+        ucpd_log(
+            UCPD_LOG_ROLE,
+            "[TYPEC] AUTO-SCAN mode disabled inside ucpd_diag\r\n");
+    }
+}
+
+
+void ucpd_diag_set_scan_sink_role(void)
+{
+    if(current_role == TYPEC_ROLE_DEVICE_SINK)
+    {
+        return;
+    }
+
+    /*
+     * AUTO-DRP scan special case:
+     *
+     * If we are currently advertising SOURCE/RP and a PC/source is plugged in,
+     * VBUS can already be present from the PC.
+     *
+     * Normal apply_role() would abort because VBUS is still present after
+     * turning our FET off. For AUTO scan this is exactly the case where we
+     * want to become DEVICE/SINK and accept external VBUS.
+     */
+    if((current_role == TYPEC_ROLE_HOST_SOURCE) && ucpd_diag_read_vbus())
+    {
+        uint32_t now =
+            HAL_GetTick();
+
+        ucpd_log(
+            UCPD_LOG_ROLE,
+            "[TYPEC-SCAN] SOURCE/RP -> SINK/RD with external VBUS present\r\n");
+
+        force_vbus_fet_off_raw();
+
+        usb_manager_stop();
+
+        current_role =
+            TYPEC_ROLE_DEVICE_SINK;
+
+        force_vbus_fet_off_raw();
+
+        reset_role_runtime_state();
+
+        ucpd_hw_set_sink_mode();
+
+        LL_UCPD_ClearFlag_TypeCEventCC1(UCPD1);
+        LL_UCPD_ClearFlag_TypeCEventCC2(UCPD1);
+
+        ucpd_diag_pending_events =
+            0U;
+
+        last_vbus =
+            ucpd_diag_read_vbus();
+
+        vbus_last_change_ms =
+            now;
+
+        ucpd_dump_state();
+
+        return;
+    }
+
+    apply_role(TYPEC_ROLE_DEVICE_SINK);
+}
+
+
+void ucpd_diag_set_scan_source_role(void)
+{
+    if(current_role == TYPEC_ROLE_HOST_SOURCE)
+    {
+        return;
+    }
+
+    if(ucpd_diag_read_vbus())
+    {
+        ucpd_log(
+            UCPD_LOG_ROLE,
+            "[TYPEC-SCAN] BLOCK SOURCE/RP: VBUS already PRESENT\r\n");
+
+        return;
+    }
+
+    apply_role(TYPEC_ROLE_HOST_SOURCE);
+}
+
+
 void ucpd_diag_request_device_role(void)
 {
     if(current_role == TYPEC_ROLE_DEVICE_SINK)
@@ -884,12 +977,6 @@ void ucpd_diag_request_host_role(void)
         return;
     }
 
-    /*
-     * SAFETY:
-     *
-     * If VBUS is already present, we are probably still connected to a PC/source.
-     * Do not become HOST/SOURCE against another VBUS source.
-     */
     if(ucpd_diag_read_vbus())
     {
         ucpd_log(
@@ -951,9 +1038,6 @@ void ucpd_diag_init(void)
     LL_APB1_GRP2_ReleaseReset(
         LL_APB1_GRP2_PERIPH_UCPD1);
 
-    /*
-     * VBUS sense PC4.
-     */
     LL_GPIO_SetPinMode(
         GPIOC,
         LL_GPIO_PIN_4,
@@ -964,11 +1048,6 @@ void ucpd_diag_init(void)
         LL_GPIO_PIN_4,
         LL_GPIO_PULL_NO);
 
-    /*
-     * CC pins:
-     * PB13 = UCPD1_CC1
-     * PB14 = UCPD1_CC2
-     */
     LL_GPIO_SetPinMode(
         UCPD_CC_PORT,
         UCPD_CC1_PIN,
@@ -1071,6 +1150,101 @@ void ucpd_diag_irq(void)
 }
 
 
+static void auto_scan_device_replug_grace_task(uint32_t now)
+{
+    if(auto_scan_mode == 0U)
+    {
+        device_replug_grace_active =
+            0U;
+
+        return;
+    }
+
+    if(device_replug_grace_active == 0U)
+    {
+        return;
+    }
+
+    if(current_role != TYPEC_ROLE_DEVICE_SINK)
+    {
+        device_replug_grace_active =
+            0U;
+
+        return;
+    }
+
+    if(role_state != ROLE_STATE_UNATTACHED)
+    {
+        /*
+         * PC/source came back and state machine is active again.
+         */
+        device_replug_grace_active =
+            0U;
+
+        return;
+    }
+
+    if(ucpd_diag_read_vbus())
+    {
+        /*
+         * PC/source may be reconnecting. Keep device stack alive.
+         */
+        return;
+    }
+
+    if((uint32_t)(now - device_replug_grace_since_ms) < TYPEC_DEVICE_REPLUG_GRACE_MS)
+    {
+        return;
+    }
+
+    ucpd_log(
+        UCPD_LOG_ATTACH,
+        "[TYPEC-SNK] AUTO-SCAN grace expired -> DEVICE STOP + SINK REARM\r\n");
+
+    usb_manager_stop();
+
+    usb_started =
+        0U;
+
+    active_orientation =
+        TYPEC_ORIENTATION_NONE;
+
+    candidate_attached =
+        0U;
+
+    candidate_orientation =
+        TYPEC_ORIENTATION_NONE;
+
+    candidate_since_ms =
+        now;
+
+    usb_start_wait_since_ms =
+        0U;
+
+    role_state =
+        ROLE_STATE_UNATTACHED;
+
+    ucpd_hw_set_sink_mode();
+
+    LL_UCPD_ClearFlag_TypeCEventCC1(UCPD1);
+    LL_UCPD_ClearFlag_TypeCEventCC2(UCPD1);
+
+    ucpd_diag_pending_events =
+        0U;
+
+    last_vbus =
+        ucpd_diag_read_vbus();
+
+    vbus_last_change_ms =
+        now;
+
+    device_replug_grace_active =
+        0U;
+
+    ucpd_dump_state();
+}
+
+
 static void role_state_machine_task(uint32_t now)
 {
     typec_orientation_t detected =
@@ -1120,10 +1294,6 @@ static void role_state_machine_task(uint32_t now)
                                 "[TYPEC-SRC] SINK ATTACHED on CC2\r\n");
                         }
 
-                        /*
-                         * HOST/SOURCE:
-                         * Only after valid attach may we enable VBUS.
-                         */
                         vbus_fet_apply(1U);
                     }
                     else
@@ -1141,10 +1311,6 @@ static void role_state_machine_task(uint32_t now)
                                 "[TYPEC-SNK] SOURCE ATTACHED on CC2\r\n");
                         }
 
-                        /*
-                         * DEVICE/SINK:
-                         * Never enable VBUS.
-                         */
                         vbus_fet_apply(0U);
                     }
 
@@ -1282,17 +1448,6 @@ static void role_state_machine_task(uint32_t now)
 
                     if(current_role == TYPEC_ROLE_HOST_SOURCE)
                     {
-                        /*
-                         * HOST/SOURCE detach:
-                         *
-                         * Fyzicky odpojene USB-C sink zarizeni.
-                         *
-                         * Bezpecne:
-                         * - vypnout VBUS FET
-                         * - zastavit TinyUSB host stack
-                         * - vratit state machine do UNATTACHED
-                         * - znovu re-armnout UCPD Source/Rp mode
-                         */
                         ucpd_log(
                             UCPD_LOG_ATTACH,
                             "[TYPEC-SRC] detach -> VBUS OFF + HOST STOP + SOURCE REARM\r\n");
@@ -1322,9 +1477,6 @@ static void role_state_machine_task(uint32_t now)
                         role_state =
                             ROLE_STATE_UNATTACHED;
 
-                        /*
-                         * Re-arm UCPD Source/Rp detection after detach.
-                         */
                         ucpd_hw_set_source_mode();
 
                         LL_UCPD_ClearFlag_TypeCEventCC1(UCPD1);
@@ -1343,26 +1495,82 @@ static void role_state_machine_task(uint32_t now)
                     }
                     else
                     {
-                        /*
-                         * DEVICE/SINK:
-                         *
-                         * Device nikdy nezapina VBUS.
-                         * TinyUSB device stack nechavame bezet kvuli CDC replug.
-                         */
-                        ucpd_log(
-                            UCPD_LOG_ATTACH,
-                            "[TYPEC-SNK] detach -> keep DEVICE stack active\r\n");
+                        if(auto_scan_mode)
+                        {
+                            ucpd_log(
+                                UCPD_LOG_ATTACH,
+                                "[TYPEC-SNK] detach in AUTO-SCAN -> keep DEVICE stack during replug grace\r\n");
 
-                        usb_started =
-                            1U;
+                            /*
+                             * Keep TinyUSB DEVICE stack alive briefly.
+                             *
+                             * This preserves reliable CDC re-enumeration when the PC
+                             * is unplugged and plugged again without cycling through HOST.
+                             *
+                             * After TYPEC_DEVICE_REPLUG_GRACE_MS without VBUS returning,
+                             * auto_scan_device_replug_grace_task() stops DEVICE and lets
+                             * AUTO-DRP scan resume.
+                             */
+                            usb_started =
+                                1U;
 
-                        active_orientation =
-                            TYPEC_ORIENTATION_NONE;
+                            active_orientation =
+                                TYPEC_ORIENTATION_NONE;
 
-                        role_state =
-                            ROLE_STATE_UNATTACHED;
+                            candidate_attached =
+                                0U;
 
-                        ucpd_dump_state();
+                            candidate_orientation =
+                                TYPEC_ORIENTATION_NONE;
+
+                            candidate_since_ms =
+                                now;
+
+                            usb_start_wait_since_ms =
+                                0U;
+
+                            role_state =
+                                ROLE_STATE_UNATTACHED;
+
+                            ucpd_hw_set_sink_mode();
+
+                            LL_UCPD_ClearFlag_TypeCEventCC1(UCPD1);
+                            LL_UCPD_ClearFlag_TypeCEventCC2(UCPD1);
+
+                            ucpd_diag_pending_events =
+                                0U;
+
+                            last_vbus =
+                                ucpd_diag_read_vbus();
+
+                            vbus_last_change_ms =
+                                now;
+
+                            device_replug_grace_active =
+                                1U;
+
+                            device_replug_grace_since_ms =
+                                now;
+
+                            ucpd_dump_state();
+                        }
+                        else
+                        {
+                            ucpd_log(
+                                UCPD_LOG_ATTACH,
+                                "[TYPEC-SNK] detach -> keep DEVICE stack active\r\n");
+
+                            usb_started =
+                                1U;
+
+                            active_orientation =
+                                TYPEC_ORIENTATION_NONE;
+
+                            role_state =
+                                ROLE_STATE_UNATTACHED;
+
+                            ucpd_dump_state();
+                        }
                     }
                 }
             }
@@ -1405,6 +1613,8 @@ void ucpd_diag_task(void)
         ucpd_diag_read_vbus();
 
     role_state_machine_task(now);
+
+    auto_scan_device_replug_grace_task(now);
 
 #if UCPD_PERIODIC_DUMP_ENABLE
     if((now - periodic_dump_ms) > PERIODIC_DUMP_MS)
