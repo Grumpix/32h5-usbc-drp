@@ -1,14 +1,21 @@
 #include "usb_device_tusb.h"
 
+#include <stdbool.h>
+#include <stdint.h>
 #include <string.h>
 
 #include "tusb.h"
 #include "uart.h"
+#include "app_cli_transport.h"
 
 
 #define USB_VID 0xCafe
 #define USB_PID 0x4000
 #define USB_BCD 0x0100
+
+
+#define CDC_TX_QUEUE_SIZE 512U
+#define CDC_TX_CHUNK_SIZE 64U
 
 
 enum
@@ -72,17 +79,148 @@ static volatile uint8_t device_mounted = 0U;
 static volatile uint8_t cdc_connected = 0U;
 
 
-static void cdc_write_text(char const *text)
+/* =========================
+   CDC TX QUEUE
+========================= */
+
+static volatile uint16_t cdc_tx_head = 0U;
+static volatile uint16_t cdc_tx_tail = 0U;
+static uint8_t cdc_tx_queue[CDC_TX_QUEUE_SIZE];
+
+
+static uint16_t cdc_tx_next(uint16_t index)
 {
-    if(cdc_connected == 0U)
+    index++;
+
+    if(index >= CDC_TX_QUEUE_SIZE)
+    {
+        index =
+            0U;
+    }
+
+    return index;
+}
+
+
+static void cdc_tx_queue_reset(void)
+{
+    cdc_tx_head =
+        0U;
+
+    cdc_tx_tail =
+        0U;
+
+    memset(cdc_tx_queue, 0, sizeof(cdc_tx_queue));
+}
+
+
+static bool cdc_tx_queue_push(uint8_t value)
+{
+    uint16_t next =
+        cdc_tx_next(cdc_tx_head);
+
+    if(next == cdc_tx_tail)
+    {
+        return false;
+    }
+
+    cdc_tx_queue[cdc_tx_head] =
+        value;
+
+    cdc_tx_head =
+        next;
+
+    return true;
+}
+
+
+static bool cdc_tx_queue_pop(uint8_t *value)
+{
+    if(value == NULL)
+    {
+        return false;
+    }
+
+    if(cdc_tx_tail == cdc_tx_head)
+    {
+        return false;
+    }
+
+    *value =
+        cdc_tx_queue[cdc_tx_tail];
+
+    cdc_tx_tail =
+        cdc_tx_next(cdc_tx_tail);
+
+    return true;
+}
+
+
+static bool cdc_tx_queue_is_empty(void)
+{
+    return
+        (cdc_tx_tail == cdc_tx_head);
+}
+
+
+static void cdc_tx_task(void)
+{
+    uint8_t chunk[CDC_TX_CHUNK_SIZE];
+    uint32_t count =
+        0U;
+
+    if((device_mounted == 0U) || (cdc_connected == 0U))
     {
         return;
     }
 
-    tud_cdc_write_str(text);
+    if(!tud_cdc_connected())
+    {
+        return;
+    }
+
+    while((count < sizeof(chunk)) && !cdc_tx_queue_is_empty())
+    {
+        uint8_t b;
+
+        if(!cdc_tx_queue_pop(&b))
+        {
+            break;
+        }
+
+        chunk[count] =
+            b;
+
+        count++;
+    }
+
+    if(count == 0U)
+    {
+        return;
+    }
+
+    /*
+     * TinyUSB TX is now called only from usb_device_tusb_task(),
+     * never directly from CDC callbacks.
+     */
+    uint32_t written =
+        tud_cdc_write(chunk, count);
+
+    (void)written;
+
     tud_cdc_write_flush();
 }
 
+
+static void cdc_write_text(char const *text)
+{
+    (void)usb_device_tusb_cdc_send_str(text);
+}
+
+
+/* =========================
+   DESCRIPTORS
+========================= */
 
 uint8_t const *tud_descriptor_device_cb(void)
 {
@@ -151,7 +289,7 @@ uint16_t const *tud_descriptor_string_cb(uint8_t index, uint16_t langid)
 
 
 /* =========================
-   DEVICE CALLBACKS (CDC)
+   DEVICE CALLBACKS CDC
 ========================= */
 
 void tud_mount_cb(void)
@@ -161,6 +299,8 @@ void tud_mount_cb(void)
 
     cdc_connected =
         0U;
+
+    cdc_tx_queue_reset();
 
     uart_write_str("[USB] ATTACH\r\n");
 }
@@ -173,6 +313,8 @@ void tud_umount_cb(void)
 
     cdc_connected =
         0U;
+
+    cdc_tx_queue_reset();
 
     uart_write_str("[USB] DETACH\r\n");
 }
@@ -199,14 +341,23 @@ void tud_cdc_line_state_cb(uint8_t itf, bool dtr, bool rts)
         cdc_connected =
             1U;
 
+        cdc_tx_queue_reset();
+
         uart_write_str("[USB-CDC] CONNECTED DTR=1\r\n");
 
-        cdc_write_text("CDC echo ready\r\n");
+        /*
+         * Safe now:
+         * usb_device_tusb_cdc_send_str() only queues bytes.
+         * Actual tud_cdc_write/flush happens in usb_device_tusb_task().
+         */
+        cdc_write_text("CDC CLI ready. Type help\r\n");
     }
     else
     {
         cdc_connected =
             0U;
+
+        cdc_tx_queue_reset();
 
         uart_write_str("[USB-CDC] DISCONNECTED DTR=0\r\n");
     }
@@ -233,10 +384,13 @@ void tud_cdc_rx_cb(uint8_t itf)
             break;
         }
 
-        tud_cdc_write(buf, count);
+        /*
+         * Must only queue RX. No parser output directly here.
+         */
+        app_cli_transport_cdc_rx(
+            buf,
+            count);
     }
-
-    tud_cdc_write_flush();
 }
 
 
@@ -252,22 +406,17 @@ void usb_device_tusb_init(void)
     cdc_connected =
         0U;
 
-    /*
-     * TinyUSB device stack se inicializuje v usb_manager.c volanim tud_init(0).
-     *
-     * Tady zatim jen logujeme, aby usb_manager mel stabilni device init hook.
-     */
+    cdc_tx_queue_reset();
+
     uart_write_str("[USB-DEVICE] app init\r\n");
 }
 
 
 void usb_device_tusb_task(void)
 {
-    /*
-     * V aktualnim projektu device task zatim nevolame z usb_manager_task(),
-     * ale funkce existuje pro budouci pouziti.
-     */
     tud_task_ext(0, false);
+
+    cdc_tx_task();
 }
 
 
@@ -279,10 +428,8 @@ void usb_device_tusb_deinit(void)
     cdc_connected =
         0U;
 
-    /*
-     * TinyUSB zatim nema v projektu pouzity stabilni tud_deinit().
-     * Pri prepinani roli zatim device fyzicky neodpojujeme/deinitujeme.
-     */
+    cdc_tx_queue_reset();
+
     uart_write_str("[USB-DEVICE] app deinit skipped\r\n");
 }
 
@@ -299,4 +446,54 @@ bool usb_device_tusb_is_cdc_connected(void)
     return
         (device_mounted != 0U) &&
         (cdc_connected != 0U);
+}
+
+
+bool usb_device_tusb_cdc_send(
+    const uint8_t *data,
+    uint32_t len)
+{
+    bool ok =
+        true;
+
+    if((data == NULL) || (len == 0U))
+    {
+        return false;
+    }
+
+    if((device_mounted == 0U) || (cdc_connected == 0U))
+    {
+        return false;
+    }
+
+    /*
+     * Queue only. Do not call TinyUSB TX here.
+     */
+    for(uint32_t i = 0U; i < len; i++)
+    {
+        if(!cdc_tx_queue_push(data[i]))
+        {
+            ok =
+                false;
+
+            break;
+        }
+    }
+
+    return ok;
+}
+
+
+bool usb_device_tusb_cdc_send_str(
+    const char *text)
+{
+    if(text == NULL)
+    {
+        return false;
+    }
+
+    return
+        usb_device_tusb_cdc_send(
+            (const uint8_t *)text,
+            (uint32_t)strlen(text));
 }

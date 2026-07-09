@@ -4,6 +4,8 @@
 # APP_LAYER_SOURCES at CMakeLists.txt:29 (file)
 file(GLOB NEW_GLOB LIST_DIRECTORIES true "C:/Users/novak/Desktop/30626/h533-300626/Core/App/*.c")
 set(OLD_GLOB
+  "C:/Users/novak/Desktop/30626/h533-300626/Core/App/app_cli.c"
+  "C:/Users/novak/Desktop/30626/h533-300626/Core/App/app_cli_transport.c"
   "C:/Users/novak/Desktop/30626/h533-300626/Core/App/app_usb_status.c"
   "C:/Users/novak/Desktop/30626/h533-300626/Core/App/app_usb_status_reporter.c"
   "C:/Users/novak/Desktop/30626/h533-300626/Core/App/drp_fsm.c"
