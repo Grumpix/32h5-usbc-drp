@@ -50,7 +50,7 @@
  * 1 = po initu posle "Hello from STM32 FTDI host\r\n"
  * 0 = neposila automaticky nic
  */
-#define FTDI_TEST_HELLO_ENABLE           1U
+#define FTDI_TEST_HELLO_ENABLE           1U // 0U = vypnuto
 
 /*
  * Verbose RX polling log.
@@ -58,7 +58,26 @@
  * 0 = normalni tichy provoz
  * 1 = loguje kazdy RX START / RX SUBMIT OK
  */
-#define FTDI_VERBOSE_RX_POLL_LOG         0U
+#define FTDI_VERBOSE_RX_POLL_LOG         0U // 0U = vypnuto
+
+
+/*
+ * LOG CONFIG
+ *
+ * Funkcni logika FTDI driveru zustava stejna.
+ * Tohle jen ridi mnozstvi debug vypisu.
+ */
+#define FTDI_LOG_APP                     1U //0U = vypnuto
+#define FTDI_LOG_CLASS                   1U
+#define FTDI_LOG_OPEN                    1U
+#define FTDI_LOG_CTRL                    1U
+#define FTDI_LOG_TX                      1U
+#define FTDI_LOG_RX_DATA                 1U
+#define FTDI_LOG_RX_STATUS_ONLY          0U
+#define FTDI_LOG_ERRORS                  1U
+#define FTDI_LOG_UMOUNT                  1U
+#define FTDI_LOG_CLOSE                   1U
+#define FTDI_LOG_HELLO                   1U
 
 
 typedef enum
@@ -194,6 +213,15 @@ static void uart_write_ascii_fixed(const uint8_t *data, uint32_t len)
 }
 
 
+static void ftdi_log(uint8_t enabled, const char *s)
+{
+    if(enabled)
+    {
+        uart_write_str(s);
+    }
+}
+
+
 static uint16_t le16_read(const uint8_t *p)
 {
     return
@@ -223,7 +251,9 @@ void ftdi_host_app_init(void)
      * po deinit/init cyklu host stacku.
      */
 
-    uart_write_str("[FTDI-HOST] app init\r\n");
+    ftdi_log(
+        FTDI_LOG_APP,
+        "[FTDI-HOST] app init\r\n");
 }
 
 
@@ -257,15 +287,18 @@ static bool ftdi_submit_control(
     const char *name,
     tuh_xfer_cb_t complete_cb)
 {
-    uart_write_str("[FTDI-HOST] CTRL START ");
-    uart_write_str(name);
-    uart_write_str(" req=");
-    uart_write_hex8(request);
-    uart_write_str(" value=");
-    uart_write_hex((uint32_t)value);
-    uart_write_str(" index=");
-    uart_write_hex((uint32_t)index);
-    uart_write_str("\r\n");
+    if(FTDI_LOG_CTRL)
+    {
+        uart_write_str("[FTDI-HOST] CTRL START ");
+        uart_write_str(name);
+        uart_write_str(" req=");
+        uart_write_hex8(request);
+        uart_write_str(" value=");
+        uart_write_hex((uint32_t)value);
+        uart_write_str(" index=");
+        uart_write_hex((uint32_t)index);
+        uart_write_str("\r\n");
+    }
 
     memset(&ftdi_ctrl_request, 0, sizeof(ftdi_ctrl_request));
     memset(&ftdi_ctrl_xfer, 0, sizeof(ftdi_ctrl_xfer));
@@ -305,9 +338,12 @@ static bool ftdi_submit_control(
 
     if(!tuh_control_xfer(&ftdi_ctrl_xfer))
     {
-        uart_write_str("[FTDI-HOST] CTRL SUBMIT FAILED ");
-        uart_write_str(name);
-        uart_write_str("\r\n");
+        if(FTDI_LOG_ERRORS)
+        {
+            uart_write_str("[FTDI-HOST] CTRL SUBMIT FAILED ");
+            uart_write_str(name);
+            uart_write_str("\r\n");
+        }
 
         return false;
     }
@@ -330,11 +366,14 @@ static void ftdi_enum_control_complete_cb(tuh_xfer_t *xfer)
             (xfer->result == XFER_RESULT_SUCCESS) ? 1U : 0U;
     }
 
-    uart_write_str("[FTDI-HOST] CTRL DONE step=");
-    uart_write_dec_u32((uint32_t)ftdi_dev.enum_step);
-    uart_write_str(" ok=");
-    uart_write_dec_u32((uint32_t)ok);
-    uart_write_str("\r\n");
+    if(FTDI_LOG_CTRL)
+    {
+        uart_write_str("[FTDI-HOST] CTRL DONE step=");
+        uart_write_dec_u32((uint32_t)ftdi_dev.enum_step);
+        uart_write_str(" ok=");
+        uart_write_dec_u32((uint32_t)ok);
+        uart_write_str("\r\n");
+    }
 
     if(ok == 0U)
     {
@@ -410,7 +449,9 @@ static void ftdi_enum_control_complete_cb(tuh_xfer_t *xfer)
             ftdi_dev.rx_status_only_count =
                 0U;
 
-            uart_write_str("[FTDI-HOST] INIT DONE - READY 115200 8N1\r\n");
+            ftdi_log(
+                FTDI_LOG_CTRL,
+                "[FTDI-HOST] INIT DONE - READY 115200 8N1\r\n");
 
             usbh_driver_set_config_complete(
                 ftdi_dev.daddr,
@@ -542,7 +583,9 @@ static bool ftdi_start_rx(void)
             ftdi_rx_buf,
             sizeof(ftdi_rx_buf)))
     {
-        uart_write_str("[FTDI-HOST] RX SUBMIT FAILED\r\n");
+        ftdi_log(
+            FTDI_LOG_ERRORS,
+            "[FTDI-HOST] RX SUBMIT FAILED\r\n");
 
         ftdi_dev.rx_active =
             0U;
@@ -564,13 +607,19 @@ bool ftdi_host_send(
 {
     if(!ftdi_host_is_ready())
     {
-        uart_write_str("[FTDI-HOST] SEND blocked - not ready\r\n");
+        ftdi_log(
+            FTDI_LOG_ERRORS,
+            "[FTDI-HOST] SEND blocked - not ready\r\n");
+
         return false;
     }
 
     if(ftdi_dev.tx_active != 0U)
     {
-        uart_write_str("[FTDI-HOST] SEND blocked - TX busy\r\n");
+        ftdi_log(
+            FTDI_LOG_ERRORS,
+            "[FTDI-HOST] SEND blocked - TX busy\r\n");
+
         return false;
     }
 
@@ -590,11 +639,14 @@ bool ftdi_host_send(
     ftdi_dev.tx_active =
         1U;
 
-    uart_write_str("[FTDI-HOST] TX START len=");
-    uart_write_dec_u32(len);
-    uart_write_str(" ep=");
-    uart_write_hex8(ftdi_dev.ep_out);
-    uart_write_str("\r\n");
+    if(FTDI_LOG_TX)
+    {
+        uart_write_str("[FTDI-HOST] TX START len=");
+        uart_write_dec_u32(len);
+        uart_write_str(" ep=");
+        uart_write_hex8(ftdi_dev.ep_out);
+        uart_write_str("\r\n");
+    }
 
     if(!usbh_edpt_xfer(
             ftdi_dev.daddr,
@@ -602,7 +654,9 @@ bool ftdi_host_send(
             ftdi_tx_buf,
             (uint16_t)len))
     {
-        uart_write_str("[FTDI-HOST] TX SUBMIT FAILED\r\n");
+        ftdi_log(
+            FTDI_LOG_ERRORS,
+            "[FTDI-HOST] TX SUBMIT FAILED\r\n");
 
         ftdi_dev.tx_active =
             0U;
@@ -610,7 +664,9 @@ bool ftdi_host_send(
         return false;
     }
 
-    uart_write_str("[FTDI-HOST] TX SUBMIT OK\r\n");
+    ftdi_log(
+        FTDI_LOG_TX,
+        "[FTDI-HOST] TX SUBMIT OK\r\n");
 
     return true;
 }
@@ -647,7 +703,9 @@ void ftdi_host_task(void)
             ftdi_dev.hello_sent =
                 1U;
 
-            uart_write_str("[FTDI-HOST] HELLO send now\r\n");
+            ftdi_log(
+                FTDI_LOG_HELLO,
+                "[FTDI-HOST] HELLO send now\r\n");
 
             ftdi_send_hello();
         }
@@ -675,7 +733,9 @@ static bool ftdi_host_init(void)
 {
     ftdi_host_reset_state();
 
-    uart_write_str("[FTDI-HOST] class init\r\n");
+    ftdi_log(
+        FTDI_LOG_CLASS,
+        "[FTDI-HOST] class init\r\n");
 
     return true;
 }
@@ -685,7 +745,9 @@ static bool ftdi_host_deinit(void)
 {
     ftdi_host_reset_state();
 
-    uart_write_str("[FTDI-HOST] class deinit\r\n");
+    ftdi_log(
+        FTDI_LOG_CLASS,
+        "[FTDI-HOST] class deinit\r\n");
 
     return true;
 }
@@ -741,15 +803,18 @@ static uint16_t ftdi_host_open(
         return 0U;
     }
 
-    uart_write_str("[FTDI-HOST] OPEN daddr=");
-    uart_write_dec_u32((uint32_t)dev_addr);
-    uart_write_str(" VID=");
-    uart_write_hex((uint32_t)vid);
-    uart_write_str(" PID=");
-    uart_write_hex((uint32_t)pid);
-    uart_write_str(" if=");
-    uart_write_dec_u32((uint32_t)itf_desc->bInterfaceNumber);
-    uart_write_str("\r\n");
+    if(FTDI_LOG_OPEN)
+    {
+        uart_write_str("[FTDI-HOST] OPEN daddr=");
+        uart_write_dec_u32((uint32_t)dev_addr);
+        uart_write_str(" VID=");
+        uart_write_hex((uint32_t)vid);
+        uart_write_str(" PID=");
+        uart_write_hex((uint32_t)pid);
+        uart_write_str(" if=");
+        uart_write_dec_u32((uint32_t)itf_desc->bInterfaceNumber);
+        uart_write_str("\r\n");
+    }
 
 
     p =
@@ -807,13 +872,16 @@ static uint16_t ftdi_host_open(
                 uint8_t ep_type =
                     ep_attr & 0x03U;
 
-                uart_write_str("[FTDI-HOST] EP addr=");
-                uart_write_hex8(ep_addr);
-                uart_write_str(" attr=");
-                uart_write_hex8(ep_attr);
-                uart_write_str(" mps=");
-                uart_write_dec_u32((uint32_t)ep_mps);
-                uart_write_str("\r\n");
+                if(FTDI_LOG_OPEN)
+                {
+                    uart_write_str("[FTDI-HOST] EP addr=");
+                    uart_write_hex8(ep_addr);
+                    uart_write_str(" attr=");
+                    uart_write_hex8(ep_attr);
+                    uart_write_str(" mps=");
+                    uart_write_dec_u32((uint32_t)ep_mps);
+                    uart_write_str("\r\n");
+                }
 
                 if(ep_type == TUSB_XFER_BULK)
                 {
@@ -836,16 +904,22 @@ static uint16_t ftdi_host_open(
 
                     if(!tuh_edpt_open(dev_addr, ep))
                     {
-                        uart_write_str("[FTDI-HOST] EP OPEN FAILED ");
-                        uart_write_hex8(ep_addr);
-                        uart_write_str("\r\n");
+                        if(FTDI_LOG_ERRORS)
+                        {
+                            uart_write_str("[FTDI-HOST] EP OPEN FAILED ");
+                            uart_write_hex8(ep_addr);
+                            uart_write_str("\r\n");
+                        }
 
                         return 0U;
                     }
 
-                    uart_write_str("[FTDI-HOST] EP OPEN OK ");
-                    uart_write_hex8(ep_addr);
-                    uart_write_str("\r\n");
+                    if(FTDI_LOG_OPEN)
+                    {
+                        uart_write_str("[FTDI-HOST] EP OPEN OK ");
+                        uart_write_hex8(ep_addr);
+                        uart_write_str("\r\n");
+                    }
                 }
             }
         }
@@ -859,7 +933,9 @@ static uint16_t ftdi_host_open(
 
     if((ep_in == 0U) || (ep_out == 0U))
     {
-        uart_write_str("[FTDI-HOST] OPEN FAILED - endpoints missing\r\n");
+        ftdi_log(
+            FTDI_LOG_ERRORS,
+            "[FTDI-HOST] OPEN FAILED - endpoints missing\r\n");
 
         return 0U;
     }
@@ -897,15 +973,18 @@ static uint16_t ftdi_host_open(
         FTDI_ENUM_STEP_IDLE;
 
 
-    uart_write_str("[FTDI-HOST] OPEN OK if=");
-    uart_write_dec_u32((uint32_t)ftdi_dev.interface_number);
-    uart_write_str(" ep_in=");
-    uart_write_hex8(ftdi_dev.ep_in);
-    uart_write_str(" ep_out=");
-    uart_write_hex8(ftdi_dev.ep_out);
-    uart_write_str(" drv_len=");
-    uart_write_dec_u32((uint32_t)drv_len);
-    uart_write_str("\r\n");
+    if(FTDI_LOG_OPEN)
+    {
+        uart_write_str("[FTDI-HOST] OPEN OK if=");
+        uart_write_dec_u32((uint32_t)ftdi_dev.interface_number);
+        uart_write_str(" ep_in=");
+        uart_write_hex8(ftdi_dev.ep_in);
+        uart_write_str(" ep_out=");
+        uart_write_hex8(ftdi_dev.ep_out);
+        uart_write_str(" drv_len=");
+        uart_write_dec_u32((uint32_t)drv_len);
+        uart_write_str("\r\n");
+    }
 
     return drv_len;
 }
@@ -918,11 +997,14 @@ static bool ftdi_host_set_config(uint8_t dev_addr, uint8_t itf_num)
         return false;
     }
 
-    uart_write_str("[FTDI-HOST] SET_CONFIG daddr=");
-    uart_write_dec_u32((uint32_t)dev_addr);
-    uart_write_str(" itf=");
-    uart_write_dec_u32((uint32_t)itf_num);
-    uart_write_str("\r\n");
+    if(FTDI_LOG_OPEN)
+    {
+        uart_write_str("[FTDI-HOST] SET_CONFIG daddr=");
+        uart_write_dec_u32((uint32_t)dev_addr);
+        uart_write_str(" itf=");
+        uart_write_dec_u32((uint32_t)itf_num);
+        uart_write_str("\r\n");
+    }
 
     ftdi_dev.enum_step =
         FTDI_ENUM_STEP_RESET;
@@ -972,21 +1054,24 @@ static bool ftdi_host_xfer_cb(
                 ftdi_dev.next_rx_due_ms =
                     HAL_GetTick();
 
-                uart_write_str("[FTDI-HOST] RX DONE result=");
-                uart_write_dec_u32((uint32_t)result);
-                uart_write_str(" len=");
-                uart_write_dec_u32(xferred_bytes);
-                uart_write_str("\r\n");
+                if(FTDI_LOG_RX_DATA)
+                {
+                    uart_write_str("[FTDI-HOST] RX DONE result=");
+                    uart_write_dec_u32((uint32_t)result);
+                    uart_write_str(" len=");
+                    uart_write_dec_u32(xferred_bytes);
+                    uart_write_str("\r\n");
 
-                uart_write_str("[FTDI-HOST] RX STATUS=");
-                uart_write_hex8(ftdi_rx_buf[0]);
-                uart_write_str(" ");
-                uart_write_hex8(ftdi_rx_buf[1]);
-                uart_write_str("\r\n");
+                    uart_write_str("[FTDI-HOST] RX STATUS=");
+                    uart_write_hex8(ftdi_rx_buf[0]);
+                    uart_write_str(" ");
+                    uart_write_hex8(ftdi_rx_buf[1]);
+                    uart_write_str("\r\n");
 
-                uart_write_str("[FTDI-HOST] RX DATA \"");
-                uart_write_ascii_fixed(payload, payload_len);
-                uart_write_str("\"\r\n");
+                    uart_write_str("[FTDI-HOST] RX DATA \"");
+                    uart_write_ascii_fixed(payload, payload_len);
+                    uart_write_str("\"\r\n");
+                }
 
                 if(ftdi_rx_callback != NULL)
                 {
@@ -999,14 +1084,17 @@ static bool ftdi_host_xfer_cb(
             {
                 ftdi_dev.rx_status_only_count++;
 
-                if(
-                    (ftdi_dev.rx_status_only_count <= 3U) ||
-                    ((ftdi_dev.rx_status_only_count % 50U) == 0U)
-                )
+                if(FTDI_LOG_RX_STATUS_ONLY)
                 {
-                    uart_write_str("[FTDI-HOST] RX status-only count=");
-                    uart_write_dec_u32(ftdi_dev.rx_status_only_count);
-                    uart_write_str("\r\n");
+                    if(
+                        (ftdi_dev.rx_status_only_count <= 3U) ||
+                        ((ftdi_dev.rx_status_only_count % 50U) == 0U)
+                    )
+                    {
+                        uart_write_str("[FTDI-HOST] RX status-only count=");
+                        uart_write_dec_u32(ftdi_dev.rx_status_only_count);
+                        uart_write_str("\r\n");
+                    }
                 }
 
                 ftdi_dev.next_rx_due_ms =
@@ -1015,11 +1103,14 @@ static bool ftdi_host_xfer_cb(
         }
         else
         {
-            uart_write_str("[FTDI-HOST] RX ERROR result=");
-            uart_write_dec_u32((uint32_t)result);
-            uart_write_str(" len=");
-            uart_write_dec_u32(xferred_bytes);
-            uart_write_str("\r\n");
+            if(FTDI_LOG_ERRORS)
+            {
+                uart_write_str("[FTDI-HOST] RX ERROR result=");
+                uart_write_dec_u32((uint32_t)result);
+                uart_write_str(" len=");
+                uart_write_dec_u32(xferred_bytes);
+                uart_write_str("\r\n");
+            }
 
             ftdi_dev.next_rx_due_ms =
                 HAL_GetTick() + FTDI_STATUS_ONLY_DELAY_MS;
@@ -1033,18 +1124,24 @@ static bool ftdi_host_xfer_cb(
         ftdi_dev.tx_active =
             0U;
 
-        uart_write_str("[FTDI-HOST] TX DONE result=");
-        uart_write_dec_u32((uint32_t)result);
-        uart_write_str(" len=");
-        uart_write_dec_u32(xferred_bytes);
-        uart_write_str("\r\n");
+        if(FTDI_LOG_TX)
+        {
+            uart_write_str("[FTDI-HOST] TX DONE result=");
+            uart_write_dec_u32((uint32_t)result);
+            uart_write_str(" len=");
+            uart_write_dec_u32(xferred_bytes);
+            uart_write_str("\r\n");
+        }
 
         return true;
     }
 
-    uart_write_str("[FTDI-HOST] XFER unknown ep=");
-    uart_write_hex8(ep_addr);
-    uart_write_str("\r\n");
+    if(FTDI_LOG_ERRORS)
+    {
+        uart_write_str("[FTDI-HOST] XFER unknown ep=");
+        uart_write_hex8(ep_addr);
+        uart_write_str("\r\n");
+    }
 
     return false;
 }
@@ -1070,21 +1167,28 @@ void ftdi_host_on_umount(uint8_t daddr)
         (ftdi_dev.daddr == daddr)
     )
     {
-        uart_write_str("[FTDI-HOST] UMOUNT reset state daddr=");
-        uart_write_dec_u32((uint32_t)daddr);
-        uart_write_str("\r\n");
+        if(FTDI_LOG_UMOUNT)
+        {
+            uart_write_str("[FTDI-HOST] UMOUNT reset state daddr=");
+            uart_write_dec_u32((uint32_t)daddr);
+            uart_write_str("\r\n");
+        }
 
         ftdi_host_reset_state();
     }
 }
 
+
 static void ftdi_host_close(uint8_t dev_addr)
 {
     if((ftdi_dev.active != 0U) && (ftdi_dev.daddr == dev_addr))
     {
-        uart_write_str("[FTDI-HOST] CLOSE daddr=");
-        uart_write_dec_u32((uint32_t)dev_addr);
-        uart_write_str("\r\n");
+        if(FTDI_LOG_CLOSE)
+        {
+            uart_write_str("[FTDI-HOST] CLOSE daddr=");
+            uart_write_dec_u32((uint32_t)dev_addr);
+            uart_write_str("\r\n");
+        }
 
         ftdi_host_reset_state();
     }

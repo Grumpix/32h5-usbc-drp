@@ -8,9 +8,46 @@
 #include <stdint.h>
 
 
+/* =========================
+   LOG CONFIG
+========================= */
+
 /*
- * Local app hooks.
+ * Known-good funkcni logika zustava stejna.
+ *
+ * Tady si jen muzes ztlumit log spam bez zasahu do role switchingu.
  */
+#define USB_MANAGER_LOG_CORE          1U // 0U - (1U zapnuto)
+#define USB_MANAGER_LOG_TRANSITIONS   1U
+#define USB_MANAGER_LOG_DIRTY         1U
+#define USB_MANAGER_LOG_TINYUSB       1U
+#define USB_MANAGER_LOG_DRD_RESET     1U
+
+
+static void usbm_log(uint8_t enabled, const char *s)
+{
+    if(enabled)
+    {
+        uart_write_str(s);
+    }
+}
+
+
+static void usbm_log_reason(uint8_t enabled, const char *prefix, const char *reason)
+{
+    if(enabled)
+    {
+        uart_write_str(prefix);
+        uart_write_str(reason);
+        uart_write_str("\r\n");
+    }
+}
+
+
+/* =========================
+   Local app hooks
+========================= */
+
 void usb_device_tusb_init(void);
 void usb_device_tusb_task(void);
 void usb_device_tusb_deinit(void);
@@ -24,25 +61,27 @@ void usb_host_tusb_deinit(void);
 /*
  * TinyUSB core deinit.
  *
- * tuh_deinit() uz mas overene funkcni.
- * tud_deinit() pouzijeme pro ciste znovu-nastartovani CDC device stacku
+ * tuh_deinit() je overene funkcni.
+ * tud_deinit() je potreba pro ciste znovu-nastartovani CDC device stacku
  * po predchozim HOST rezimu.
  */
 bool tuh_deinit(uint8_t rhport);
 bool tud_deinit(uint8_t rhport);
 
 
+/* =========================
+   Runtime state
+========================= */
+
 static usb_mode_t usb_manager_mode =
     USB_MODE_NONE;
 
 
 /*
- * Dirty flag:
- *
  * Jakmile probehne tud_init(), USB DRD peripheral je potencialne
  * nakonfigurovany device stackem.
  *
- * Pred startem hostu MUSIME udelat fyzicky USB DRD reset.
+ * Pred startem hostu musime udelat TinyUSB device deinit + USB DRD reset.
  */
 static uint8_t usb_device_drd_dirty =
     0U;
@@ -50,8 +89,10 @@ static uint8_t usb_device_drd_dirty =
 
 /*
  * Jakmile probehne tuh_init(), host core/peripheral stav muze ovlivnit
- * dalsi device start. Pred dalsim DEVICE startem po HOST rezimu proto
- * udelame cisty HOST deinit + USB DRD reset.
+ * dalsi device start.
+ *
+ * Pred dalsim DEVICE startem po HOST rezimu proto udelame cisty HOST deinit
+ * + USB DRD reset, pokud je to jeste potreba.
  */
 static uint8_t usb_host_drd_dirty =
     0U;
@@ -68,11 +109,16 @@ static uint8_t usb_host_core_inited =
     0U;
 
 
+/* =========================
+   Low-level DRD reset
+========================= */
+
 static void usb_manager_force_usb_drd_reset(const char *reason)
 {
-    uart_write_str("[USB-DRD] FORCE RESET: ");
-    uart_write_str(reason);
-    uart_write_str("\r\n");
+    usbm_log_reason(
+        USB_MANAGER_LOG_DRD_RESET,
+        "[USB-DRD] FORCE RESET: ",
+        reason);
 
     HAL_NVIC_DisableIRQ(
         USB_DRD_FS_IRQn);
@@ -109,27 +155,42 @@ static void usb_manager_force_usb_drd_reset(const char *reason)
     HAL_NVIC_EnableIRQ(
         USB_DRD_FS_IRQn);
 
-    uart_write_str("[USB-DRD] FORCE RESET DONE\r\n");
+    usbm_log(
+        USB_MANAGER_LOG_DRD_RESET,
+        "[USB-DRD] FORCE RESET DONE\r\n");
 }
 
+
+/* =========================
+   TinyUSB core deinit helpers
+========================= */
 
 static void usb_manager_device_core_deinit_if_needed(void)
 {
     if(usb_device_core_inited == 0U)
     {
-        uart_write_str("[USB-DEVICE] tud_deinit skipped - not inited\r\n");
+        usbm_log(
+            USB_MANAGER_LOG_TINYUSB,
+            "[USB-DEVICE] tud_deinit skipped - not inited\r\n");
+
         return;
     }
 
-    uart_write_str("[USB-DEVICE] BEFORE tud_deinit\r\n");
+    usbm_log(
+        USB_MANAGER_LOG_TINYUSB,
+        "[USB-DEVICE] BEFORE tud_deinit\r\n");
 
     if(tud_deinit(0))
     {
-        uart_write_str("[USB-DEVICE] AFTER tud_deinit OK\r\n");
+        usbm_log(
+            USB_MANAGER_LOG_TINYUSB,
+            "[USB-DEVICE] AFTER tud_deinit OK\r\n");
     }
     else
     {
-        uart_write_str("[USB-DEVICE] AFTER tud_deinit FAIL\r\n");
+        usbm_log(
+            USB_MANAGER_LOG_TINYUSB,
+            "[USB-DEVICE] AFTER tud_deinit FAIL\r\n");
     }
 
     usb_device_core_inited =
@@ -141,19 +202,28 @@ static void usb_manager_host_core_deinit_if_needed(void)
 {
     if(usb_host_core_inited == 0U)
     {
-        uart_write_str("[USB-HOST] tuh_deinit skipped - not inited\r\n");
+        usbm_log(
+            USB_MANAGER_LOG_TINYUSB,
+            "[USB-HOST] tuh_deinit skipped - not inited\r\n");
+
         return;
     }
 
-    uart_write_str("[USB-HOST] BEFORE tuh_deinit\r\n");
+    usbm_log(
+        USB_MANAGER_LOG_TINYUSB,
+        "[USB-HOST] BEFORE tuh_deinit\r\n");
 
     if(tuh_deinit(0))
     {
-        uart_write_str("[USB-HOST] AFTER tuh_deinit OK\r\n");
+        usbm_log(
+            USB_MANAGER_LOG_TINYUSB,
+            "[USB-HOST] AFTER tuh_deinit OK\r\n");
     }
     else
     {
-        uart_write_str("[USB-HOST] AFTER tuh_deinit FAIL\r\n");
+        usbm_log(
+            USB_MANAGER_LOG_TINYUSB,
+            "[USB-HOST] AFTER tuh_deinit FAIL\r\n");
     }
 
     usb_host_core_inited =
@@ -161,15 +231,24 @@ static void usb_manager_host_core_deinit_if_needed(void)
 }
 
 
+/* =========================
+   Dirty-state cleanup helpers
+========================= */
+
 static void usb_manager_clear_device_dirty_before_host(const char *reason)
 {
     if(usb_device_drd_dirty == 0U)
     {
-        uart_write_str("[USB-DRD] device dirty=0, reset not needed\r\n");
+        usbm_log(
+            USB_MANAGER_LOG_DIRTY,
+            "[USB-DRD] device dirty=0, reset not needed\r\n");
+
         return;
     }
 
-    uart_write_str("[USB-DRD] device dirty=1 -> reset before HOST\r\n");
+    usbm_log(
+        USB_MANAGER_LOG_DIRTY,
+        "[USB-DRD] device dirty=1 -> reset before HOST\r\n");
 
     usb_device_tusb_deinit();
 
@@ -187,11 +266,16 @@ static void usb_manager_clear_host_dirty_before_device(const char *reason)
 {
     if(usb_host_drd_dirty == 0U)
     {
-        uart_write_str("[USB-DRD] host dirty=0, reset not needed\r\n");
+        usbm_log(
+            USB_MANAGER_LOG_DIRTY,
+            "[USB-DRD] host dirty=0, reset not needed\r\n");
+
         return;
     }
 
-    uart_write_str("[USB-DRD] host dirty=1 -> reset before DEVICE\r\n");
+    usbm_log(
+        USB_MANAGER_LOG_DIRTY,
+        "[USB-DRD] host dirty=1 -> reset before DEVICE\r\n");
 
     usb_host_tusb_deinit();
 
@@ -204,6 +288,10 @@ static void usb_manager_clear_host_dirty_before_device(const char *reason)
         0U;
 }
 
+
+/* =========================
+   Public API
+========================= */
 
 void usb_manager_init(void)
 {
@@ -222,23 +310,32 @@ void usb_manager_init(void)
     usb_host_core_inited =
         0U;
 
-    uart_write_str("[USB] manager init\r\n");
+    usbm_log(
+        USB_MANAGER_LOG_CORE,
+        "[USB] manager init\r\n");
 }
 
 
 bool usb_manager_start_device(void)
 {
-    uart_write_str("[USB-DEVICE] START\r\n");
+    usbm_log(
+        USB_MANAGER_LOG_TRANSITIONS,
+        "[USB-DEVICE] START\r\n");
 
     if(usb_manager_mode == USB_MODE_DEVICE)
     {
-        uart_write_str("[USB-DEVICE] already active\r\n");
+        usbm_log(
+            USB_MANAGER_LOG_TRANSITIONS,
+            "[USB-DEVICE] already active\r\n");
+
         return true;
     }
 
     if(usb_manager_mode == USB_MODE_HOST)
     {
-        uart_write_str("[USB-DEVICE] stopping host first\r\n");
+        usbm_log(
+            USB_MANAGER_LOG_TRANSITIONS,
+            "[USB-DEVICE] stopping host first\r\n");
 
         usb_host_tusb_deinit();
 
@@ -265,11 +362,15 @@ bool usb_manager_start_device(void)
             "dirty HOST -> DEVICE");
     }
 
-    uart_write_str("[USB-DEVICE] BEFORE usb_device_tusb_init\r\n");
+    usbm_log(
+        USB_MANAGER_LOG_TINYUSB,
+        "[USB-DEVICE] BEFORE usb_device_tusb_init\r\n");
 
     usb_device_tusb_init();
 
-    uart_write_str("[USB-DEVICE] AFTER usb_device_tusb_init\r\n");
+    usbm_log(
+        USB_MANAGER_LOG_TINYUSB,
+        "[USB-DEVICE] AFTER usb_device_tusb_init\r\n");
 
     /*
      * Mode nastavime pred tud_init(), aby USB interrupt behem initu
@@ -278,7 +379,9 @@ bool usb_manager_start_device(void)
     usb_manager_mode =
         USB_MODE_DEVICE;
 
-    uart_write_str("[USB-DEVICE] BEFORE tud_init\r\n");
+    usbm_log(
+        USB_MANAGER_LOG_TINYUSB,
+        "[USB-DEVICE] BEFORE tud_init\r\n");
 
     tud_init(0);
 
@@ -286,16 +389,23 @@ bool usb_manager_start_device(void)
         1U;
 
     /*
-     * Od teto chvile je USB DRD periferie "dirty" od device stacku.
+     * Od teto chvile je USB DRD periferie dirty od device stacku.
      * Pred hostem bude potreba fyzicky reset.
      */
     usb_device_drd_dirty =
         1U;
 
-    uart_write_str("[USB-DEVICE] AFTER tud_init\r\n");
+    usbm_log(
+        USB_MANAGER_LOG_TINYUSB,
+        "[USB-DEVICE] AFTER tud_init\r\n");
 
-    uart_write_str("[USB] DEVICE mode\r\n");
-    uart_write_str("[USB-DEVICE] START DONE\r\n");
+    usbm_log(
+        USB_MANAGER_LOG_TRANSITIONS,
+        "[USB] DEVICE mode\r\n");
+
+    usbm_log(
+        USB_MANAGER_LOG_TRANSITIONS,
+        "[USB-DEVICE] START DONE\r\n");
 
     return true;
 }
@@ -303,17 +413,24 @@ bool usb_manager_start_device(void)
 
 bool usb_manager_start_host(void)
 {
-    uart_write_str("[USB-HOST] START\r\n");
+    usbm_log(
+        USB_MANAGER_LOG_TRANSITIONS,
+        "[USB-HOST] START\r\n");
 
     if(usb_manager_mode == USB_MODE_HOST)
     {
-        uart_write_str("[USB-HOST] already active\r\n");
+        usbm_log(
+            USB_MANAGER_LOG_TRANSITIONS,
+            "[USB-HOST] already active\r\n");
+
         return true;
     }
 
     if(usb_manager_mode == USB_MODE_DEVICE)
     {
-        uart_write_str("[USB-HOST] leaving DEVICE -> reset USB DRD first\r\n");
+        usbm_log(
+            USB_MANAGER_LOG_TRANSITIONS,
+            "[USB-HOST] leaving DEVICE -> reset USB DRD first\r\n");
 
         usb_manager_clear_device_dirty_before_host(
             "DEVICE -> HOST");
@@ -331,11 +448,15 @@ bool usb_manager_start_host(void)
     usb_manager_mode =
         USB_MODE_NONE;
 
-    uart_write_str("[USB-HOST] BEFORE usb_host_tusb_init\r\n");
+    usbm_log(
+        USB_MANAGER_LOG_TINYUSB,
+        "[USB-HOST] BEFORE usb_host_tusb_init\r\n");
 
     usb_host_tusb_init();
 
-    uart_write_str("[USB-HOST] AFTER usb_host_tusb_init\r\n");
+    usbm_log(
+        USB_MANAGER_LOG_TINYUSB,
+        "[USB-HOST] AFTER usb_host_tusb_init\r\n");
 
     /*
      * Mode nastavime pred tuh_init(), aby USB_DRD_FS_IRQHandler()
@@ -344,7 +465,9 @@ bool usb_manager_start_host(void)
     usb_manager_mode =
         USB_MODE_HOST;
 
-    uart_write_str("[USB-HOST] BEFORE tuh_init\r\n");
+    usbm_log(
+        USB_MANAGER_LOG_TINYUSB,
+        "[USB-HOST] BEFORE tuh_init\r\n");
 
     tuh_init(0);
 
@@ -357,10 +480,17 @@ bool usb_manager_start_host(void)
     usb_host_drd_dirty =
         1U;
 
-    uart_write_str("[USB-HOST] AFTER tuh_init\r\n");
+    usbm_log(
+        USB_MANAGER_LOG_TINYUSB,
+        "[USB-HOST] AFTER tuh_init\r\n");
 
-    uart_write_str("[USB] HOST mode\r\n");
-    uart_write_str("[USB-HOST] START DONE\r\n");
+    usbm_log(
+        USB_MANAGER_LOG_TRANSITIONS,
+        "[USB] HOST mode\r\n");
+
+    usbm_log(
+        USB_MANAGER_LOG_TRANSITIONS,
+        "[USB-HOST] START DONE\r\n");
 
     return true;
 }
@@ -368,11 +498,15 @@ bool usb_manager_start_host(void)
 
 void usb_manager_stop(void)
 {
-    uart_write_str("[USB] STOP\r\n");
+    usbm_log(
+        USB_MANAGER_LOG_TRANSITIONS,
+        "[USB] STOP\r\n");
 
     if(usb_manager_mode == USB_MODE_HOST)
     {
-        uart_write_str("[USB] stopping host\r\n");
+        usbm_log(
+            USB_MANAGER_LOG_TRANSITIONS,
+            "[USB] stopping host\r\n");
 
         /*
          * App-level host state reset.
@@ -400,20 +534,20 @@ void usb_manager_stop(void)
 
         /*
          * Host je po tuh_deinit + DRD resetu cisty pro dalsi HOST start.
-         * Zaroven ale pred DEVICE startem uz taky neni potreba dalsi reset.
+         * Zaroven pred DEVICE startem uz taky neni potreba dalsi reset.
          */
         usb_host_drd_dirty =
             0U;
     }
     else if(usb_manager_mode == USB_MODE_DEVICE)
     {
-        uart_write_str("[USB] stopping device -> force USB DRD reset\r\n");
+        usbm_log(
+            USB_MANAGER_LOG_TRANSITIONS,
+            "[USB] stopping device -> force USB DRD reset\r\n");
 
         usb_device_tusb_deinit();
 
         /*
-         * DULEZITE PRO HOST -> DEVICE -> HOST opakovani:
-         *
          * Pred opustenim DEVICE rezimu deinitujeme i TinyUSB device core.
          */
         usb_manager_device_core_deinit_if_needed();
@@ -426,13 +560,17 @@ void usb_manager_stop(void)
     }
     else
     {
-        uart_write_str("[USB] already stopped\r\n");
+        usbm_log(
+            USB_MANAGER_LOG_TRANSITIONS,
+            "[USB] already stopped\r\n");
     }
 
     usb_manager_mode =
         USB_MODE_NONE;
 
-    uart_write_str("[USB] STOP DONE\r\n");
+    usbm_log(
+        USB_MANAGER_LOG_TRANSITIONS,
+        "[USB] STOP DONE\r\n");
 }
 
 
@@ -456,7 +594,9 @@ bool usb_manager_toggle_mode(void)
 
     if(usb_manager_mode == USB_MODE_HOST)
     {
-        uart_write_str("[USB] toggle HOST -> DEVICE\r\n");
+        usbm_log(
+            USB_MANAGER_LOG_TRANSITIONS,
+            "[USB] toggle HOST -> DEVICE\r\n");
 
         usb_manager_stop();
 
@@ -465,7 +605,9 @@ bool usb_manager_toggle_mode(void)
     }
     else
     {
-        uart_write_str("[USB] toggle -> HOST\r\n");
+        usbm_log(
+            USB_MANAGER_LOG_TRANSITIONS,
+            "[USB] toggle -> HOST\r\n");
 
         usb_manager_stop();
 

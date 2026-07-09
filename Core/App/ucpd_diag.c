@@ -31,6 +31,43 @@
 
 
 /* =========================
+   LOG CONFIG
+========================= */
+
+/*
+ * Known-good funkcni logika zustava stejna.
+ * Tady jen ridime mnozstvi logu.
+ */
+#define UCPD_LOG_BOOT                 1U // 0U = vypnuto
+#define UCPD_LOG_GPIO                 1U
+#define UCPD_LOG_ROLE                 1U
+#define UCPD_LOG_ATTACH               1U
+#define UCPD_LOG_VBUS                 1U
+#define UCPD_LOG_FET                  1U
+#define UCPD_LOG_EVENTS               1U
+#define UCPD_LOG_HW                   1U
+
+
+static void ucpd_log(uint8_t enabled, const char *s)
+{
+    if(enabled)
+    {
+        uart_write_str(s);
+    }
+}
+
+
+static void ucpd_log_hex(uint8_t enabled, const char *prefix, uint32_t value)
+{
+    if(enabled)
+    {
+        uart_write_str(prefix);
+        uart_write_hex(value);
+    }
+}
+
+
+/* =========================
    VBUS FET PB8
 ========================= */
 
@@ -251,13 +288,17 @@ static void vbus_fet_apply(uint8_t enable)
     {
         vbus_fet_on_drive_low();
 
-        uart_write_str("[VBUS-FET] ON: PB8 output LOW\r\n");
+        ucpd_log(
+            UCPD_LOG_FET,
+            "[VBUS-FET] ON: PB8 output LOW\r\n");
     }
     else
     {
         vbus_fet_off_hiz();
 
-        uart_write_str("[VBUS-FET] OFF: PB8 Hi-Z\r\n");
+        ucpd_log(
+            UCPD_LOG_FET,
+            "[VBUS-FET] OFF: PB8 Hi-Z\r\n");
     }
 }
 
@@ -273,12 +314,19 @@ static void force_vbus_fet_off_raw(void)
 
     vbus_fet_off_hiz();
 
-    uart_write_str("[VBUS-FET] FORCE OFF: PB8 Hi-Z\r\n");
+    ucpd_log(
+        UCPD_LOG_FET,
+        "[VBUS-FET] FORCE OFF: PB8 Hi-Z\r\n");
 }
 
 
 static void dump_gpiob(void)
 {
+    if(UCPD_LOG_GPIO == 0U)
+    {
+        return;
+    }
+
     uart_write_str("[GPIOB] MODER=");
     uart_write_hex(GPIOB->MODER);
 
@@ -341,6 +389,21 @@ static void decode_pb13_pb14_pb8(void)
 
     uint32_t pb14_af =
         (afrh >> ((14U - 8U) * 4U)) & 0xFU;
+
+
+    if(UCPD_LOG_GPIO == 0U)
+    {
+        (void)pb8_mode;
+        (void)pb13_mode;
+        (void)pb14_mode;
+        (void)pb8_pull;
+        (void)pb13_pull;
+        (void)pb14_pull;
+        (void)pb13_af;
+        (void)pb14_af;
+
+        return;
+    }
 
 
     uart_write_str("[PB8] MODE=");
@@ -436,14 +499,21 @@ static void ucpd_dump_state(void)
 
 static void ucpd_disable_dead_battery(void)
 {
-    uart_write_str("[UCPD] Disable dead-battery Rd\r\n");
+    ucpd_log(
+        UCPD_LOG_HW,
+        "[UCPD] Disable dead-battery Rd\r\n");
 
     PWR->UCPDR |=
         PWR_UCPDR_UCPD_DBDIS;
 
-    uart_write_str("[PWR] UCPDR=");
-    uart_write_hex(PWR->UCPDR);
-    uart_write_str("\r\n");
+    ucpd_log_hex(
+        UCPD_LOG_HW,
+        "[PWR] UCPDR=",
+        PWR->UCPDR);
+
+    ucpd_log(
+        UCPD_LOG_HW,
+        "\r\n");
 }
 
 
@@ -483,9 +553,14 @@ static void ucpd_hw_set_sink_mode(void)
         __NOP();
     }
 
-    uart_write_str("[UCPD] SINK/RD MODE CR=");
-    uart_write_hex(cr);
-    uart_write_str("\r\n");
+    ucpd_log_hex(
+        UCPD_LOG_HW,
+        "[UCPD] SINK/RD MODE CR=",
+        cr);
+
+    ucpd_log(
+        UCPD_LOG_HW,
+        "\r\n");
 }
 
 
@@ -509,9 +584,14 @@ static void ucpd_hw_set_source_mode(void)
         __NOP();
     }
 
-    uart_write_str("[UCPD] SOURCE/RP MODE CR=");
-    uart_write_hex(cr);
-    uart_write_str("\r\n");
+    ucpd_log_hex(
+        UCPD_LOG_HW,
+        "[UCPD] SOURCE/RP MODE CR=",
+        cr);
+
+    ucpd_log(
+        UCPD_LOG_HW,
+        "\r\n");
 }
 
 
@@ -554,9 +634,17 @@ static void reset_role_runtime_state(void)
 
 static void apply_role(typec_role_t role)
 {
-    uart_write_str("[TYPEC] APPLY ROLE ");
-    uart_write_str(role_name(role));
-    uart_write_str("\r\n");
+    ucpd_log(
+        UCPD_LOG_ROLE,
+        "[TYPEC] APPLY ROLE ");
+
+    ucpd_log(
+        UCPD_LOG_ROLE,
+        role_name(role));
+
+    ucpd_log(
+        UCPD_LOG_ROLE,
+        "\r\n");
 
     /*
      * SAFETY FIRST:
@@ -565,7 +653,9 @@ static void apply_role(typec_role_t role)
      */
     if(current_role == TYPEC_ROLE_HOST_SOURCE)
     {
-        uart_write_str("[TYPEC] Leaving HOST/SOURCE -> force VBUS FET OFF first\r\n");
+        ucpd_log(
+            UCPD_LOG_ROLE,
+            "[TYPEC] Leaving HOST/SOURCE -> force VBUS FET OFF first\r\n");
 
         force_vbus_fet_off_raw();
 
@@ -573,8 +663,14 @@ static void apply_role(typec_role_t role)
 
         if(ucpd_diag_read_vbus())
         {
-            uart_write_str("[TYPEC] WARN: VBUS still PRESENT after FET OFF\r\n");
-            uart_write_str("[TYPEC] Role switch aborted for safety\r\n");
+            ucpd_log(
+                UCPD_LOG_ROLE,
+                "[TYPEC] WARN: VBUS still PRESENT after FET OFF\r\n");
+
+            ucpd_log(
+                UCPD_LOG_ROLE,
+                "[TYPEC] Role switch aborted for safety\r\n");
+
             return;
         }
     }
@@ -596,13 +692,17 @@ static void apply_role(typec_role_t role)
     {
         ucpd_hw_set_source_mode();
 
-        uart_write_str("[TYPEC] Now HOST/SOURCE. Connect USB device / FTDI.\r\n");
+        ucpd_log(
+            UCPD_LOG_ROLE,
+            "[TYPEC] Now HOST/SOURCE. Connect USB device / FTDI.\r\n");
     }
     else
     {
         ucpd_hw_set_sink_mode();
 
-        uart_write_str("[TYPEC] Now DEVICE/SINK. Connect to PC.\r\n");
+        ucpd_log(
+            UCPD_LOG_ROLE,
+            "[TYPEC] Now DEVICE/SINK. Connect to PC.\r\n");
     }
 
     LL_UCPD_ClearFlag_TypeCEventCC1(UCPD1);
@@ -690,25 +790,33 @@ static void usb_start_once_for_current_role(void)
 
     if(current_role == TYPEC_ROLE_HOST_SOURCE)
     {
-        uart_write_str("[USB-HOST] START from Type-C source state\r\n");
+        ucpd_log(
+            UCPD_LOG_ROLE,
+            "[USB-HOST] START from Type-C source state\r\n");
 
         usb_manager_start_host();
 
         usb_started =
             1U;
 
-        uart_write_str("[USB-HOST] START DONE from Type-C source state\r\n");
+        ucpd_log(
+            UCPD_LOG_ROLE,
+            "[USB-HOST] START DONE from Type-C source state\r\n");
     }
     else
     {
-        uart_write_str("[USB-DEVICE] START from Type-C sink state\r\n");
+        ucpd_log(
+            UCPD_LOG_ROLE,
+            "[USB-DEVICE] START from Type-C sink state\r\n");
 
         usb_manager_start_device();
 
         usb_started =
             1U;
 
-        uart_write_str("[USB-DEVICE] START DONE from Type-C sink state\r\n");
+        ucpd_log(
+            UCPD_LOG_ROLE,
+            "[USB-DEVICE] START DONE from Type-C sink state\r\n");
     }
 }
 
@@ -728,7 +836,10 @@ void ucpd_diag_request_device_role(void)
 {
     if(current_role == TYPEC_ROLE_DEVICE_SINK)
     {
-        uart_write_str("[TYPEC] Already DEVICE/SINK\r\n");
+        ucpd_log(
+            UCPD_LOG_ROLE,
+            "[TYPEC] Already DEVICE/SINK\r\n");
+
         return;
     }
 
@@ -740,7 +851,10 @@ void ucpd_diag_request_host_role(void)
 {
     if(current_role == TYPEC_ROLE_HOST_SOURCE)
     {
-        uart_write_str("[TYPEC] Already HOST/SOURCE\r\n");
+        ucpd_log(
+            UCPD_LOG_ROLE,
+            "[TYPEC] Already HOST/SOURCE\r\n");
+
         return;
     }
 
@@ -752,8 +866,14 @@ void ucpd_diag_request_host_role(void)
      */
     if(ucpd_diag_read_vbus())
     {
-        uart_write_str("[TYPEC] BLOCK HOST/SOURCE: VBUS already PRESENT\r\n");
-        uart_write_str("[TYPEC] Disconnect cable first, then press PA0 again\r\n");
+        ucpd_log(
+            UCPD_LOG_ROLE,
+            "[TYPEC] BLOCK HOST/SOURCE: VBUS already PRESENT\r\n");
+
+        ucpd_log(
+            UCPD_LOG_ROLE,
+            "[TYPEC] Disconnect cable first, then press PA0 again\r\n");
+
         return;
     }
 
@@ -853,7 +973,10 @@ void ucpd_diag_init(void)
         UCPD_CC2_PIN,
         LL_GPIO_PULL_NO);
 
-    uart_write_str("[GPIOB] AFTER PIN CONFIG\r\n");
+    ucpd_log(
+        UCPD_LOG_GPIO,
+        "[GPIOB] AFTER PIN CONFIG\r\n");
+
     dump_gpiob();
     decode_pb13_pb14_pb8();
 
@@ -882,10 +1005,21 @@ void ucpd_diag_init(void)
     NVIC_EnableIRQ(
         UCPD1_IRQn);
 
-    uart_write_str("===== UCPD READY MANUAL ROLE SWITCH SAFE TEST =====\r\n");
-    uart_write_str("[TYPEC] Default role: DEVICE/SINK CDC\r\n");
-    uart_write_str("[TYPEC] Press PA0 to toggle DEVICE/SINK <-> HOST/SOURCE\r\n");
-    uart_write_str("[TYPEC] HOST/SOURCE blocked if VBUS already present\r\n");
+    ucpd_log(
+        UCPD_LOG_BOOT,
+        "===== UCPD READY MANUAL ROLE SWITCH SAFE TEST =====\r\n");
+
+    ucpd_log(
+        UCPD_LOG_BOOT,
+        "[TYPEC] Default role: DEVICE/SINK CDC\r\n");
+
+    ucpd_log(
+        UCPD_LOG_BOOT,
+        "[TYPEC] Press PA0 to toggle DEVICE/SINK <-> HOST/SOURCE\r\n");
+
+    ucpd_log(
+        UCPD_LOG_BOOT,
+        "[TYPEC] HOST/SOURCE blocked if VBUS already present\r\n");
 
     ucpd_dump_state();
 }
@@ -949,11 +1083,15 @@ static void role_state_machine_task(uint32_t now)
                     {
                         if(active_orientation == TYPEC_ORIENTATION_CC1)
                         {
-                            uart_write_str("[TYPEC-SRC] SINK ATTACHED on CC1\r\n");
+                            ucpd_log(
+                                UCPD_LOG_ATTACH,
+                                "[TYPEC-SRC] SINK ATTACHED on CC1\r\n");
                         }
                         else
                         {
-                            uart_write_str("[TYPEC-SRC] SINK ATTACHED on CC2\r\n");
+                            ucpd_log(
+                                UCPD_LOG_ATTACH,
+                                "[TYPEC-SRC] SINK ATTACHED on CC2\r\n");
                         }
 
                         /*
@@ -966,11 +1104,15 @@ static void role_state_machine_task(uint32_t now)
                     {
                         if(active_orientation == TYPEC_ORIENTATION_CC1)
                         {
-                            uart_write_str("[TYPEC-SNK] SOURCE ATTACHED on CC1\r\n");
+                            ucpd_log(
+                                UCPD_LOG_ATTACH,
+                                "[TYPEC-SNK] SOURCE ATTACHED on CC1\r\n");
                         }
                         else
                         {
-                            uart_write_str("[TYPEC-SNK] SOURCE ATTACHED on CC2\r\n");
+                            ucpd_log(
+                                UCPD_LOG_ATTACH,
+                                "[TYPEC-SNK] SOURCE ATTACHED on CC2\r\n");
                         }
 
                         /*
@@ -997,7 +1139,9 @@ static void role_state_machine_task(uint32_t now)
             {
                 if((now - candidate_since_ms) >= TYPEC_DETACH_DEBOUNCE_MS)
                 {
-                    uart_write_str("[TYPEC] DETACH before VBUS\r\n");
+                    ucpd_log(
+                        UCPD_LOG_ATTACH,
+                        "[TYPEC] DETACH before VBUS\r\n");
 
                     if(current_role == TYPEC_ROLE_HOST_SOURCE)
                     {
@@ -1020,11 +1164,15 @@ static void role_state_machine_task(uint32_t now)
             {
                 if(current_role == TYPEC_ROLE_HOST_SOURCE)
                 {
-                    uart_write_str("[TYPEC-SRC] VBUS PRESENT, wait before host start\r\n");
+                    ucpd_log(
+                        UCPD_LOG_VBUS,
+                        "[TYPEC-SRC] VBUS PRESENT, wait before host start\r\n");
                 }
                 else
                 {
-                    uart_write_str("[TYPEC-SNK] VBUS PRESENT from PC, wait before device start\r\n");
+                    ucpd_log(
+                        UCPD_LOG_VBUS,
+                        "[TYPEC-SNK] VBUS PRESENT from PC, wait before device start\r\n");
                 }
 
                 usb_start_wait_since_ms =
@@ -1044,7 +1192,9 @@ static void role_state_machine_task(uint32_t now)
             {
                 if((now - candidate_since_ms) >= TYPEC_DETACH_DEBOUNCE_MS)
                 {
-                    uart_write_str("[TYPEC] DETACH before USB start\r\n");
+                    ucpd_log(
+                        UCPD_LOG_ATTACH,
+                        "[TYPEC] DETACH before USB start\r\n");
 
                     if(current_role == TYPEC_ROLE_HOST_SOURCE)
                     {
@@ -1065,7 +1215,9 @@ static void role_state_machine_task(uint32_t now)
 
             if(ucpd_diag_read_vbus() == 0U)
             {
-                uart_write_str("[TYPEC] VBUS LOST before USB start\r\n");
+                ucpd_log(
+                    UCPD_LOG_VBUS,
+                    "[TYPEC] VBUS LOST before USB start\r\n");
 
                 if(current_role == TYPEC_ROLE_HOST_SOURCE)
                 {
@@ -1098,7 +1250,9 @@ static void role_state_machine_task(uint32_t now)
             {
                 if((now - candidate_since_ms) >= TYPEC_DETACH_DEBOUNCE_MS)
                 {
-                    uart_write_str("[TYPEC] DETACH while USB active\r\n");
+                    ucpd_log(
+                        UCPD_LOG_ATTACH,
+                        "[TYPEC] DETACH while USB active\r\n");
 
                     if(current_role == TYPEC_ROLE_HOST_SOURCE)
                     {
@@ -1113,7 +1267,9 @@ static void role_state_machine_task(uint32_t now)
                          * - vratit state machine do UNATTACHED
                          * - znovu re-armnout UCPD Source/Rp mode
                          */
-                        uart_write_str("[TYPEC-SRC] detach -> VBUS OFF + HOST STOP + SOURCE REARM\r\n");
+                        ucpd_log(
+                            UCPD_LOG_ATTACH,
+                            "[TYPEC-SRC] detach -> VBUS OFF + HOST STOP + SOURCE REARM\r\n");
 
                         vbus_fet_apply(0U);
 
@@ -1167,7 +1323,9 @@ static void role_state_machine_task(uint32_t now)
                          * Device nikdy nezapina VBUS.
                          * TinyUSB device stack nechavame bezet kvuli CDC replug.
                          */
-                        uart_write_str("[TYPEC-SNK] detach -> keep DEVICE stack active\r\n");
+                        ucpd_log(
+                            UCPD_LOG_ATTACH,
+                            "[TYPEC-SNK] detach -> keep DEVICE stack active\r\n");
 
                         usb_started =
                             1U;
@@ -1189,7 +1347,9 @@ static void role_state_machine_task(uint32_t now)
 
         default:
         {
-            uart_write_str("[TYPEC] Invalid state, reset to unattached\r\n");
+            ucpd_log(
+                UCPD_LOG_ROLE,
+                "[TYPEC] Invalid state, reset to unattached\r\n");
 
             force_vbus_fet_off_raw();
 
@@ -1242,7 +1402,8 @@ void ucpd_diag_task(void)
             vbus_last_change_ms =
                 now;
 
-            uart_write_str(
+            ucpd_log(
+                UCPD_LOG_VBUS,
                 vbus ?
                 "[VBUS] PRESENT\r\n" :
                 "[VBUS] LOST\r\n");
@@ -1267,12 +1428,16 @@ void ucpd_diag_task(void)
 
         if(ev & UCPD_DIAG_EVENT_CC1)
         {
-            uart_write_str("[UCPD] CC1 EVENT\r\n");
+            ucpd_log(
+                UCPD_LOG_EVENTS,
+                "[UCPD] CC1 EVENT\r\n");
         }
 
         if(ev & UCPD_DIAG_EVENT_CC2)
         {
-            uart_write_str("[UCPD] CC2 EVENT\r\n");
+            ucpd_log(
+                UCPD_LOG_EVENTS,
+                "[UCPD] CC2 EVENT\r\n");
         }
 
         ucpd_dump_state();
