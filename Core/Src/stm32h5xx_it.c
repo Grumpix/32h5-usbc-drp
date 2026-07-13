@@ -3,6 +3,7 @@
 #include "tusb.h"
 #include "usb_manager.h"
 #include "ucpd_diag.h"
+#include "m16c_vnc_bus.h"
 
 /* =========================
    Cortex handlers
@@ -44,4 +45,20 @@ extern void drp_irq_handler(void);
 void UCPD1_IRQHandler(void)
 {
     ucpd_diag_irq();
+}
+
+/* =========================
+   M16C / VNC1L BUS IRQ
+
+   PB1 = USB1_RD#
+   EXTI1 je pouzite pro zachyceni hran RD#.
+   V m16c_vnc_bus.c se podle hrany RD# posouva paced FIFO.
+========================= */
+void EXTI1_IRQHandler(void)
+{
+    if (__HAL_GPIO_EXTI_GET_IT(GPIO_PIN_1) != 0U)
+    {
+        __HAL_GPIO_EXTI_CLEAR_IT(GPIO_PIN_1);
+        m16c_vnc_bus_rd_irq();
+    }
 }

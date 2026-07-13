@@ -7,6 +7,7 @@
 #include "usb_role_policy.h"
 #include "app_usb_status_reporter.h"
 #include "app_cli_transport.h"
+#include "m16c_vnc_bus.h"
 
 
 void SystemClock_Config(void);
@@ -42,6 +43,12 @@ int main(void)
 
     HAL_Delay(5);
 
+    /*
+     * Must be early and safe:
+     * PA0..PA7 Hi-Z, TXE#/RXF# inactive HIGH.
+     */
+    m16c_vnc_bus_init();
+
     drp_init();
 
     usb_manager_init();
@@ -63,6 +70,8 @@ int main(void)
         ucpd_diag_task();
 
         usb_manager_task();
+
+        m16c_vnc_bus_task();
 
         app_usb_status_reporter_task();
 
