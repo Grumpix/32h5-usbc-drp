@@ -9,7 +9,7 @@
 
 
 #define APP_CLI_FW_NAME       "stm32h533-usbc-drp"
-#define APP_CLI_VERSION       "0.4-m16c-active-read-test"
+#define APP_CLI_VERSION       "0.9-m16c-trace-command"
 
 
 static void out_append(
@@ -174,21 +174,30 @@ static void cli_cmd_help(
     out_append(out, out_size, &pos, "\r\n");
 
     out_append(out, out_size, &pos, "Commands:\r\n");
-    out_append(out, out_size, &pos, "  help, ?    - show commands\r\n");
-    out_append(out, out_size, &pos, "  ping       - connectivity test\r\n");
-    out_append(out, out_size, &pos, "  version    - firmware/build info\r\n");
-    out_append(out, out_size, &pos, "  role       - current USB-C role\r\n");
-    out_append(out, out_size, &pos, "  status     - full USB status\r\n");
-    out_append(out, out_size, &pos, "  usb        - alias for status\r\n");
-    out_append(out, out_size, &pos, "  m16c       - M16C/VNC bus monitor\r\n");
-    out_append(out, out_size, &pos, "  m16c reset - reset M16C/VNC counters\r\n");
-    out_append(out, out_size, &pos, "  m16c idle  - TXE#=1\r\n");
-    out_append(out, out_size, &pos, "  m16c ready - TXE#=0\r\n");
-    out_append(out, out_size, &pos, "  m16c clear - clear STM32->M16C FIFO\r\n");
-    out_append(out, out_size, &pos, "  m16c boot  - queue boot banner\r\n");
-    out_append(out, out_size, &pos, "  m16c pc    - queue SDA event\r\n");
-    out_append(out, out_size, &pos, "  m16c nopc  - queue SDD event\r\n");
-    out_append(out, out_size, &pos, "  m16c dd2   - queue DD2 event\r\n");
+    out_append(out, out_size, &pos, "  help, ?       - show commands\r\n");
+    out_append(out, out_size, &pos, "  ping          - connectivity test\r\n");
+    out_append(out, out_size, &pos, "  version       - firmware/build info\r\n");
+    out_append(out, out_size, &pos, "  role          - current USB-C role\r\n");
+    out_append(out, out_size, &pos, "  status        - full USB status\r\n");
+    out_append(out, out_size, &pos, "  usb           - alias for status\r\n");
+
+    out_append(out, out_size, &pos, "  m16c          - M16C/VNC bus monitor\r\n");
+    out_append(out, out_size, &pos, "  m16c trace    - show TX/RD trace only\r\n");
+    out_append(out, out_size, &pos, "  m16c reset    - reset M16C/VNC counters\r\n");
+    out_append(out, out_size, &pos, "  m16c idle     - TXE#=1, stop WR capture\r\n");
+    out_append(out, out_size, &pos, "  m16c ready    - TXE#=0 only, no WR IRQ arm\r\n");
+    out_append(out, out_size, &pos, "  m16c armwr    - arm temporary WR capture, TXE#=0\r\n");
+    out_append(out, out_size, &pos, "  m16c stopwr   - stop WR capture, TXE#=1\r\n");
+    out_append(out, out_size, &pos, "  m16c clear    - clear STM32->M16C FIFO\r\n");
+    out_append(out, out_size, &pos, "  m16c boot     - queue simple boot prompt\r\n");
+
+    out_append(out, out_size, &pos, "  m16c pc       - queue SDA CR event\r\n");
+    out_append(out, out_size, &pos, "  m16c pc2      - queue SDA CR prompt event\r\n");
+    out_append(out, out_size, &pos, "  m16c pc3      - queue SDA CR drive prompt event\r\n");
+    out_append(out, out_size, &pos, "  m16c pc4      - queue SDA CR CR prompt event\r\n");
+
+    out_append(out, out_size, &pos, "  m16c nopc     - queue SDD CR event\r\n");
+    out_append(out, out_size, &pos, "  m16c dd2      - queue DD2 CR event\r\n");
 }
 
 
@@ -306,6 +315,16 @@ static void cli_cmd_m16c(
 }
 
 
+static void cli_cmd_m16c_trace(
+    char *out,
+    uint32_t out_size)
+{
+    m16c_vnc_bus_format_trace(
+        out,
+        out_size);
+}
+
+
 static void cli_cmd_m16c_reset(
     char *out,
     uint32_t out_size)
@@ -326,9 +345,10 @@ static void cli_cmd_m16c_idle(
     uint32_t pos =
         0U;
 
+    m16c_vnc_bus_stop_wr_capture();
     m16c_vnc_bus_set_ready(0U);
 
-    out_append(out, out_size, &pos, "m16c idle: TXE#=1\r\n");
+    out_append(out, out_size, &pos, "m16c idle: TXE#=1, WR capture stopped\r\n");
 }
 
 
@@ -339,9 +359,40 @@ static void cli_cmd_m16c_ready(
     uint32_t pos =
         0U;
 
+    /*
+     * Bezpecne ready:
+     * jen TXE#=0, ale nearmuje WR EXTI.
+     * WR capture se zapina samostatne pres m16c armwr.
+     */
     m16c_vnc_bus_set_ready(1U);
 
-    out_append(out, out_size, &pos, "m16c ready: TXE#=0\r\n");
+    out_append(out, out_size, &pos, "m16c ready: TXE#=0, WR capture not armed\r\n");
+}
+
+
+static void cli_cmd_m16c_armwr(
+    char *out,
+    uint32_t out_size)
+{
+    uint32_t pos =
+        0U;
+
+    m16c_vnc_bus_arm_wr_capture();
+
+    out_append(out, out_size, &pos, "m16c WR capture armed temporarily\r\n");
+}
+
+
+static void cli_cmd_m16c_stopwr(
+    char *out,
+    uint32_t out_size)
+{
+    uint32_t pos =
+        0U;
+
+    m16c_vnc_bus_stop_wr_capture();
+
+    out_append(out, out_size, &pos, "m16c WR capture stopped\r\n");
 }
 
 
@@ -380,7 +431,46 @@ static void cli_cmd_m16c_pc(
 
     m16c_vnc_bus_queue_pc_attached();
 
-    out_append(out, out_size, &pos, "m16c queued SDA\r\n");
+    out_append(out, out_size, &pos, "m16c queued SDA / PC Control target\r\n");
+}
+
+
+static void cli_cmd_m16c_pc2(
+    char *out,
+    uint32_t out_size)
+{
+    uint32_t pos =
+        0U;
+
+    m16c_vnc_bus_queue_pc_attached_prompt();
+
+    out_append(out, out_size, &pos, "m16c queued SDA CR prompt / PC Control target\r\n");
+}
+
+
+static void cli_cmd_m16c_pc3(
+    char *out,
+    uint32_t out_size)
+{
+    uint32_t pos =
+        0U;
+
+    m16c_vnc_bus_queue_pc_attached_drive_prompt();
+
+    out_append(out, out_size, &pos, "m16c queued SDA CR D prompt / PC Control target\r\n");
+}
+
+
+static void cli_cmd_m16c_pc4(
+    char *out,
+    uint32_t out_size)
+{
+    uint32_t pos =
+        0U;
+
+    m16c_vnc_bus_queue_pc_attached_double_prompt();
+
+    out_append(out, out_size, &pos, "m16c queued SDA CR CR prompt / PC Control target\r\n");
 }
 
 
@@ -431,66 +521,127 @@ void app_cli_execute_line(
         cmd,
         sizeof(cmd));
 
-    if(cmd[0] == '\0')
+    if((cmd[0] == '\0') || str_eq(cmd, "help") || str_eq(cmd, "?"))
     {
-        return;
-    }
-
-    if(str_eq(cmd, "help") || str_eq(cmd, "?"))
-    {
-        cli_cmd_help(port, out, out_size);
+        cli_cmd_help(
+            port,
+            out,
+            out_size);
     }
     else if(str_eq(cmd, "ping"))
     {
-        cli_cmd_ping(port, out, out_size);
+        cli_cmd_ping(
+            port,
+            out,
+            out_size);
     }
-    else if(str_eq(cmd, "version") || str_eq(cmd, "ver"))
+    else if(str_eq(cmd, "version"))
     {
-        cli_cmd_version(out, out_size);
+        cli_cmd_version(
+            out,
+            out_size);
     }
     else if(str_eq(cmd, "role"))
     {
-        cli_cmd_role(out, out_size);
+        cli_cmd_role(
+            out,
+            out_size);
     }
     else if(str_eq(cmd, "status") || str_eq(cmd, "usb"))
     {
-        cli_cmd_status(out, out_size);
+        cli_cmd_status(
+            out,
+            out_size);
     }
     else if(str_eq(cmd, "m16c"))
     {
-        cli_cmd_m16c(out, out_size);
+        cli_cmd_m16c(
+            out,
+            out_size);
+    }
+    else if(str_eq(cmd, "m16c trace"))
+    {
+        cli_cmd_m16c_trace(
+            out,
+            out_size);
     }
     else if(str_eq(cmd, "m16c reset"))
     {
-        cli_cmd_m16c_reset(out, out_size);
+        cli_cmd_m16c_reset(
+            out,
+            out_size);
     }
     else if(str_eq(cmd, "m16c idle"))
     {
-        cli_cmd_m16c_idle(out, out_size);
+        cli_cmd_m16c_idle(
+            out,
+            out_size);
     }
     else if(str_eq(cmd, "m16c ready"))
     {
-        cli_cmd_m16c_ready(out, out_size);
+        cli_cmd_m16c_ready(
+            out,
+            out_size);
+    }
+    else if(str_eq(cmd, "m16c armwr"))
+    {
+        cli_cmd_m16c_armwr(
+            out,
+            out_size);
+    }
+    else if(str_eq(cmd, "m16c stopwr"))
+    {
+        cli_cmd_m16c_stopwr(
+            out,
+            out_size);
     }
     else if(str_eq(cmd, "m16c clear"))
     {
-        cli_cmd_m16c_clear(out, out_size);
+        cli_cmd_m16c_clear(
+            out,
+            out_size);
     }
     else if(str_eq(cmd, "m16c boot"))
     {
-        cli_cmd_m16c_boot(out, out_size);
+        cli_cmd_m16c_boot(
+            out,
+            out_size);
     }
     else if(str_eq(cmd, "m16c pc"))
     {
-        cli_cmd_m16c_pc(out, out_size);
+        cli_cmd_m16c_pc(
+            out,
+            out_size);
+    }
+    else if(str_eq(cmd, "m16c pc2"))
+    {
+        cli_cmd_m16c_pc2(
+            out,
+            out_size);
+    }
+    else if(str_eq(cmd, "m16c pc3"))
+    {
+        cli_cmd_m16c_pc3(
+            out,
+            out_size);
+    }
+    else if(str_eq(cmd, "m16c pc4"))
+    {
+        cli_cmd_m16c_pc4(
+            out,
+            out_size);
     }
     else if(str_eq(cmd, "m16c nopc"))
     {
-        cli_cmd_m16c_nopc(out, out_size);
+        cli_cmd_m16c_nopc(
+            out,
+            out_size);
     }
     else if(str_eq(cmd, "m16c dd2"))
     {
-        cli_cmd_m16c_dd2(out, out_size);
+        cli_cmd_m16c_dd2(
+            out,
+            out_size);
     }
     else
     {
@@ -500,6 +651,5 @@ void app_cli_execute_line(
         out_append(out, out_size, &pos, "ERR unknown command: ");
         out_append(out, out_size, &pos, cmd);
         out_append(out, out_size, &pos, "\r\n");
-        out_append(out, out_size, &pos, "Type help\r\n");
     }
 }

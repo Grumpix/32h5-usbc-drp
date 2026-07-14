@@ -51,8 +51,6 @@ void UCPD1_IRQHandler(void)
    M16C / VNC1L BUS IRQ
 
    PB1 = USB1_RD#
-   EXTI1 je pouzite pro zachyceni hran RD#.
-   V m16c_vnc_bus.c se podle hrany RD# posouva paced FIFO.
 ========================= */
 void EXTI1_IRQHandler(void)
 {
@@ -60,5 +58,22 @@ void EXTI1_IRQHandler(void)
     {
         __HAL_GPIO_EXTI_CLEAR_IT(GPIO_PIN_1);
         m16c_vnc_bus_rd_irq();
+    }
+}
+
+/* =========================
+   M16C / VNC1L BUS IRQ
+
+   PB2 = USB1_WR
+   POZOR:
+   EXTI2 je v m16c_vnc_bus.c defaultne vypnute.
+   Zapina se jen docasne pres "m16c armwr".
+========================= */
+void EXTI2_IRQHandler(void)
+{
+    if (__HAL_GPIO_EXTI_GET_IT(GPIO_PIN_2) != 0U)
+    {
+        __HAL_GPIO_EXTI_CLEAR_IT(GPIO_PIN_2);
+        m16c_vnc_bus_wr_irq();
     }
 }
