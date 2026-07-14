@@ -1,0 +1,169 @@
+{
+	"globsDependent" : 
+	[
+		{
+			"expression" : "C:/Users/novak/Desktop/30626/h533-300626/Core/App/*.c",
+			"listDirectories" : true,
+			"paths" : 
+			[
+				"C:/Users/novak/Desktop/30626/h533-300626/Core/App/app_cli.c",
+				"C:/Users/novak/Desktop/30626/h533-300626/Core/App/app_cli_transport.c",
+				"C:/Users/novak/Desktop/30626/h533-300626/Core/App/app_usb_status.c",
+				"C:/Users/novak/Desktop/30626/h533-300626/Core/App/app_usb_status_reporter.c",
+				"C:/Users/novak/Desktop/30626/h533-300626/Core/App/drp_fsm.c",
+				"C:/Users/novak/Desktop/30626/h533-300626/Core/App/m16c_vnc_bus.c",
+				"C:/Users/novak/Desktop/30626/h533-300626/Core/App/uart.c",
+				"C:/Users/novak/Desktop/30626/h533-300626/Core/App/ucpd_diag.c",
+				"C:/Users/novak/Desktop/30626/h533-300626/Core/App/usb_debug.c",
+				"C:/Users/novak/Desktop/30626/h533-300626/Core/App/usb_manager.c",
+				"C:/Users/novak/Desktop/30626/h533-300626/Core/App/usb_mode_button.c",
+				"C:/Users/novak/Desktop/30626/h533-300626/Core/App/usb_role_policy.c",
+				"C:/Users/novak/Desktop/30626/h533-300626/Core/App/usb_time.c"
+			]
+		},
+		{
+			"expression" : "C:/Users/novak/Desktop/30626/h533-300626/Core/Board/*.c",
+			"listDirectories" : true,
+			"paths" : 
+			[
+				"C:/Users/novak/Desktop/30626/h533-300626/Core/Board/board.c",
+				"C:/Users/novak/Desktop/30626/h533-300626/Core/Board/usb_hw.c"
+			]
+		},
+		{
+			"expression" : "C:/Users/novak/Desktop/30626/h533-300626/Core/Src/*.c",
+			"listDirectories" : true,
+			"paths" : 
+			[
+				"C:/Users/novak/Desktop/30626/h533-300626/Core/Src/main.c",
+				"C:/Users/novak/Desktop/30626/h533-300626/Core/Src/stm32h5xx_hal_msp.c",
+				"C:/Users/novak/Desktop/30626/h533-300626/Core/Src/stm32h5xx_it.c",
+				"C:/Users/novak/Desktop/30626/h533-300626/Core/Src/syscalls.c",
+				"C:/Users/novak/Desktop/30626/h533-300626/Core/Src/sysmem.c",
+				"C:/Users/novak/Desktop/30626/h533-300626/Core/Src/system_stm32h5xx.c"
+			]
+		}
+	],
+	"inputs" : 
+	[
+		{
+			"path" : "CMakeLists.txt"
+		},
+		{
+			"isGenerated" : true,
+			"path" : "build/CMakeFiles/4.3.3/CMakeSystem.cmake"
+		},
+		{
+			"path" : "arm-none-eabi.cmake"
+		},
+		{
+			"isCMake" : true,
+			"isExternal" : true,
+			"path" : "C:/Program Files/CMake/share/cmake-4.3/Modules/CMakeSystemSpecificInitialize.cmake"
+		},
+		{
+			"isGenerated" : true,
+			"path" : "build/CMakeFiles/4.3.3/CMakeCCompiler.cmake"
+		},
+		{
+			"isGenerated" : true,
+			"path" : "build/CMakeFiles/4.3.3/CMakeASMCompiler.cmake"
+		},
+		{
+			"isCMake" : true,
+			"isExternal" : true,
+			"path" : "C:/Program Files/CMake/share/cmake-4.3/Modules/CMakeSystemSpecificInformation.cmake"
+		},
+		{
+			"isCMake" : true,
+			"isExternal" : true,
+			"path" : "C:/Program Files/CMake/share/cmake-4.3/Modules/CMakeGenericSystem.cmake"
+		},
+		{
+			"isCMake" : true,
+			"isExternal" : true,
+			"path" : "C:/Program Files/CMake/share/cmake-4.3/Modules/CMakeInitializeConfigs.cmake"
+		},
+		{
+			"isCMake" : true,
+			"isExternal" : true,
+			"path" : "C:/Program Files/CMake/share/cmake-4.3/Modules/Platform/Generic.cmake"
+		},
+		{
+			"isCMake" : true,
+			"isExternal" : true,
+			"path" : "C:/Program Files/CMake/share/cmake-4.3/Modules/CMakeCInformation.cmake"
+		},
+		{
+			"isCMake" : true,
+			"isExternal" : true,
+			"path" : "C:/Program Files/CMake/share/cmake-4.3/Modules/CMakeLanguageInformation.cmake"
+		},
+		{
+			"isCMake" : true,
+			"isExternal" : true,
+			"path" : "C:/Program Files/CMake/share/cmake-4.3/Modules/Compiler/GNU-C.cmake"
+		},
+		{
+			"isCMake" : true,
+			"isExternal" : true,
+			"path" : "C:/Program Files/CMake/share/cmake-4.3/Modules/Compiler/GNU.cmake"
+		},
+		{
+			"isCMake" : true,
+			"isExternal" : true,
+			"path" : "C:/Program Files/CMake/share/cmake-4.3/Modules/Compiler/CMakeCommonCompilerMacros.cmake"
+		},
+		{
+			"isCMake" : true,
+			"isExternal" : true,
+			"path" : "C:/Program Files/CMake/share/cmake-4.3/Modules/Platform/Generic.cmake"
+		},
+		{
+			"isCMake" : true,
+			"isExternal" : true,
+			"path" : "C:/Program Files/CMake/share/cmake-4.3/Modules/CMakeCommonLanguageInclude.cmake"
+		},
+		{
+			"isCMake" : true,
+			"isExternal" : true,
+			"path" : "C:/Program Files/CMake/share/cmake-4.3/Modules/Internal/CMakeCLinkerInformation.cmake"
+		},
+		{
+			"isCMake" : true,
+			"isExternal" : true,
+			"path" : "C:/Program Files/CMake/share/cmake-4.3/Modules/Internal/CMakeCommonLinkerInformation.cmake"
+		},
+		{
+			"isCMake" : true,
+			"isExternal" : true,
+			"path" : "C:/Program Files/CMake/share/cmake-4.3/Modules/CMakeASMInformation.cmake"
+		},
+		{
+			"isCMake" : true,
+			"isExternal" : true,
+			"path" : "C:/Program Files/CMake/share/cmake-4.3/Modules/Compiler/GNU-ASM.cmake"
+		},
+		{
+			"isCMake" : true,
+			"isExternal" : true,
+			"path" : "C:/Program Files/CMake/share/cmake-4.3/Modules/Compiler/GNU.cmake"
+		},
+		{
+			"isCMake" : true,
+			"isExternal" : true,
+			"path" : "C:/Program Files/CMake/share/cmake-4.3/Modules/Internal/CMakeASMLinkerInformation.cmake"
+		}
+	],
+	"kind" : "cmakeFiles",
+	"paths" : 
+	{
+		"build" : "C:/Users/novak/Desktop/30626/h533-300626/build",
+		"source" : "C:/Users/novak/Desktop/30626/h533-300626"
+	},
+	"version" : 
+	{
+		"major" : 1,
+		"minor" : 1
+	}
+}

@@ -9,7 +9,7 @@
 
 
 #define APP_CLI_FW_NAME       "stm32h533-usbc-drp"
-#define APP_CLI_VERSION       "0.9-m16c-trace-command"
+#define APP_CLI_VERSION       "1.1-m16c-pcslow-pc6arm"
 
 
 static void out_append(
@@ -195,6 +195,10 @@ static void cli_cmd_help(
     out_append(out, out_size, &pos, "  m16c pc2      - queue SDA CR prompt event\r\n");
     out_append(out, out_size, &pos, "  m16c pc3      - queue SDA CR drive prompt event\r\n");
     out_append(out, out_size, &pos, "  m16c pc4      - queue SDA CR CR prompt event\r\n");
+    out_append(out, out_size, &pos, "  m16c pc5      - queue Slave Enabled CR prompt CR event\r\n");
+    out_append(out, out_size, &pos, "  m16c pc6      - queue SDA CR prompt CR event\r\n");
+    out_append(out, out_size, &pos, "  m16c pc6arm   - arm WR capture and queue SDA CR prompt CR\r\n");
+    out_append(out, out_size, &pos, "  m16c pcslow   - queue paced SDA CR event\r\n");
 
     out_append(out, out_size, &pos, "  m16c nopc     - queue SDD CR event\r\n");
     out_append(out, out_size, &pos, "  m16c dd2      - queue DD2 CR event\r\n");
@@ -359,11 +363,6 @@ static void cli_cmd_m16c_ready(
     uint32_t pos =
         0U;
 
-    /*
-     * Bezpecne ready:
-     * jen TXE#=0, ale nearmuje WR EXTI.
-     * WR capture se zapina samostatne pres m16c armwr.
-     */
     m16c_vnc_bus_set_ready(1U);
 
     out_append(out, out_size, &pos, "m16c ready: TXE#=0, WR capture not armed\r\n");
@@ -471,6 +470,58 @@ static void cli_cmd_m16c_pc4(
     m16c_vnc_bus_queue_pc_attached_double_prompt();
 
     out_append(out, out_size, &pos, "m16c queued SDA CR CR prompt / PC Control target\r\n");
+}
+
+
+static void cli_cmd_m16c_pc5(
+    char *out,
+    uint32_t out_size)
+{
+    uint32_t pos =
+        0U;
+
+    m16c_vnc_bus_queue_pc_attached_slave_enabled_prompt();
+
+    out_append(out, out_size, &pos, "m16c queued Slave Enabled CR prompt CR / PC Control target\r\n");
+}
+
+
+static void cli_cmd_m16c_pc6(
+    char *out,
+    uint32_t out_size)
+{
+    uint32_t pos =
+        0U;
+
+    m16c_vnc_bus_queue_pc_attached_sda_prompt_cr();
+
+    out_append(out, out_size, &pos, "m16c queued SDA CR prompt CR / PC Control target\r\n");
+}
+
+
+static void cli_cmd_m16c_pc6arm(
+    char *out,
+    uint32_t out_size)
+{
+    uint32_t pos =
+        0U;
+
+    m16c_vnc_bus_queue_pc6_and_arm_wr();
+
+    out_append(out, out_size, &pos, "m16c armed WR capture and queued SDA CR prompt CR\r\n");
+}
+
+
+static void cli_cmd_m16c_pcslow(
+    char *out,
+    uint32_t out_size)
+{
+    uint32_t pos =
+        0U;
+
+    m16c_vnc_bus_queue_pc_attached_slow();
+
+    out_append(out, out_size, &pos, "m16c queued slow/paced SDA CR\r\n");
 }
 
 
@@ -628,6 +679,30 @@ void app_cli_execute_line(
     else if(str_eq(cmd, "m16c pc4"))
     {
         cli_cmd_m16c_pc4(
+            out,
+            out_size);
+    }
+    else if(str_eq(cmd, "m16c pc5"))
+    {
+        cli_cmd_m16c_pc5(
+            out,
+            out_size);
+    }
+    else if(str_eq(cmd, "m16c pc6"))
+    {
+        cli_cmd_m16c_pc6(
+            out,
+            out_size);
+    }
+    else if(str_eq(cmd, "m16c pc6arm"))
+    {
+        cli_cmd_m16c_pc6arm(
+            out,
+            out_size);
+    }
+    else if(str_eq(cmd, "m16c pcslow"))
+    {
+        cli_cmd_m16c_pcslow(
             out,
             out_size);
     }

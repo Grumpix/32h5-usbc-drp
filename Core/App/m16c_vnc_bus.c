@@ -88,11 +88,11 @@
  * Nyni pridavame prompt:
  *   "03.68-A03VDPSF On-Line:\r>"
  */
-#define M16C_VDPS_BOOT_BANNER           "Ver 03.68VDPSF On-Line:\r>\r"
+#define M16C_VDPS_BOOT_BANNER           "SDA\r"
 
-#define M16C_WR_CAPTURE_TIMEOUT_MS      250U
-#define M16C_WR_CAPTURE_MAX_EDGES       64U
-#define M16C_WR_CAPTURE_MAX_BYTES       16U
+#define M16C_WR_CAPTURE_TIMEOUT_MS      1500U
+#define M16C_WR_CAPTURE_MAX_EDGES       256U
+#define M16C_WR_CAPTURE_MAX_BYTES       64U
 
 /*
  * Podle mereni je WR v klidu LOW.
@@ -575,18 +575,11 @@ static uint8_t pace_delay_elapsed(void)
 static void finish_burst(void)
 {
     /*
-     * M16C po ukonceni vety dela jeste jeden extra RD cyklus.
-     * Kdyz hned pustime bus do Hi-Z, prakticky znovu precte posledni byte.
-     *
-     * Proto po skonceni burstu nechame na D0..D7 aktivne vystaveny dummy 0x00
-     * a RXF# uz zvedneme HIGH. Pokud M16C presto udela extra RD, precte 0x00
-     * misto duplicitniho CR nebo '>'.
-     *
-     * Dulezite:
-     * - byte_presented = 0, aby se dummy nepocital jako platny FIFO byte.
-     * - bus_driving zustava 1, aby Hi-Z necetl zbytky posledni hodnoty.
+     * Po poslednim platnem byte M16C dela jeste jeden extra RD.
+     * Nechceme, aby precetl znovu CR. Testujeme 0xFF jako neplatny byte,
+     * ktery by nemel vypadat jako konec dalsi vety.
      */
-    bus_drive_byte(0x00U);
+    bus_drive_byte(0xFFU);
 
     status_set_rxf_high();
 
@@ -635,17 +628,14 @@ static void complete_read_cycle(void)
     uint8_t rd_bus;
 
     /*
-     * Snapshot sběrnice přesně v okamžiku zpracování RD# rising.
-     * Pokud STM32 bus řídí správně, u validního čtení by to mělo sedět
+     * Snapshot sbernice presne v okamziku zpracovani RD# rising.
+     * Pokud STM32 bus ridi spravne, u validniho cteni by to melo sedet
      * s TX trace.
      */
     rd_bus = bus_read_u8();
 
     /*
-     * Dulezita oprava:
-     * M16C obcas udela extra RD cyklus po tom, co uz jsme vetu ukoncili.
-     * Pokud zrovna nemame vystaveny platny byte, nedelame pace hold ani FIFO pop.
-     * Ale i extra RD ulozime do RD trace, at vidime, co bylo na sbernici.
+     * Extra RD mimo platny byte.
      */
     if (!bus_rt.byte_presented)
     {
@@ -662,24 +652,24 @@ static void complete_read_cycle(void)
     }
 
     if (bus_rt.tx_mode == M16C_TX_MODE_BURST)
+{
+    /*
+     * Burst sentence:
+     * RXF# zustava LOW, pokud mame dalsi byte.
+     * Hned po RD# rising prehodime D0..D7 na dalsi byte.
+     */
+    if (tx_fifo_peek(&next_data))
     {
-        /*
-         * Burst sentence:
-         * RXF# zustava LOW, pokud mame dalsi byte.
-         * Hned po RD# rising prehodime D0..D7 na dalsi byte.
-         */
-        if (tx_fifo_peek(&next_data))
-        {
-            bus_drive_byte(next_data);
-            status_set_rxf_low();
-        }
-        else
-        {
-            finish_burst();
-        }
-
-        return;
+        bus_drive_byte(next_data);
+        status_set_rxf_low();
     }
+    else
+    {
+        finish_burst();
+    }
+
+    return;
+}
 
     enter_pace_hold();
 }
@@ -1257,6 +1247,22 @@ void m16c_vnc_bus_queue_pc_attached(void)
      */
     queue_string_burst("SDA\r");
 }
+
+void m16c_vnc_bus_queue_pc6_and_arm_wr(void)
+{
+    /*
+     * Atomicky:
+     * - arm WR capture
+     * - pak poslat FTDI short event + prompt:
+     *     SDA\r>\r
+     *
+     * Cilem je zachytit, zda M16C po PC attach eventu zapise do VNC
+     * prikaz jako napr. SC S\r nebo podobny.
+     */
+    m16c_vnc_bus_arm_wr_capture();
+    m16c_vnc_bus_queue_pc_attached_sda_prompt_cr();
+}
+
 void m16c_vnc_bus_queue_pc_attached_prompt(void)
 {
     /*
@@ -1301,6 +1307,20 @@ void m16c_vnc_bus_queue_pc_attached_sda_prompt_cr(void)
      */
     queue_string_burst("SDA\r>\r");
 }
+
+void m16c_vnc_bus_queue_pc_attached_slow(void)
+{
+    /*
+     * Varianta:
+     *   SDA\r
+     * ale paced/FIFO style, ne burst.
+     *
+     * Cilem je overit, jestli M16C event parser nechce spis postupne
+     * FIFO chovani misto jedne souvisle burst vety.
+     */
+    queue_string_paced("SDA\r");
+}
+
 
 void m16c_vnc_bus_queue_pc_detached(void)
 {

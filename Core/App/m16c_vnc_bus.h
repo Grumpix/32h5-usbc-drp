@@ -55,19 +55,29 @@ void m16c_vnc_bus_queue_bytes(
 
 void m16c_vnc_bus_queue_string(
     const char *text);
-void m16c_vnc_bus_format_trace(char *out, uint32_t out_size);
+
 void m16c_vnc_bus_queue_boot_banner(void);
+
 void m16c_vnc_bus_queue_pc_attached(void);
-void m16c_vnc_bus_queue_pc_detached(void);
-void m16c_vnc_bus_queue_host_device_attached(void);
 void m16c_vnc_bus_queue_pc_attached_prompt(void);
 void m16c_vnc_bus_queue_pc_attached_drive_prompt(void);
 void m16c_vnc_bus_queue_pc_attached_double_prompt(void);
-void m16c_vnc_bus_arm_wr_capture(void);
 void m16c_vnc_bus_queue_pc_attached_slave_enabled_prompt(void);
 void m16c_vnc_bus_queue_pc_attached_sda_prompt_cr(void);
+void m16c_vnc_bus_queue_pc_attached_slow(void);
+void m16c_vnc_bus_queue_pc6_and_arm_wr(void);
+
+void m16c_vnc_bus_queue_pc_detached(void);
+void m16c_vnc_bus_queue_host_device_attached(void);
+
+void m16c_vnc_bus_arm_wr_capture(void);
 void m16c_vnc_bus_stop_wr_capture(void);
+
 void m16c_vnc_bus_format_status(
+    char *out,
+    uint32_t out_size);
+
+void m16c_vnc_bus_format_trace(
     char *out,
     uint32_t out_size);
 
